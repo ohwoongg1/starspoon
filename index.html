@@ -9,37 +9,51 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --gold:#F59E0B;
-  --bg:#ffffff;--bg2:#F8F8F6;--bg3:#F1F0EC;
+  --gold:#F59E0B;--bg:#fff;--bg2:#F8F8F6;--bg3:#F1F0EC;
   --text:#1C1C1A;--text2:#6B6B67;--text3:#9B9B97;
-  --border:#E4E3DF;--border2:#D0CFC9;
-  --radius:10px;--radius-lg:14px;
+  --border:#E4E3DF;--border2:#D0CFC9;--radius:10px;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);font-size:14px}
 
+/* 헤더 */
 .header{background:var(--bg);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
 .logo{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
 .logo-icon{width:34px;height:34px;background:var(--gold);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.logo-text{font-size:17px;font-weight:600;color:var(--text);letter-spacing:-0.3px}
+.logo-text{font-size:17px;font-weight:600;color:var(--text)}
 .logo-text span{color:var(--gold)}
 .search-wrap{flex:1;max-width:500px;position:relative}
 .search-wrap input{width:100%;height:38px;border-radius:19px;border:1.5px solid var(--border2);background:var(--bg2);padding:0 14px 0 40px;font-size:14px;color:var(--text);outline:none;transition:border-color .2s}
 .search-wrap input:focus{border-color:var(--gold);background:#fff}
 .search-wrap input::placeholder{color:var(--text3)}
 .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:17px}
-.header-btns{margin-left:auto;display:flex;gap:8px}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .hbtn{border:1.5px solid var(--border2);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--text2);background:none;cursor:pointer;font-weight:500;transition:all .15s}
 .hbtn:hover{background:var(--bg2)}
 .hbtn.active{background:var(--gold);color:#fff;border-color:var(--gold)}
+.user-info{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+.user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.login-btn{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.login-btn:hover{background:#D97706}
+.logout-btn{background:none;border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text3);cursor:pointer}
+.logout-btn:hover{background:var(--bg2)}
 
+/* 필터 */
 .filter-bar{background:var(--bg);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
 .filter-bar::-webkit-scrollbar{display:none}
 .chip{border:1.5px solid var(--border2);border-radius:20px;padding:5px 15px;font-size:13px;color:var(--text2);background:var(--bg);cursor:pointer;white-space:nowrap;font-weight:500;transition:all .15s}
 .chip:hover{border-color:var(--gold);color:var(--gold)}
 .chip.on{background:var(--gold);border-color:var(--gold);color:#fff}
 
-.main{display:flex;height:calc(100vh - 103px)}
+/* 탭 */
+.page-tabs{background:var(--bg);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:0}
+.ptab{padding:12px 20px;font-size:14px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .15s}
+.ptab:hover{color:var(--text)}
+.ptab.on{color:var(--gold);border-bottom-color:var(--gold)}
 
+/* 메인 */
+.main{display:flex;height:calc(100vh - 143px)}
+
+/* 사이드바 */
 .sidebar{width:360px;flex-shrink:0;background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
 .celeb-tabs{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap}
 .ctab{border:1.5px solid var(--border2);border-radius:20px;padding:5px 13px;font-size:12px;font-weight:500;color:var(--text2);background:none;cursor:pointer;white-space:nowrap;transition:all .15s}
@@ -51,6 +65,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .list::-webkit-scrollbar{width:4px}
 .list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
+/* 카드 */
 .card{padding:16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
 .card:hover,.card.active{background:var(--bg2)}
 .card-top{display:flex;align-items:flex-start;gap:11px;margin-bottom:10px}
@@ -67,19 +82,88 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .yt-btn:hover{background:rgba(204,0,0,0.12)}
 .map-btn{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 9px;background:none;cursor:pointer;font-weight:500}
 .map-btn:hover{background:var(--bg2)}
+
+/* 평점 */
+.rating-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.stars{display:flex;gap:2px}
+.star{font-size:16px;cursor:pointer;color:#D0CFC9;transition:color .1s}
+.star.on{color:var(--gold)}
+.rating-count{font-size:12px;color:var(--text3)}
+.save-btn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 9px;background:none;cursor:pointer}
+.save-btn:hover{background:var(--bg2)}
+.save-btn.saved{color:var(--gold);border-color:var(--gold)}
+
+/* 순위 뱃지 */
+.rank-badge{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.rank-1{background:#FFD700;color:#7B5800}
+.rank-2{background:#C0C0C0;color:#555}
+.rank-3{background:#CD7F32;color:#fff}
+.rank-n{background:var(--bg3);color:var(--text3)}
+
 .empty{padding:48px 20px;text-align:center;color:var(--text3)}
 .empty i{font-size:32px;display:block;margin-bottom:10px;opacity:.4}
 
+/* 지도 */
 .map-area{flex:1;position:relative;overflow:hidden}
 #kakao-map{width:100%;height:100%}
 
-/* 커스텀 마커 말풍선 */
+/* 순위 페이지 */
+.rank-page{flex:1;overflow-y:auto;background:var(--bg3);padding:20px}
+.rank-page.hidden{display:none}
+.rank-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;max-width:1200px;margin:0 auto}
+.rank-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:flex-start;gap:12px;transition:box-shadow .15s}
+.rank-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.rank-info{flex:1;min-width:0}
+.rank-name{font-weight:600;font-size:15px;margin-bottom:4px}
+.rank-meta{font-size:12px;color:var(--text3);margin-bottom:6px}
+.rank-score{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--text2)}
+.score-item{display:flex;align-items:center;gap:3px}
+
+/* 내 맛집 페이지 */
+.my-page{flex:1;overflow-y:auto;background:var(--bg3);padding:20px}
+.my-page.hidden{display:none}
+.my-empty{text-align:center;padding:60px 20px;color:var(--text3)}
+.my-empty i{font-size:48px;display:block;margin-bottom:12px;opacity:.3}
+
+/* 댓글 모달 */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg);border-radius:16px;width:480px;max-width:90vw;max-height:80vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.modal-title{font-weight:600;font-size:16px}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1}
+.modal-body{flex:1;overflow-y:auto;padding:16px 20px}
+.comment-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.comment-item{background:var(--bg2);border-radius:10px;padding:12px}
+.comment-user{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.comment-avatar{width:26px;height:26px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:600;flex-shrink:0;overflow:hidden}
+.comment-avatar img{width:100%;height:100%;object-fit:cover}
+.comment-name{font-size:13px;font-weight:500}
+.comment-date{font-size:11px;color:var(--text3);margin-left:auto}
+.comment-stars{font-size:13px;margin-bottom:4px}
+.comment-text{font-size:13px;color:var(--text2);line-height:1.5}
+.comment-form{border-top:1px solid var(--border);padding-top:14px}
+.comment-form textarea{width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:10px;font-size:13px;font-family:inherit;resize:none;height:70px;outline:none}
+.comment-form textarea:focus{border-color:var(--gold)}
+.comment-form-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.rating-input{display:flex;gap:4px}
+.rating-input .star{font-size:20px}
+.submit-comment{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer}
+.submit-comment:hover{background:#D97706}
+.no-login-msg{text-align:center;padding:20px;color:var(--text3);font-size:13px}
+
+/* 커스텀 마커 */
 .custom-overlay{position:relative;background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:12px 14px;min-width:180px;max-width:220px;box-shadow:0 6px 18px rgba(0,0,0,0.12);cursor:pointer}
 .custom-overlay .tt-name{font-weight:600;font-size:14px;margin-bottom:2px;color:#1C1C1A}
 .custom-overlay .tt-who{font-size:11px;color:#B45309;font-weight:600;margin-bottom:5px}
 .custom-overlay .tt-comment{font-size:12px;color:#6B6B67;line-height:1.45}
-.custom-overlay:after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top-color:var(--border2);border-bottom:0}
-.custom-overlay:before{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top-color:#fff;border-bottom:0;z-index:1}
+
+/* 토스트 */
+.toast{position:fixed;bottom:22px;right:22px;background:#1C1C1A;color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;box-shadow:0 6px 16px rgba(0,0,0,0.2)}
+.toast.show{display:flex}
+
+.map-area.hidden{display:none}
+.sidebar.hidden{display:none}
 </style>
 </head>
 <body>
@@ -93,8 +177,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     <i class="ti ti-search search-icon"></i>
     <input type="text" id="mainSearch" placeholder="연예인 이름 또는 음식 검색  예: 성시경 국밥" oninput="doSearch(this.value)">
   </div>
-  <div class="header-btns">
-    <button class="hbtn active">지도 보기</button>
+  <div class="header-right">
+    <div id="authArea">
+      <button class="login-btn" onclick="loginWithGoogle()">
+        <i class="ti ti-brand-google"></i> 구글 로그인
+      </button>
+    </div>
     <button class="hbtn" onclick="location.href='admin.html'">관리자</button>
   </div>
 </header>
@@ -111,8 +199,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="chip" onclick="setCategory(this,'카페·디저트')">카페·디저트</button>
 </div>
 
+<div class="page-tabs">
+  <div class="ptab on" onclick="setPage('map',this)">🗺 지도</div>
+  <div class="ptab" onclick="setPage('rank',this)">🏆 TOP 100</div>
+  <div class="ptab" onclick="setPage('my',this)">❤️ 내 맛집</div>
+</div>
+
 <div class="main">
-  <aside class="sidebar">
+  <!-- 사이드바 -->
+  <aside class="sidebar" id="sidebar">
     <div class="celeb-tabs" id="celebTabs"></div>
     <div class="list-header">
       <span>맛집 목록</span>
@@ -120,185 +215,466 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
     </div>
     <div class="list" id="restaurantList"></div>
   </aside>
-  <main class="map-area">
+
+  <!-- 지도 -->
+  <div class="map-area" id="mapArea">
     <div id="kakao-map"></div>
-  </main>
+  </div>
+
+  <!-- TOP 100 순위 -->
+  <div class="rank-page hidden" id="rankPage">
+    <div style="max-width:1200px;margin:0 auto 16px">
+      <h2 style="font-size:18px;font-weight:700">🏆 스타스푼 TOP 100</h2>
+      <p style="font-size:13px;color:var(--text3);margin-top:4px">평점 40% + 댓글 수 30% + 연예인 방문 횟수 30% 합산 점수</p>
+    </div>
+    <div class="rank-grid" id="rankGrid"></div>
+  </div>
+
+  <!-- 내 맛집 -->
+  <div class="my-page hidden" id="myPage">
+    <div id="myContent"></div>
+  </div>
 </div>
 
-<script>
-// ── 데이터 ──────────────────────────────────
-var DATA = [
-  {id:1,name:"우래옥",celeb:"성시경",cat:"냉면",area:"중구",comment:"평양냉면의 정석. 면발이 살아있고 육수가 깊어요.",yt:"",lat:37.5663,lng:126.9997},
-  {id:2,name:"하동관",celeb:"성시경",cat:"국밥·탕",area:"중구",comment:"50년 넘은 곰탕집. 국물 한 모금에 세월이 느껴짐.",yt:"",lat:37.5658,lng:126.9823},
-  {id:3,name:"진주집",celeb:"성시경",cat:"한식",area:"종로구",comment:"청국장이 진짜입니다. 서울 한복판에 이런 맛이.",yt:"",lat:37.5779,lng:126.9850},
-  {id:4,name:"을지OB베어",celeb:"이영자",cat:"한식",area:"중구",comment:"안주도 훌륭하고 분위기가 옛날 감성 그대로예요.",yt:"",lat:37.5660,lng:126.9874},
-  {id:5,name:"장충동왕족발",celeb:"이영자",cat:"한식",area:"중구",comment:"족발은 여기가 원조. 쫄깃함이 달라요.",yt:"",lat:37.5590,lng:127.0050},
-  {id:6,name:"명동교자",celeb:"백종원",cat:"한식",area:"중구",comment:"칼국수 면이 특별해요. 이 가격에 이 퀄리티.",yt:"",lat:37.5635,lng:126.9856},
-  {id:7,name:"삼청동수제비",celeb:"나얼",cat:"한식",area:"종로구",comment:"수제비 한 그릇에 감성까지 담겨있어요.",yt:"",lat:37.5823,lng:126.9810},
-  {id:8,name:"봉피양",celeb:"나얼",cat:"냉면",area:"서초구",comment:"평양냉면 좋아하면 꼭 가봐야 할 곳.",yt:"",lat:37.5040,lng:127.0243},
-  {id:9,name:"홍대양꼬치",celeb:"홍진경",cat:"고기",area:"마포구",comment:"양꼬치는 여기 와야 제대로 먹는 거예요.",yt:"",lat:37.5563,lng:126.9233},
-  {id:10,name:"연남동카페그날",celeb:"홍진경",cat:"카페·디저트",area:"마포구",comment:"디저트가 예쁘고 맛도 있어요. 사진각도 완벽!",yt:"",lat:37.5602,lng:126.9246},
-  {id:11,name:"광장시장마약김밥",celeb:"성시경",cat:"분식",area:"종로구",comment:"마약김밥 한 줄이면 점심 해결. 가성비 끝판왕.",yt:"",lat:37.5700,lng:126.9994},
-  {id:12,name:"경리단갈비",celeb:"백종원",cat:"고기",area:"용산구",comment:"갈비 맛은 여기가 진짜. 숯불향이 달라요.",yt:"",lat:37.5346,lng:126.9947},
-];
+<!-- 댓글/평점 모달 -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">맛집 정보</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="comment-list" id="commentList"></div>
+      <div class="comment-form" id="commentForm">
+        <div id="commentFormInner"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
-var COLORS={
-  "성시경":"#F59E0B","이영자":"#EF4444",
-  "백종원":"#3B82F6","나얼":"#8B5CF6","홍진경":"#10B981"
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="toastMsg"></span></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC5nf84GbQQ_5vIDwhIvTZ5zPqf7nrnSxU",
+  authDomain: "starspoon-120d7.firebaseapp.com",
+  projectId: "starspoon-120d7",
+  storageBucket: "starspoon-120d7.firebasestorage.app",
+  messagingSenderId: "672370227821",
+  appId: "1:672370227821:web:aea1d9c6ca8587842a5d64",
+  measurementId: "G-J8B76Y0LHW"
 };
 
-var selCeleb="전체", selCat="전체", searchQ="";
-var map, markers=[], overlays=[], geocoder;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-// ── 카카오맵 초기화 ──────────────────────────
-kakao.maps.load(function(){
-  var container = document.getElementById("kakao-map");
-  var options = {
-    center: new kakao.maps.LatLng(37.5550, 126.9700),
-    level: 8
-  };
-  map = new kakao.maps.Map(container, options);
-  geocoder = new kakao.maps.services.Geocoder();
+// ── 전역 상태 ──────────────────────
+let currentUser = null;
+let selCeleb = "전체", selCat = "전체", searchQ = "";
+let map, markers = [], overlays = [];
+let currentModalId = null;
+let myRating = 0;
+let savedList = [];
 
-  // 지도 컨트롤 추가
-  var zoomControl = new kakao.maps.ZoomControl();
-  map.addControl(zoomControl, kakao.maps.ControlPosition.RIGHT);
-  var mapTypeControl = new kakao.maps.MapTypeControl();
-  map.addControl(mapTypeControl, kakao.maps.ControlPosition.TOPRIGHT);
+const COLORS = {"성시경":"#F59E0B","이영자":"#EF4444","백종원":"#3B82F6","나얼":"#8B5CF6","홍진경":"#10B981"};
 
-  buildCelebTabs();
-  render();
+const DATA = [
+  {id:"r1",name:"우래옥",celeb:"성시경",cat:"냉면",area:"중구",comment:"평양냉면의 정석. 면발이 살아있고 육수가 깊어요.",yt:"",lat:37.5663,lng:126.9997,visits:8},
+  {id:"r2",name:"하동관",celeb:"성시경",cat:"국밥·탕",area:"중구",comment:"50년 넘은 곰탕집. 국물 한 모금에 세월이 느껴짐.",yt:"",lat:37.5658,lng:126.9823,visits:5},
+  {id:"r3",name:"진주집",celeb:"성시경",cat:"한식",area:"종로구",comment:"청국장이 진짜입니다. 서울 한복판에 이런 맛이.",yt:"",lat:37.5779,lng:126.9850,visits:3},
+  {id:"r4",name:"을지OB베어",celeb:"이영자",cat:"한식",area:"중구",comment:"안주도 훌륭하고 분위기가 옛날 감성 그대로예요.",yt:"",lat:37.5660,lng:126.9874,visits:4},
+  {id:"r5",name:"장충동왕족발",celeb:"이영자",cat:"한식",area:"중구",comment:"족발은 여기가 원조. 쫄깃함이 달라요.",yt:"",lat:37.5590,lng:127.0050,visits:6},
+  {id:"r6",name:"명동교자",celeb:"백종원",cat:"한식",area:"중구",comment:"칼국수 면이 특별해요. 이 가격에 이 퀄리티.",yt:"",lat:37.5635,lng:126.9856,visits:7},
+  {id:"r7",name:"삼청동수제비",celeb:"나얼",cat:"한식",area:"종로구",comment:"수제비 한 그릇에 감성까지 담겨있어요.",yt:"",lat:37.5823,lng:126.9810,visits:2},
+  {id:"r8",name:"봉피양",celeb:"나얼",cat:"냉면",area:"서초구",comment:"평양냉면 좋아하면 꼭 가봐야 할 곳.",yt:"",lat:37.5040,lng:127.0243,visits:3},
+  {id:"r9",name:"홍대양꼬치",celeb:"홍진경",cat:"고기",area:"마포구",comment:"양꼬치는 여기 와야 제대로 먹는 거예요.",yt:"",lat:37.5563,lng:126.9233,visits:4},
+  {id:"r10",name:"연남동카페그날",celeb:"홍진경",cat:"카페·디저트",area:"마포구",comment:"디저트가 예쁘고 맛도 있어요. 사진각도 완벽!",yt:"",lat:37.5602,lng:126.9246,visits:2},
+  {id:"r11",name:"광장시장마약김밥",celeb:"성시경",cat:"분식",area:"종로구",comment:"마약김밥 한 줄이면 점심 해결. 가성비 끝판왕.",yt:"",lat:37.5700,lng:126.9994,visits:9},
+  {id:"r12",name:"경리단갈비",celeb:"백종원",cat:"고기",area:"용산구",comment:"갈비 맛은 여기가 진짜. 숯불향이 달라요.",yt:"",lat:37.5346,lng:126.9947,visits:5},
+];
+
+// 점수 캐시
+let scoreCache = {};
+
+// ── Firebase 함수 전역 노출 ──────────────────────
+window.loginWithGoogle = async function() {
+  try {
+    await signInWithRedirect(auth, provider);
+  } catch(e) { showToast("로그인 실패: " + e.message); }
+};
+
+window.logoutUser = async function() {
+  await signOut(auth);
+  savedList = [];
+  renderAuthArea();
+  renderList();
+};
+
+// 리다이렉트 후 결과 처리
+getRedirectResult(auth).then(result => {
+  if (result?.user) showToast("로그인 됐어요! 환영해요 😊");
+}).catch(e => { console.log(e); });
+
+// ── 인증 상태 감지 ──────────────────────
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
+  if (user) {
+    // 저장 맛집 불러오기
+    const snap = await getDoc(doc(db, "users", user.uid));
+    savedList = snap.exists() ? (snap.data().saved || []) : [];
+  } else {
+    savedList = [];
+  }
+  renderAuthArea();
+  renderList();
+  if (map) renderPins();
 });
 
-// ── 마커 생성 ──────────────────────────────
-function makeMarkerImage(color){
-  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42">'
-    +'<path d="M18 0C8.06 0 0 8.06 0 18c0 12.75 18 24 18 24S36 30.75 36 18C36 8.06 27.94 0 18 0z" fill="'+color+'"/>'
-    +'<text x="18" y="23" text-anchor="middle" font-size="16">⭐</text>'
-    +'</svg>';
-  var url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  return new kakao.maps.MarkerImage(url, new kakao.maps.Size(36,42), {offset: new kakao.maps.Point(18,42)});
-}
-
-function renderPins(){
-  // 기존 마커 제거
-  markers.forEach(function(m){m.setMap(null)});
-  overlays.forEach(function(o){o.setMap(null)});
-  markers=[]; overlays=[];
-
-  var items = filtered();
-  items.forEach(function(d){
-    var color = COLORS[d.celeb] || "#F59E0B";
-    var pos = new kakao.maps.LatLng(d.lat, d.lng);
-    var marker = new kakao.maps.Marker({
-      map: map,
-      position: pos,
-      image: makeMarkerImage(color),
-      title: d.name
-    });
-
-    // 말풍선 오버레이
-    var content = '<div class="custom-overlay">'
-      +'<div class="tt-name">'+d.name+'</div>'
-      +'<div class="tt-who">⭐ '+d.celeb+' 추천</div>'
-      +'<div class="tt-comment">'+d.comment+'</div>'
-      +'</div>';
-    var overlay = new kakao.maps.CustomOverlay({
-      position: pos,
-      content: content,
-      yAnchor: 2.2,
-      zIndex: 3
-    });
-
-    kakao.maps.event.addListener(marker,'mouseover',function(){overlay.setMap(map)});
-    kakao.maps.event.addListener(marker,'mouseout',function(){overlay.setMap(null)});
-    kakao.maps.event.addListener(marker,'click',function(){
-      map.setCenter(pos);
-      map.setLevel(4);
-    });
-
-    markers.push(marker);
-    overlays.push(overlay);
-  });
-}
-
-// ── 리스트 렌더 ──────────────────────────────
-function renderList(){
-  var list = document.getElementById("restaurantList");
-  var items = filtered();
-  document.getElementById("listCount").textContent = items.length+"곳";
-  if(items.length===0){
-    list.innerHTML='<div class="empty"><i class="ti ti-mood-empty"></i>검색 결과가 없어요</div>';
-    return;
+function renderAuthArea() {
+  const area = document.getElementById("authArea");
+  if (currentUser) {
+    area.innerHTML = `
+      <div class="user-info">
+        <img class="user-avatar" src="${currentUser.photoURL||''}" onerror="this.style.display='none'">
+        <span>${currentUser.displayName || currentUser.email}</span>
+        <button class="logout-btn" onclick="logoutUser()">로그아웃</button>
+      </div>`;
+  } else {
+    area.innerHTML = `<button class="login-btn" onclick="loginWithGoogle()"><i class="ti ti-brand-google"></i> 구글 로그인</button>`;
   }
-  list.innerHTML = items.map(function(d){
-    return '<div class="card" onclick="focusMap('+d.id+')">'
-      +'<div class="card-top">'
-        +'<div class="card-icon">⭐</div>'
-        +'<div class="card-info">'
-          +'<div class="card-name">'+d.name+'</div>'
-          +'<div class="card-meta">'
-            +'<span class="badge">'+d.celeb+'</span>'
-            +'<span class="meta-dot">·</span>'
-            +'<span class="meta-sub">'+d.cat+'</span>'
-            +'<span class="meta-dot">·</span>'
-            +'<span class="meta-sub">'+d.area+'</span>'
-          +'</div>'
-        +'</div>'
-      +'</div>'
-      +'<div class="comment">"'+d.comment+'"</div>'
-      +'<div class="card-foot">'
-        +(d.yt?'<a class="yt-btn" href="'+d.yt+'" target="_blank"><i class="ti ti-brand-youtube"></i>영상 보기</a>':'<span style="font-size:12px;color:var(--text3)">영상 미등록</span>')
-        +'<button class="map-btn" onclick="event.stopPropagation();focusMap('+d.id+')"><i class="ti ti-map-pin"></i>지도</button>'
-      +'</div>'
-    +'</div>';
-  }).join("");
 }
 
-function focusMap(id){
-  var d = DATA.find(function(x){return x.id===id});
-  if(!d||!map) return;
-  map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
-  map.setLevel(4);
-  document.querySelectorAll(".card").forEach(function(c){c.classList.remove("active")});
-  event.currentTarget.classList.add("active");
+// ── 점수 계산 ──────────────────────
+async function getScore(d) {
+  if (scoreCache[d.id]) return scoreCache[d.id];
+  // 댓글/평점 가져오기
+  const commSnap = await getDocs(collection(db, "restaurants", d.id, "comments"));
+  let totalRating = 0, ratingCount = 0, commentCount = commSnap.size;
+  commSnap.forEach(c => { if(c.data().rating) { totalRating += c.data().rating; ratingCount++; } });
+  const avgRating = ratingCount > 0 ? totalRating / ratingCount : 0;
+  // 점수 = 평점(40) + 댓글수(30) + 방문횟수(30)
+  const ratingScore = (avgRating / 5) * 40;
+  const commentScore = Math.min(commentCount / 10, 1) * 30;
+  const visitScore = Math.min((d.visits || 0) / 10, 1) * 30;
+  const total = Math.round(ratingScore + commentScore + visitScore);
+  scoreCache[d.id] = {total, avgRating: avgRating.toFixed(1), commentCount, visits: d.visits||0};
+  return scoreCache[d.id];
 }
 
-function buildCelebTabs(){
-  var celebs = ["전체",...new Set(DATA.map(function(d){return d.celeb}))];
-  var container = document.getElementById("celebTabs");
-  container.innerHTML = "";
-  celebs.forEach(function(c){
-    var btn = document.createElement("button");
-    btn.className = "ctab"+(c==="전체"?" on":"");
-    btn.textContent = c;
-    btn.onclick = function(){setCeleb(this,c)};
-    container.appendChild(btn);
-  });
-}
-
-function filtered(){
-  return DATA.filter(function(d){
-    if(selCeleb!=="전체"&&d.celeb!==selCeleb) return false;
-    if(selCat!=="전체"&&d.cat!==selCat) return false;
-    if(searchQ){
-      if(d.celeb.indexOf(searchQ)<0&&d.name.indexOf(searchQ)<0&&
-         d.cat.indexOf(searchQ)<0&&d.comment.indexOf(searchQ)<0) return false;
-    }
+// ── 필터 ──────────────────────
+function filtered() {
+  return DATA.filter(d => {
+    if (selCeleb !== "전체" && d.celeb !== selCeleb) return false;
+    if (selCat !== "전체" && d.cat !== selCat) return false;
+    if (searchQ && d.celeb.indexOf(searchQ) < 0 && d.name.indexOf(searchQ) < 0 &&
+        d.cat.indexOf(searchQ) < 0 && d.comment.indexOf(searchQ) < 0) return false;
     return true;
   });
 }
 
-function render(){renderList();if(map)renderPins();}
-function setCeleb(el,name){
-  document.querySelectorAll(".ctab").forEach(function(b){b.classList.remove("on")});
-  el.classList.add("on"); selCeleb=name; render();
+// ── 리스트 렌더 ──────────────────────
+function renderList() {
+  const list = document.getElementById("restaurantList");
+  const items = filtered();
+  document.getElementById("listCount").textContent = items.length + "곳";
+  if (!items.length) { list.innerHTML = '<div class="empty"><i class="ti ti-mood-empty"></i>검색 결과가 없어요</div>'; return; }
+  list.innerHTML = items.map(d => {
+    const isSaved = savedList.includes(d.id);
+    return `<div class="card" id="card-${d.id}">
+      <div class="card-top">
+        <div class="card-icon">⭐</div>
+        <div class="card-info">
+          <div class="card-name">${d.name}</div>
+          <div class="card-meta">
+            <span class="badge">${d.celeb}</span>
+            <span class="meta-dot">·</span>
+            <span class="meta-sub">${d.cat}</span>
+            <span class="meta-dot">·</span>
+            <span class="meta-sub">${d.area}</span>
+          </div>
+        </div>
+      </div>
+      <div class="comment">"${d.comment}"</div>
+      <div class="rating-row">
+        <div class="stars" id="stars-${d.id}">
+          ${[1,2,3,4,5].map(i=>`<span class="star" onclick="rateRestaurant('${d.id}',${i})">★</span>`).join("")}
+        </div>
+        <span class="rating-count" id="rcount-${d.id}"></span>
+        <button class="save-btn ${isSaved?'saved':''}" onclick="toggleSave('${d.id}')" style="margin-left:auto">
+          <i class="ti ti-heart${isSaved?'-filled':''}"></i>${isSaved?'저장됨':'저장'}
+        </button>
+      </div>
+      <div class="card-foot">
+        ${d.yt?`<a class="yt-btn" href="${d.yt}" target="_blank"><i class="ti ti-brand-youtube"></i>영상</a>`:'<span style="font-size:12px;color:var(--text3)">영상 미등록</span>'}
+        <button class="map-btn" onclick="focusMap('${d.id}')"><i class="ti ti-map-pin"></i>지도</button>
+        <button class="map-btn" onclick="openModal('${d.id}')"><i class="ti ti-message"></i>댓글</button>
+      </div>
+    </div>`;
+  }).join("");
+  loadRatings(items);
 }
-function setCategory(el,cat){
-  document.querySelectorAll(".chip").forEach(function(b){b.classList.remove("on")});
-  el.classList.add("on"); selCat=cat; render();
+
+async function loadRatings(items) {
+  for (const d of items) {
+    const snap = await getDocs(collection(db, "restaurants", d.id, "comments"));
+    let total = 0, cnt = 0;
+    snap.forEach(c => { if(c.data().rating){total+=c.data().rating;cnt++;} });
+    const el = document.getElementById("rcount-" + d.id);
+    if (el) el.textContent = cnt > 0 ? `★ ${(total/cnt).toFixed(1)} (${cnt})` : "평점 없음";
+  }
 }
-function doSearch(q){searchQ=q.trim(); render();}
+
+// ── 평점 ──────────────────────
+window.rateRestaurant = function(id, rating) {
+  if (!currentUser) { showToast("로그인 후 평점을 남길 수 있어요!"); return; }
+  myRating = rating;
+  // 별 색상 업데이트
+  const stars = document.querySelectorAll(`#stars-${id} .star`);
+  stars.forEach((s,i) => s.classList.toggle("on", i < rating));
+  showToast(`댓글 작성 시 ${rating}점이 반영돼요!`);
+};
+
+// ── 저장 ──────────────────────
+window.toggleSave = async function(id) {
+  if (!currentUser) { showToast("로그인 후 저장할 수 있어요!"); return; }
+  const idx = savedList.indexOf(id);
+  if (idx >= 0) savedList.splice(idx, 1);
+  else savedList.push(id);
+  await setDoc(doc(db, "users", currentUser.uid), {saved: savedList}, {merge: true});
+  scoreCache = {};
+  renderList();
+  if (currentPage === "my") renderMyPage();
+  showToast(idx >= 0 ? "저장 취소됐어요" : "내 맛집에 저장됐어요! ❤️");
+};
+
+// ── 댓글 모달 ──────────────────────
+window.openModal = async function(id) {
+  currentModalId = id;
+  myRating = 0;
+  const d = DATA.find(x => x.id === id);
+  document.getElementById("modalTitle").textContent = `💬 ${d.name} 댓글`;
+  document.getElementById("modalOverlay").classList.add("show");
+  await loadComments(id);
+};
+
+window.closeModal = function(e) {
+  if (!e || e.target === document.getElementById("modalOverlay")) {
+    document.getElementById("modalOverlay").classList.remove("show");
+    currentModalId = null;
+    myRating = 0;
+  }
+};
+
+async function loadComments(id) {
+  const snap = await getDocs(query(collection(db, "restaurants", id, "comments"), orderBy("createdAt", "desc")));
+  const list = document.getElementById("commentList");
+  if (snap.empty) {
+    list.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:16px 0">첫 번째 댓글을 남겨보세요!</p>';
+  } else {
+    list.innerHTML = "";
+    snap.forEach(c => {
+      const data = c.data();
+      const div = document.createElement("div");
+      div.className = "comment-item";
+      div.innerHTML = `
+        <div class="comment-user">
+          <div class="comment-avatar">${data.photoURL ? `<img src="${data.photoURL}">` : data.displayName?.[0]||'?'}</div>
+          <span class="comment-name">${data.displayName||'익명'}</span>
+          <span class="comment-date">${data.createdAt?.toDate?.()?.toLocaleDateString('ko-KR')||''}</span>
+        </div>
+        ${data.rating ? `<div class="comment-stars">${'★'.repeat(data.rating)}${'☆'.repeat(5-data.rating)} ${data.rating}점</div>` : ''}
+        <div class="comment-text">${data.text}</div>`;
+      list.appendChild(div);
+    });
+  }
+
+  // 댓글 입력폼
+  const form = document.getElementById("commentFormInner");
+  if (currentUser) {
+    form.innerHTML = `
+      <textarea id="commentText" placeholder="이 맛집에 대한 솔직한 후기를 남겨주세요..."></textarea>
+      <div class="comment-form-bottom">
+        <div class="rating-input" id="modalStars">
+          ${[1,2,3,4,5].map(i=>`<span class="star" onclick="setModalRating(${i})">★</span>`).join("")}
+          <span style="font-size:12px;color:var(--text3);margin-left:4px" id="modalRatingText">평점 선택</span>
+        </div>
+        <button class="submit-comment" onclick="submitComment()">등록</button>
+      </div>`;
+  } else {
+    form.innerHTML = `<div class="no-login-msg"><i class="ti ti-lock" style="font-size:24px;display:block;margin-bottom:8px"></i>로그인 후 댓글을 남길 수 있어요<br><button class="login-btn" style="margin:10px auto 0;display:flex" onclick="loginWithGoogle()">구글 로그인</button></div>`;
+  }
+}
+
+window.setModalRating = function(r) {
+  myRating = r;
+  document.querySelectorAll("#modalStars .star").forEach((s,i) => s.classList.toggle("on", i < r));
+  document.getElementById("modalRatingText").textContent = r + "점";
+};
+
+window.submitComment = async function() {
+  const text = document.getElementById("commentText")?.value?.trim();
+  if (!text) { showToast("댓글 내용을 입력해주세요"); return; }
+  if (!myRating) { showToast("평점을 선택해주세요"); return; }
+  await addDoc(collection(db, "restaurants", currentModalId, "comments"), {
+    text, rating: myRating,
+    displayName: currentUser.displayName || "익명",
+    photoURL: currentUser.photoURL || "",
+    uid: currentUser.uid,
+    createdAt: serverTimestamp()
+  });
+  scoreCache = {};
+  showToast("댓글이 등록됐어요! 🎉");
+  await loadComments(currentModalId);
+  loadRatings(filtered());
+};
+
+// ── 카카오맵 ──────────────────────
+kakao.maps.load(function() {
+  const container = document.getElementById("kakao-map");
+  map = new kakao.maps.Map(container, {
+    center: new kakao.maps.LatLng(37.5550, 126.9700),
+    level: 8
+  });
+  map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+  renderPins();
+});
+
+function makeMarkerImage(color) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42"><path d="M18 0C8.06 0 0 8.06 0 18c0 12.75 18 24 18 24S36 30.75 36 18C36 8.06 27.94 0 18 0z" fill="${color}"/><text x="18" y="23" text-anchor="middle" font-size="16">⭐</text></svg>`;
+  return new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), new kakao.maps.Size(36,42), {offset: new kakao.maps.Point(18,42)});
+}
+
+function renderPins() {
+  markers.forEach(m => m.setMap(null));
+  overlays.forEach(o => o.setMap(null));
+  markers = []; overlays = [];
+  filtered().forEach(d => {
+    const pos = new kakao.maps.LatLng(d.lat, d.lng);
+    const marker = new kakao.maps.Marker({map, position: pos, image: makeMarkerImage(COLORS[d.celeb]||"#F59E0B"), title: d.name});
+    const overlay = new kakao.maps.CustomOverlay({
+      position: pos,
+      content: `<div class="custom-overlay"><div class="tt-name">${d.name}</div><div class="tt-who">⭐ ${d.celeb} 추천</div><div class="tt-comment">${d.comment}</div></div>`,
+      yAnchor: 2.2, zIndex: 3
+    });
+    kakao.maps.event.addListener(marker, 'mouseover', () => overlay.setMap(map));
+    kakao.maps.event.addListener(marker, 'mouseout', () => overlay.setMap(null));
+    kakao.maps.event.addListener(marker, 'click', () => { map.setCenter(pos); map.setLevel(4); openModal(d.id); });
+    markers.push(marker); overlays.push(overlay);
+  });
+}
+
+window.focusMap = function(id) {
+  const d = DATA.find(x => x.id === id);
+  if (!d || !map) return;
+  setPage('map', document.querySelector('.ptab'));
+  map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
+  map.setLevel(4);
+};
+
+// ── TOP 100 순위 ──────────────────────
+async function renderRankPage() {
+  const grid = document.getElementById("rankGrid");
+  grid.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px">순위 계산 중...</p>';
+  const scored = [];
+  for (const d of DATA) {
+    const s = await getScore(d);
+    scored.push({...d, ...s});
+  }
+  scored.sort((a,b) => b.total - a.total);
+  const top100 = scored.slice(0, 100);
+  grid.innerHTML = top100.map((d,i) => {
+    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+    return `<div class="rank-card" onclick="openModal('${d.id}')">
+      <div class="rank-badge ${rankClass}">${i+1}</div>
+      <div class="rank-info">
+        <div class="rank-name">${d.name}</div>
+        <div class="rank-meta">${d.celeb} · ${d.cat} · ${d.area}</div>
+        <div class="rank-score">
+          <span class="score-item">⭐ ${d.avgRating}점</span>
+          <span class="score-item">💬 ${d.commentCount}개</span>
+          <span class="score-item">🎬 ${d.visits}회</span>
+          <span style="margin-left:auto;font-weight:700;color:var(--gold)">${d.total}점</span>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+// ── 내 맛집 ──────────────────────
+function renderMyPage() {
+  const content = document.getElementById("myContent");
+  if (!currentUser) {
+    content.innerHTML = `<div class="my-empty"><i class="ti ti-heart"></i><p style="font-size:15px;font-weight:600;margin-bottom:8px">로그인이 필요해요</p><p style="font-size:13px;color:var(--text3)">로그인하면 좋아하는 맛집을 저장할 수 있어요</p><button class="login-btn" style="margin:16px auto 0;display:flex" onclick="loginWithGoogle()">구글 로그인</button></div>`;
+    return;
+  }
+  const myData = DATA.filter(d => savedList.includes(d.id));
+  if (!myData.length) {
+    content.innerHTML = `<div class="my-empty"><i class="ti ti-heart"></i><p style="font-size:15px;font-weight:600;margin-bottom:8px">저장한 맛집이 없어요</p><p style="font-size:13px;color:var(--text3)">맛집 카드의 ❤️ 저장 버튼을 눌러보세요</p></div>`;
+    return;
+  }
+  content.innerHTML = `<div style="max-width:800px;margin:0 auto"><h2 style="font-size:16px;font-weight:700;margin-bottom:14px">❤️ 내가 저장한 맛집 ${myData.length}곳</h2><div style="display:flex;flex-direction:column;gap:10px">${myData.map(d=>`
+    <div class="rank-card" onclick="openModal('${d.id}')">
+      <div class="card-icon">⭐</div>
+      <div class="rank-info">
+        <div class="rank-name">${d.name}</div>
+        <div class="rank-meta">${d.celeb} · ${d.cat} · ${d.area}</div>
+        <div class="rank-score"><span>${d.comment}</span></div>
+      </div>
+      <button class="save-btn saved" onclick="event.stopPropagation();toggleSave('${d.id}')"><i class="ti ti-heart-filled"></i></button>
+    </div>`).join("")}</div></div>`;
+}
+
+// ── 페이지 전환 ──────────────────────
+let currentPage = "map";
+window.setPage = function(page, el) {
+  currentPage = page;
+  document.querySelectorAll(".ptab").forEach(t => t.classList.remove("on"));
+  if (el) el.classList.add("on");
+  document.getElementById("sidebar").classList.toggle("hidden", page !== "map");
+  document.getElementById("mapArea").classList.toggle("hidden", page !== "map");
+  document.getElementById("rankPage").classList.toggle("hidden", page !== "rank");
+  document.getElementById("myPage").classList.toggle("hidden", page !== "my");
+  if (page === "rank") renderRankPage();
+  if (page === "my") renderMyPage();
+};
+
+// ── 필터 함수 ──────────────────────
+window.setCeleb = function(el, name) {
+  document.querySelectorAll(".ctab").forEach(b => b.classList.remove("on"));
+  el.classList.add("on"); selCeleb = name; render();
+};
+window.setCategory = function(el, cat) {
+  document.querySelectorAll(".chip").forEach(b => b.classList.remove("on"));
+  el.classList.add("on"); selCat = cat; render();
+};
+window.doSearch = function(q) { searchQ = q.trim(); render(); };
+
+function buildCelebTabs() {
+  const celebs = ["전체", ...new Set(DATA.map(d => d.celeb))];
+  const container = document.getElementById("celebTabs");
+  container.innerHTML = celebs.map(c =>
+    `<button class="ctab${c==="전체"?" on":""}" onclick="setCeleb(this,'${c}')">${c}</button>`
+  ).join("");
+}
+
+function render() { renderList(); if (map) renderPins(); }
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  document.getElementById("toastMsg").textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2500);
+}
+window.showToast = showToast;
+
+buildCelebTabs();
+render();
 </script>
 </body>
 </html>
