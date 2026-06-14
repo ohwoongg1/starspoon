@@ -811,7 +811,30 @@ window.setCategory = function(el, cat) {
   document.querySelectorAll(".chip").forEach(b => b.classList.remove("on"));
   el.classList.add("on"); selCat = cat; render();
 };
-window.doSearch = function(q) { searchQ = q.trim(); render(); };
+window.doSearch = function(q) { 
+  searchQ = q.trim(); 
+  render();
+  // 지역명 검색 시 지도 이동
+  if (q.trim() && map) {
+    const geocoder = new kakao.maps.services.Geocoder();
+    geocoder.addressSearch(q.trim(), function(result, status) {
+      if (status === kakao.maps.services.Status.OK) {
+        const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+        map.setCenter(coords);
+        map.setLevel(6);
+      }
+    });
+    // 키워드로도 검색 (구로구, 마포구 등)
+    const ps = new kakao.maps.services.Places();
+    ps.keywordSearch(q.trim(), function(result, status) {
+      if (status === kakao.maps.services.Status.OK && result[0]) {
+        const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+        map.setCenter(coords);
+        map.setLevel(7);
+      }
+    });
+  }
+};
 
 function buildCelebTabs() {
   const celebs = ["전체", ...new Set(DATA.map(d => d.celeb))];
