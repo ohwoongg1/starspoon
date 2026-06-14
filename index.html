@@ -224,7 +224,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </a>
   <div class="search-wrap">
     <i class="ti ti-search search-icon"></i>
-    <input type="text" id="mainSearch" placeholder="연예인 이름 또는 음식 검색  예: 성시경 국밥" oninput="doSearch(this.value)">
+    <input type="text" id="mainSearch" placeholder="연예인·음식·지역 검색  예: 중구, 성시경" oninput="doSearch(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value);this.blur()}">
   </div>
   <div class="header-right">
     <div id="authArea">
@@ -831,20 +831,22 @@ window.doSearch = function(q) {
   // 지역명 검색 시 지도 이동
   if (q.trim() && map) {
     const geocoder = new kakao.maps.services.Geocoder();
-    geocoder.addressSearch(q.trim(), function(result, status) {
+    geocoder.addressSearch(q.trim() + ' 서울', function(result, status) {
       if (status === kakao.maps.services.Status.OK) {
         const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
         map.setCenter(coords);
-        map.setLevel(6);
-      }
-    });
-    // 키워드로도 검색 (구로구, 마포구 등)
-    const ps = new kakao.maps.services.Places();
-    ps.keywordSearch(q.trim(), function(result, status) {
-      if (status === kakao.maps.services.Status.OK && result[0]) {
-        const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-        map.setCenter(coords);
         map.setLevel(7);
+        renderPins();
+      } else {
+        const ps = new kakao.maps.services.Places();
+        ps.keywordSearch(q.trim(), function(result2, status2) {
+          if (status2 === kakao.maps.services.Status.OK && result2[0]) {
+            const coords = new kakao.maps.LatLng(result2[0].y, result2[0].x);
+            map.setCenter(coords);
+            map.setLevel(7);
+            renderPins();
+          }
+        });
       }
     });
   }
