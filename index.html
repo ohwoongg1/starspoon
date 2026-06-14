@@ -343,19 +343,22 @@ let savedList = [];
 const COLORS = {"성시경":"#F59E0B","이영자":"#EF4444","백종원":"#3B82F6","나얼":"#8B5CF6","홍진경":"#10B981"};
 
 const DATA = [
-  {id:"r1",name:"우래옥",celeb:"성시경",cat:"냉면",area:"중구",comment:"평양냉면의 정석. 면발이 살아있고 육수가 깊어요.",yt:"",lat:37.5663,lng:126.9997,visits:8},
-  {id:"r2",name:"하동관",celeb:"성시경",cat:"국밥·탕",area:"중구",comment:"50년 넘은 곰탕집. 국물 한 모금에 세월이 느껴짐.",yt:"",lat:37.5658,lng:126.9823,visits:5},
-  {id:"r3",name:"진주집",celeb:"성시경",cat:"한식",area:"종로구",comment:"청국장이 진짜입니다. 서울 한복판에 이런 맛이.",yt:"",lat:37.5779,lng:126.9850,visits:3},
-  {id:"r4",name:"을지OB베어",celeb:"이영자",cat:"한식",area:"중구",comment:"안주도 훌륭하고 분위기가 옛날 감성 그대로예요.",yt:"",lat:37.5660,lng:126.9874,visits:4},
-  {id:"r5",name:"장충동왕족발",celeb:"이영자",cat:"한식",area:"중구",comment:"족발은 여기가 원조. 쫄깃함이 달라요.",yt:"",lat:37.5590,lng:127.0050,visits:6},
-  {id:"r6",name:"명동교자",celeb:"백종원",cat:"한식",area:"중구",comment:"칼국수 면이 특별해요. 이 가격에 이 퀄리티.",yt:"",lat:37.5635,lng:126.9856,visits:7},
-  {id:"r7",name:"삼청동수제비",celeb:"나얼",cat:"한식",area:"종로구",comment:"수제비 한 그릇에 감성까지 담겨있어요.",yt:"",lat:37.5823,lng:126.9810,visits:2},
-  {id:"r8",name:"봉피양",celeb:"나얼",cat:"냉면",area:"서초구",comment:"평양냉면 좋아하면 꼭 가봐야 할 곳.",yt:"",lat:37.5040,lng:127.0243,visits:3},
-  {id:"r9",name:"홍대양꼬치",celeb:"홍진경",cat:"고기",area:"마포구",comment:"양꼬치는 여기 와야 제대로 먹는 거예요.",yt:"",lat:37.5563,lng:126.9233,visits:4},
-  {id:"r10",name:"연남동카페그날",celeb:"홍진경",cat:"카페·디저트",area:"마포구",comment:"디저트가 예쁘고 맛도 있어요. 사진각도 완벽!",yt:"",lat:37.5602,lng:126.9246,visits:2},
-  {id:"r11",name:"광장시장마약김밥",celeb:"성시경",cat:"분식",area:"종로구",comment:"마약김밥 한 줄이면 점심 해결. 가성비 끝판왕.",yt:"",lat:37.5700,lng:126.9994,visits:9},
-  {id:"r12",name:"경리단갈비",celeb:"백종원",cat:"고기",area:"용산구",comment:"갈비 맛은 여기가 진짜. 숯불향이 달라요.",yt:"",lat:37.5346,lng:126.9947,visits:5},
+  {id:"r1",name:"우래옥",celebs:["성시경","나얼"],cat:"냉면",area:"중구",comment:"평양냉면의 정석. 면발이 살아있고 육수가 깊어요.",yt:"",lat:37.5663,lng:126.9997,visits:8},
+  {id:"r2",name:"하동관",celebs:["성시경"],cat:"국밥·탕",area:"중구",comment:"50년 넘은 곰탕집. 국물 한 모금에 세월이 느껴짐.",yt:"",lat:37.5658,lng:126.9823,visits:5},
+  {id:"r3",name:"진주집",celebs:["성시경"],cat:"한식",area:"종로구",comment:"청국장이 진짜입니다. 서울 한복판에 이런 맛이.",yt:"",lat:37.5779,lng:126.9850,visits:3},
+  {id:"r4",name:"을지OB베어",celebs:["이영자","백종원"],cat:"한식",area:"중구",comment:"안주도 훌륭하고 분위기가 옛날 감성 그대로예요.",yt:"",lat:37.5660,lng:126.9874,visits:4},
+  {id:"r5",name:"장충동왕족발",celebs:["이영자"],cat:"한식",area:"중구",comment:"족발은 여기가 원조. 쫄깃함이 달라요.",yt:"",lat:37.5590,lng:127.0050,visits:6},
+  {id:"r6",name:"명동교자",celebs:["백종원","성시경","홍진경"],cat:"한식",area:"중구",comment:"칼국수 면이 특별해요. 이 가격에 이 퀄리티.",yt:"",lat:37.5635,lng:126.9856,visits:7},
+  {id:"r7",name:"삼청동수제비",celebs:["나얼"],cat:"한식",area:"종로구",comment:"수제비 한 그릇에 감성까지 담겨있어요.",yt:"",lat:37.5823,lng:126.9810,visits:2},
+  {id:"r8",name:"봉피양",celebs:["나얼","성시경"],cat:"냉면",area:"서초구",comment:"평양냉면 좋아하면 꼭 가봐야 할 곳.",yt:"",lat:37.5040,lng:127.0243,visits:3},
+  {id:"r9",name:"홍대양꼬치",celebs:["홍진경"],cat:"고기",area:"마포구",comment:"양꼬치는 여기 와야 제대로 먹는 거예요.",yt:"",lat:37.5563,lng:126.9233,visits:4},
+  {id:"r10",name:"연남동카페그날",celebs:["홍진경"],cat:"카페·디저트",area:"마포구",comment:"디저트가 예쁘고 맛도 있어요. 사진각도 완벽!",yt:"",lat:37.5602,lng:126.9246,visits:2},
+  {id:"r11",name:"광장시장마약김밥",celebs:["성시경","이영자"],cat:"분식",area:"종로구",comment:"마약김밥 한 줄이면 점심 해결. 가성비 끝판왕.",yt:"",lat:37.5700,lng:126.9994,visits:9},
+  {id:"r12",name:"경리단갈비",celebs:["백종원"],cat:"고기",area:"용산구",comment:"갈비 맛은 여기가 진짜. 숯불향이 달라요.",yt:"",lat:37.5346,lng:126.9947,visits:5},
 ];
+
+// 하위 호환성: celeb 속성 자동 생성
+DATA.forEach(d => { if (!d.celeb) d.celeb = d.celebs[0]; });
 
 let scoreCache = {};
 
@@ -500,9 +503,9 @@ async function getScore(d) {
 
 function filtered() {
   return DATA.filter(d => {
-    if (selCeleb !== "전체" && d.celeb !== selCeleb) return false;
+    if (selCeleb !== "전체" && !d.celebs.includes(selCeleb)) return false;
     if (selCat !== "전체" && d.cat !== selCat) return false;
-    if (searchQ && d.celeb.indexOf(searchQ) < 0 && d.name.indexOf(searchQ) < 0 &&
+    if (searchQ && !d.celebs.some(c => c.includes(searchQ)) && d.name.indexOf(searchQ) < 0 &&
         d.cat.indexOf(searchQ) < 0 && d.comment.indexOf(searchQ) < 0) return false;
     return true;
   });
@@ -515,13 +518,15 @@ function renderList() {
   if (!items.length) { list.innerHTML = '<div class="empty"><i class="ti ti-mood-empty"></i>검색 결과가 없어요</div>'; return; }
   list.innerHTML = items.map(d => {
     const isSaved = savedList.includes(d.id);
+    const isMulti = d.celebs.length > 1;
+    const celebBadges = d.celebs.map(c => `<span class="badge" style="background:${COLORS[c]}22;color:${COLORS[c]}">${c}</span>`).join(" ");
     return `<div class="card" id="card-${d.id}">
       <div class="card-top">
-        <div class="card-icon">⭐</div>
+        <div class="card-icon" style="${isMulti ? 'background:linear-gradient(135deg,#FFD700,#F59E0B);font-size:22px' : ''}">${isMulti ? '👑' : '⭐'}</div>
         <div class="card-info">
-          <div class="card-name">${d.name}</div>
+          <div class="card-name">${d.name}${isMulti ? ' <span style="font-size:11px;color:#B45309;font-weight:700">스타 핫플 🔥</span>' : ''}</div>
           <div class="card-meta">
-            <span class="badge">${d.celeb}</span>
+            ${celebBadges}
             <span class="meta-dot">·</span>
             <span class="meta-sub">${d.cat}</span>
             <span class="meta-dot">·</span>
@@ -669,9 +674,11 @@ kakao.maps.load(function() {
   renderPins();
 });
 
-function makeMarkerImage(color) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42"><path d="M18 0C8.06 0 0 8.06 0 18c0 12.75 18 24 18 24S36 30.75 36 18C36 8.06 27.94 0 18 0z" fill="${color}"/><text x="18" y="23" text-anchor="middle" font-size="16">⭐</text></svg>`;
-  return new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), new kakao.maps.Size(36,42), {offset: new kakao.maps.Point(18,42)});
+function makeMarkerImage(color, isMulti) {
+  const icon = isMulti ? '👑' : '⭐';
+  const fillColor = isMulti ? '#FFD700' : color;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48"><path d="M20 0C9 0 0 9 0 20c0 14 20 28 20 28S40 34 40 20C40 9 31 0 20 0z" fill="${fillColor}" stroke="${isMulti?'#B8860B':'none'}" stroke-width="${isMulti?2:0}"/><text x="20" y="26" text-anchor="middle" font-size="${isMulti?18:16}">${icon}</text></svg>`;
+  return new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), new kakao.maps.Size(isMulti?40:36, isMulti?48:42), {offset: new kakao.maps.Point(isMulti?20:18, isMulti?48:42)});
 }
 
 function renderPins() {
@@ -679,11 +686,13 @@ function renderPins() {
   overlays.forEach(o => o.setMap(null));
   markers = []; overlays = [];
   filtered().forEach(d => {
+    const isMulti = d.celebs.length > 1;
     const pos = new kakao.maps.LatLng(d.lat, d.lng);
-    const marker = new kakao.maps.Marker({map, position: pos, image: makeMarkerImage(COLORS[d.celeb]||"#F59E0B"), title: d.name});
+    const marker = new kakao.maps.Marker({map, position: pos, image: makeMarkerImage(COLORS[d.celebs[0]]||"#F59E0B", isMulti), title: d.name});
+    const celebList = d.celebs.join(' · ');
     const overlay = new kakao.maps.CustomOverlay({
       position: pos,
-      content: `<div class="custom-overlay"><div class="tt-name">${d.name}</div><div class="tt-who">⭐ ${d.celeb} 추천</div><div class="tt-comment">${d.comment}</div></div>`,
+      content: `<div class="custom-overlay"><div class="tt-name">${isMulti?'👑 ':'⭐ '}${d.name}</div><div class="tt-who">${celebList} 추천</div><div class="tt-comment">${d.comment}</div></div>`,
       yAnchor: 2.2, zIndex: 3
     });
     kakao.maps.event.addListener(marker, 'mouseover', () => overlay.setMap(map));
@@ -773,10 +782,15 @@ window.setMobileView = function(view, el) {
   el.classList.add('on');
   if (view === 'map') {
     document.getElementById('sidebar').style.display = 'none';
-    document.getElementById('mapArea').style.display = 'block';
-    if (map) kakao.maps.event.trigger(map, 'resize');
+    document.getElementById('sidebar').classList.remove('hidden');
+    const mapArea = document.getElementById('mapArea');
+    mapArea.style.display = 'block';
+    mapArea.classList.remove('hidden');
+    setTimeout(() => { if (map) kakao.maps.event.trigger(map, 'resize'); }, 100);
   } else {
-    document.getElementById('sidebar').style.display = 'flex';
+    const sidebar = document.getElementById('sidebar');
+    sidebar.style.display = 'flex';
+    sidebar.classList.remove('hidden');
     document.getElementById('mapArea').style.display = 'none';
   }
 };
