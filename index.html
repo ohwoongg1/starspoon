@@ -301,40 +301,74 @@ window.loginWithGoogle = async function() {
   } catch(e) { showToast("구글 로그인 실패: " + e.message); }
 };
 
-// ── 카카오 로그인 ──
+// ── 카카오 로그인 (SDK 2.x authorize 방식) ──
 window.loginWithKakao = function() {
-  window.Kakao.Auth.login({
-    throughTalk: false,
-    success: async function(authObj) {
-      window.Kakao.API.request({
-        url: '/v2/user/me',
-        success: async function(res) {
-          const kakaoUser = {
-            uid: 'kakao_' + res.id,
-            displayName: res.kakao_account?.profile?.nickname || '카카오 사용자',
-            photoURL: res.kakao_account?.profile?.profile_image_url || '',
-            email: res.kakao_account?.email || '',
-            provider: 'kakao'
-          };
-          await setDoc(doc(db, "users", kakaoUser.uid), {
-            displayName: kakaoUser.displayName,
-            photoURL: kakaoUser.photoURL,
-            email: kakaoUser.email,
-            provider: 'kakao'
-          }, { merge: true });
-          currentUser = kakaoUser;
-          const snap = await getDoc(doc(db, "users", kakaoUser.uid));
-          savedList = snap.exists() ? (snap.data().saved || []) : [];
-          renderAuthArea();
-          renderList();
-          showToast("카카오 로그인 성공! 환영해요 😊");
-        },
-        fail: function(e) { showToast("카카오 정보 오류: " + JSON.stringify(e)); }
-      });
-    },
-    fail: function(e) { showToast("카카오 로그인 실패: " + JSON.stringify(e)); }
+  window.Kakao.Auth.authorize({
+    redirectUri: window.location.origin
   });
 };
+
+// 페이지 로드 시 카카오 토큰 처리
+async function initKakaoLogin() {
+  try {
+    // URL에서 code 파라미터 확인 (리다이렉트 후)
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      // 코드를 토큰으로 교환 (카카오 토큰 엔드포인트)
+      const res = await fetch('https://kauth.kakao.com/oauth/token', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          client_id: '25b433faf5d746c938cbcc7658f650b0',
+          redirect_uri: window.location.origin,
+          code: code
+        })
+      });
+      const tokenData = await res.json();
+      if (tokenData.access_token) {
+        window.Kakao.Auth.setAccessToken(tokenData.access_token);
+        await fetchKakaoUser();
+        // URL에서 code 파라미터 제거
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    } else if (window.Kakao.Auth.getAccessToken()) {
+      await fetchKakaoUser();
+    }
+  } catch(e) {}
+}
+
+async function fetchKakaoUser() {
+  return new Promise((resolve) => {
+    window.Kakao.API.request({
+      url: '/v2/user/me',
+      success: async function(res) {
+        const kakaoUser = {
+          uid: 'kakao_' + res.id,
+          displayName: res.kakao_account?.profile?.nickname || '카카오 사용자',
+          photoURL: res.kakao_account?.profile?.profile_image_url || '',
+          email: res.kakao_account?.email || '',
+          provider: 'kakao'
+        };
+        await setDoc(doc(db, "users", kakaoUser.uid), {
+          displayName: kakaoUser.displayName,
+          photoURL: kakaoUser.photoURL,
+          email: kakaoUser.email,
+          provider: 'kakao'
+        }, { merge: true });
+        currentUser = kakaoUser;
+        const snap = await getDoc(doc(db, "users", kakaoUser.uid));
+        savedList = snap.exists() ? (snap.data().saved || []) : [];
+        renderAuthArea();
+        renderList();
+        showToast("카카오 로그인 성공! 환영해요 😊");
+        resolve();
+      },
+      fail: function(e) { resolve(); }
+    });
+  });
+}
 
 window.logoutUser = async function() {
   if (currentUser?.provider === 'kakao') {
@@ -706,6 +740,7 @@ window.showToast = showToast;
 
 buildCelebTabs();
 render();
+initKakaoLogin();
 </script>
 </body>
 </html>
