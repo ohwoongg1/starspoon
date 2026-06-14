@@ -342,7 +342,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, query, orderBy, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC5nf84GbQQ_5vIDwhIvTZ5zPqf7nrnSxU",
@@ -663,12 +663,18 @@ window.closeModal = function(e) {
 async function loadComments(id) {
   const snap = await getDocs(query(collection(db, "restaurants", id, "comments"), orderBy("createdAt", "desc")));
   const list = document.getElementById("commentList");
+  const ADMIN_UID = "관리자UID"; // 관리자 UID
+
   if (snap.empty) {
     list.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:16px 0">첫 번째 댓글을 남겨보세요!</p>';
   } else {
     list.innerHTML = "";
     snap.forEach(c => {
       const data = c.data();
+      const isMyComment = currentUser && data.uid === currentUser.uid;
+      const isAdmin = currentUser && (currentUser.email === 'ohwoongg1@gmail.com' || currentUser.uid === ADMIN_UID);
+      const canDelete = isMyComment || isAdmin;
+
       const div = document.createElement("div");
       div.className = "comment-item";
       div.innerHTML = `
@@ -676,6 +682,7 @@ async function loadComments(id) {
           <div class="comment-avatar">${data.photoURL ? `<img src="${data.photoURL}">` : data.displayName?.[0]||'?'}</div>
           <span class="comment-name">${data.displayName||'익명'}</span>
           <span class="comment-date">${data.updatedAt ? '수정됨 ' : ''}${(data.updatedAt||data.createdAt)?.toDate?.()?.toLocaleDateString('ko-KR')||''}</span>
+          ${canDelete ? `<button onclick="deleteComment('${id}','${c.id}')" style="margin-left:6px;background:none;border:none;color:#EF4444;cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;border:1px solid #EF444433" title="삭제">🗑️</button>` : ''}
         </div>
         ${data.rating ? `<div class="comment-stars">${'★'.repeat(data.rating)}${'☆'.repeat(5-data.rating)} ${data.rating}점</div>` : ''}
         <div class="comment-text">${data.text}</div>`;
@@ -715,6 +722,15 @@ window.setModalRating = function(r) {
   myRating = r;
   document.querySelectorAll("#modalStars .star").forEach((s,i) => s.classList.toggle("on", i < r));
   document.getElementById("modalRatingText").textContent = r + "점";
+};
+
+window.deleteComment = async function(restaurantId, commentId) {
+  if (!confirm("댓글을 삭제할까요?")) return;
+  await deleteDoc(doc(db, "restaurants", restaurantId, "comments", commentId));
+  scoreCache = {};
+  showToast("댓글이 삭제됐어요");
+  await loadComments(restaurantId);
+  loadRatings(filtered());
 };
 
 window.submitComment = async function() {
