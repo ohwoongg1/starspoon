@@ -154,6 +154,65 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .toast.show{display:flex}
 .map-area.hidden{display:none}
 .sidebar.hidden{display:none}
+
+/* 모바일 최적화 */
+@media (max-width: 768px) {
+  .header{padding:0 12px;height:52px;gap:8px}
+  .logo-text{font-size:15px}
+  .search-wrap{max-width:none}
+  .search-wrap input{height:34px;font-size:13px;padding:0 10px 0 34px}
+  .hbtn{display:none}
+  .login-btn-google{padding:5px 8px;font-size:12px}
+  .login-btn-kakao{padding:5px 8px;font-size:12px}
+  .user-info span{display:none}
+  .logout-btn{padding:4px 8px;font-size:11px}
+
+  .filter-bar{padding:8px 12px}
+  .chip{padding:4px 12px;font-size:12px}
+  .page-tabs{padding:0 12px}
+  .ptab{padding:10px 12px;font-size:13px}
+
+  .main{flex-direction:column;height:calc(100vh - 130px);position:relative}
+  .sidebar{width:100%;height:100%;border-right:none;flex:1}
+  .map-area{width:100%;height:100%;flex:1}
+
+  .rank-page{padding:12px}
+  .rank-grid{grid-template-columns:1fr}
+  .my-page{padding:12px}
+  .modal{max-width:95vw;max-height:88vh}
+  .card{padding:12px}
+  .celeb-tabs{padding:10px 12px}
+}
+
+/* 모바일 지도/리스트 전환 버튼 */
+.mobile-toggle{display:none}
+@media (max-width: 768px) {
+  .mobile-toggle{
+    display:flex;
+    position:fixed;
+    bottom:20px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:150;
+    background:#1C1C1A;
+    border-radius:24px;
+    padding:4px;
+    gap:4px;
+    box-shadow:0 4px 16px rgba(0,0,0,0.3)
+  }
+  .mobile-toggle button{
+    border:none;
+    border-radius:20px;
+    padding:9px 22px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    background:none;
+    color:#fff;
+    transition:all .15s
+  }
+  .mobile-toggle button.on{background:#fff;color:#1C1C1A}
+}
 </style>
 </head>
 <body>
@@ -213,6 +272,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <div class="map-area" id="mapArea">
     <div id="kakao-map"></div>
+  </div>
+
+  <!-- 모바일 지도/리스트 전환 버튼 -->
+  <div class="mobile-toggle" id="mobileToggle">
+    <button class="on" onclick="setMobileView('list',this)">📋 리스트</button>
+    <button onclick="setMobileView('map',this)">🗺 지도</button>
   </div>
 
   <div class="rank-page hidden" id="rankPage">
@@ -699,6 +764,30 @@ window.setPage = function(page, el) {
   if (page === "rank") renderRankPage();
   if (page === "my") renderMyPage();
 };
+
+// 모바일 지도/리스트 전환
+window.setMobileView = function(view, el) {
+  const isMobile = window.innerWidth <= 768;
+  if (!isMobile) return;
+  document.querySelectorAll('.mobile-toggle button').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  if (view === 'map') {
+    document.getElementById('sidebar').style.display = 'none';
+    document.getElementById('mapArea').style.display = 'block';
+    if (map) kakao.maps.event.trigger(map, 'resize');
+  } else {
+    document.getElementById('sidebar').style.display = 'flex';
+    document.getElementById('mapArea').style.display = 'none';
+  }
+};
+
+// 화면 크기 변경 시 처리
+window.addEventListener('resize', function() {
+  if (window.innerWidth > 768) {
+    document.getElementById('sidebar').style.display = '';
+    document.getElementById('mapArea').style.display = '';
+  }
+});
 
 window.setCeleb = function(el, name) {
   document.querySelectorAll(".ctab").forEach(b => b.classList.remove("on"));
