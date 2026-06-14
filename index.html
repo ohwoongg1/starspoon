@@ -342,23 +342,42 @@ let savedList = [];
 
 const COLORS = {"성시경":"#F59E0B","이영자":"#EF4444","백종원":"#3B82F6","나얼":"#8B5CF6","홍진경":"#10B981"};
 
-const DATA = [
-  {id:"r1",name:"우래옥",celebs:["성시경","나얼"],cat:"냉면",area:"중구",comment:"평양냉면의 정석. 면발이 살아있고 육수가 깊어요.",yt:"",lat:37.5663,lng:126.9997,visits:8},
-  {id:"r2",name:"하동관",celebs:["성시경"],cat:"국밥·탕",area:"중구",comment:"50년 넘은 곰탕집. 국물 한 모금에 세월이 느껴짐.",yt:"",lat:37.5658,lng:126.9823,visits:5},
-  {id:"r3",name:"진주집",celebs:["성시경"],cat:"한식",area:"종로구",comment:"청국장이 진짜입니다. 서울 한복판에 이런 맛이.",yt:"",lat:37.5779,lng:126.9850,visits:3},
-  {id:"r4",name:"을지OB베어",celebs:["이영자","백종원"],cat:"한식",area:"중구",comment:"안주도 훌륭하고 분위기가 옛날 감성 그대로예요.",yt:"",lat:37.5660,lng:126.9874,visits:4},
-  {id:"r5",name:"장충동왕족발",celebs:["이영자"],cat:"한식",area:"중구",comment:"족발은 여기가 원조. 쫄깃함이 달라요.",yt:"",lat:37.5590,lng:127.0050,visits:6},
-  {id:"r6",name:"명동교자",celebs:["백종원","성시경","홍진경"],cat:"한식",area:"중구",comment:"칼국수 면이 특별해요. 이 가격에 이 퀄리티.",yt:"",lat:37.5635,lng:126.9856,visits:7},
-  {id:"r7",name:"삼청동수제비",celebs:["나얼"],cat:"한식",area:"종로구",comment:"수제비 한 그릇에 감성까지 담겨있어요.",yt:"",lat:37.5823,lng:126.9810,visits:2},
-  {id:"r8",name:"봉피양",celebs:["나얼","성시경"],cat:"냉면",area:"서초구",comment:"평양냉면 좋아하면 꼭 가봐야 할 곳.",yt:"",lat:37.5040,lng:127.0243,visits:3},
-  {id:"r9",name:"홍대양꼬치",celebs:["홍진경"],cat:"고기",area:"마포구",comment:"양꼬치는 여기 와야 제대로 먹는 거예요.",yt:"",lat:37.5563,lng:126.9233,visits:4},
-  {id:"r10",name:"연남동카페그날",celebs:["홍진경"],cat:"카페·디저트",area:"마포구",comment:"디저트가 예쁘고 맛도 있어요. 사진각도 완벽!",yt:"",lat:37.5602,lng:126.9246,visits:2},
-  {id:"r11",name:"광장시장마약김밥",celebs:["성시경","이영자"],cat:"분식",area:"종로구",comment:"마약김밥 한 줄이면 점심 해결. 가성비 끝판왕.",yt:"",lat:37.5700,lng:126.9994,visits:9},
-  {id:"r12",name:"경리단갈비",celebs:["백종원"],cat:"고기",area:"용산구",comment:"갈비 맛은 여기가 진짜. 숯불향이 달라요.",yt:"",lat:37.5346,lng:126.9947,visits:5},
-];
+let DATA = [];
 
-// 하위 호환성: celeb 속성 자동 생성
-DATA.forEach(d => { if (!d.celeb) d.celeb = d.celebs[0]; });
+// Firebase에서 맛집 데이터 불러오기
+async function loadRestaurantsFromDB() {
+  try {
+    const snap = await getDocs(collection(db, "restaurants"));
+    DATA = [];
+    snap.forEach(doc => {
+      const d = doc.data();
+      DATA.push({
+        id: doc.id,
+        name: d.name || '',
+        celebs: d.celebs || [d.celeb || ''],
+        celeb: d.celeb || (d.celebs && d.celebs[0]) || '',
+        cat: d.category || d.cat || '한식',
+        area: d.area || '',
+        comment: d.comment || '',
+        yt: d.video_url || d.yt || '',
+        lat: d.lat || 37.5665,
+        lng: d.lng || 126.9780,
+        visits: d.visits || 0,
+      });
+    });
+    DATA.forEach(d => { if (!d.celeb) d.celeb = d.celebs[0]; });
+    render();
+    showToast(`맛집 ${DATA.length}개 불러왔어요! 🍽️`);
+  } catch(e) {
+    console.log('DB 로드 오류:', e);
+    // 오류 시 기본 샘플 데이터
+    DATA = [
+      {id:"r1",name:"우래옥",celebs:["성시경","나얼"],celeb:"성시경",cat:"냉면",area:"중구",comment:"평양냉면의 정석.",yt:"",lat:37.5663,lng:126.9997,visits:8},
+    ];
+    DATA.forEach(d => { if (!d.celeb) d.celeb = d.celebs[0]; });
+    render();
+  }
+}
 
 let scoreCache = {};
 
@@ -879,7 +898,7 @@ function showToast(msg) {
 window.showToast = showToast;
 
 buildCelebTabs();
-render();
+loadRestaurantsFromDB();
 initKakaoLogin();
 </script>
 </body>
