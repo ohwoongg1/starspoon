@@ -819,11 +819,19 @@ window.addEventListener('resize', function() {
 
 window.setCeleb = function(el, name) {
   document.querySelectorAll(".ctab").forEach(b => b.classList.remove("on"));
-  el.classList.add("on"); selCeleb = name; render();
+  el.classList.add("on"); selCeleb = name;
+  // 검색어 초기화
+  searchQ = "";
+  document.getElementById("mainSearch").value = "";
+  render();
 };
 window.setCategory = function(el, cat) {
   document.querySelectorAll(".chip").forEach(b => b.classList.remove("on"));
-  el.classList.add("on"); selCat = cat; render();
+  el.classList.add("on"); selCat = cat;
+  // 검색어 초기화
+  searchQ = "";
+  document.getElementById("mainSearch").value = "";
+  render();
 };
 window.doSearch = function(q) { 
   searchQ = q.trim(); 
