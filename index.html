@@ -151,6 +151,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .custom-overlay .tt-comment{font-size:12px;color:#6B6B67;line-height:1.45}
 
 .toast{position:fixed;bottom:22px;right:22px;background:#1C1C1A;color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;box-shadow:0 6px 16px rgba(0,0,0,0.2)}
+
+.place-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;transition:box-shadow .15s}
+.place-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+.place-icon{width:40px;height:40px;background:var(--bg2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.place-info{flex:1;min-width:0}
+.place-name{font-weight:600;font-size:15px;margin-bottom:3px}
+.place-cat{font-size:12px;color:var(--gold);font-weight:600;margin-bottom:2px}
+.place-addr{font-size:12px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.place-btns{display:flex;gap:6px}
+.place-map-btn{font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;background:none;cursor:pointer}
+.place-save-btn{font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;background:none;cursor:pointer}
+.place-save-btn.saved{color:var(--gold);border-color:var(--gold);background:rgba(245,158,11,0.08)}
 .toast.show{display:flex}
 .map-area.hidden{display:none}
 .sidebar.hidden{display:none}
@@ -255,7 +267,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <div class="page-tabs">
-  <div class="ptab on" onclick="setPage('map',this)">🗺 지도</div>
+  <div class="ptab on" onclick="setPage('map',this)">🗺 스타 맛집</div>
+  <div class="ptab" onclick="setPage('search',this)">🔍 일반 검색</div>
   <div class="ptab" onclick="setPage('rank',this)">🏆 TOP 100</div>
   <div class="ptab" onclick="setPage('my',this)">❤️ 내 맛집</div>
 </div>
@@ -278,6 +291,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="mobile-toggle" id="mobileToggle">
     <button class="on" onclick="setMobileView('list',this)">📋 리스트</button>
     <button onclick="setMobileView('map',this)">🗺 지도</button>
+  </div>
+
+  <!-- 일반 맛집 검색 페이지 -->
+  <div class="rank-page hidden" id="searchPage">
+    <div style="max-width:800px;margin:0 auto">
+      <h2 style="font-size:18px;font-weight:700;margin-bottom:6px">🔍 일반 맛집 검색</h2>
+      <p style="font-size:13px;color:var(--text3);margin-bottom:16px">카카오맵에서 전국 음식점을 검색하고 내 맛집으로 저장하세요</p>
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <input id="placeSearch" type="text" placeholder="예: 강남 삼겹살, 홍대 파스타, 부산 국밥..."
+          style="flex:1;height:42px;border-radius:10px;border:1.5px solid var(--border2);padding:0 14px;font-size:14px;outline:none"
+          onkeydown="if(event.key==='Enter')searchPlaces()"
+          onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
+        <button onclick="searchPlaces()" style="height:42px;padding:0 20px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">검색</button>
+      </div>
+      <div id="placeResults"></div>
+    </div>
   </div>
 
   <div class="rank-page hidden" id="rankPage">
@@ -441,6 +470,7 @@ async function fetchKakaoUser() {
     currentUser = kakaoUser;
     const snap = await getDoc(doc(db, "users", kakaoUser.uid));
     savedList = snap.exists() ? (snap.data().saved || []) : [];
+    savedPlaces = snap.exists() ? (snap.data().savedPlaces || []) : [];
     renderAuthArea();
     renderList();
     showToast("카카오 로그인 성공! 환영해요 😊");
@@ -469,12 +499,14 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const snap = await getDoc(doc(db, "users", user.uid));
     savedList = snap.exists() ? (snap.data().saved || []) : [];
+    savedPlaces = snap.exists() ? (snap.data().savedPlaces || []) : [];
     renderAuthArea();
     renderList();
     if (map) renderPins();
   } else if (!currentUser?.provider) {
     currentUser = null;
     savedList = [];
+    savedPlaces = [];
     renderAuthArea();
     renderList();
     if (map) renderPins();
@@ -777,21 +809,52 @@ function renderMyPage() {
     content.innerHTML = `<div class="my-empty"><i class="ti ti-heart"></i><p style="font-size:15px;font-weight:600;margin-bottom:8px">로그인이 필요해요</p><div class="login-options" style="margin-top:16px"><button class="login-btn-google" onclick="loginWithGoogle()"><i class="ti ti-brand-google"></i> 구글</button><button class="login-btn-kakao" onclick="loginWithKakao()">🟡 카카오</button></div></div>`;
     return;
   }
-  const myData = DATA.filter(d => savedList.includes(d.id));
-  if (!myData.length) {
-    content.innerHTML = `<div class="my-empty"><i class="ti ti-heart"></i><p style="font-size:15px;font-weight:600;margin-bottom:8px">저장한 맛집이 없어요</p><p style="font-size:13px;color:var(--text3)">맛집 카드의 ❤️ 저장 버튼을 눌러보세요</p></div>`;
+  const myStarData = DATA.filter(d => savedList.includes(d.id));
+  const myPlaceData = savedPlaces || [];
+  const total = myStarData.length + myPlaceData.length;
+
+  if (!total) {
+    content.innerHTML = `<div class="my-empty"><i class="ti ti-heart"></i><p style="font-size:15px;font-weight:600;margin-bottom:8px">저장한 맛집이 없어요</p><p style="font-size:13px;color:var(--text3)">스타 맛집의 ❤️ 저장 버튼 또는 일반 검색에서 저장해보세요</p></div>`;
     return;
   }
-  content.innerHTML = `<div style="max-width:800px;margin:0 auto"><h2 style="font-size:16px;font-weight:700;margin-bottom:14px">❤️ 내가 저장한 맛집 ${myData.length}곳</h2><div style="display:flex;flex-direction:column;gap:10px">${myData.map(d=>`
-    <div class="rank-card" onclick="openModal('${d.id}')">
-      <div class="card-icon">⭐</div>
-      <div class="rank-info">
-        <div class="rank-name">${d.name}</div>
-        <div class="rank-meta">${d.celeb} · ${d.cat} · ${d.area}</div>
-        <div class="rank-score"><span>${d.comment}</span></div>
-      </div>
-      <button class="save-btn saved" onclick="event.stopPropagation();toggleSave('${d.id}')"><i class="ti ti-heart-filled"></i></button>
-    </div>`).join("")}</div></div>`;
+
+  const starSection = myStarData.length ? `
+    <h3 style="font-size:14px;font-weight:700;color:var(--gold);margin:0 0 10px">⭐ 스타 맛집 ${myStarData.length}곳</h3>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      ${myStarData.map(d=>`
+      <div class="rank-card" onclick="openModal('${d.id}')">
+        <div class="card-icon">⭐</div>
+        <div class="rank-info">
+          <div class="rank-name">${d.name}</div>
+          <div class="rank-meta">${d.celeb} · ${d.cat} · ${d.area}</div>
+          <div class="rank-score"><span>${d.comment}</span></div>
+        </div>
+        <button class="save-btn saved" onclick="event.stopPropagation();toggleSave('${d.id}')"><i class="ti ti-heart-filled"></i></button>
+      </div>`).join("")}
+    </div>` : '';
+
+  const placeSection = myPlaceData.length ? `
+    <h3 style="font-size:14px;font-weight:700;color:#3B82F6;margin:0 0 10px">🔍 내가 찾은 맛집 ${myPlaceData.length}곳</h3>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${myPlaceData.map(p=>`
+      <div class="rank-card">
+        <div class="card-icon">🍽️</div>
+        <div class="rank-info">
+          <div class="rank-name">${p.name}</div>
+          <div class="rank-meta">${p.category} · ${p.address}</div>
+          <div class="rank-score" style="gap:8px">
+            <button class="place-map-btn" onclick="focusPlaceOnMapFromSaved(${p.lat},${p.lng})">🗺 지도</button>
+            ${p.url ? `<a href="${p.url}" target="_blank" style="font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;text-decoration:none">카카오맵</a>` : ''}
+          </div>
+        </div>
+        <button class="save-btn saved" onclick="removePlaceSave('${p.id}')"><i class="ti ti-heart-filled"></i></button>
+      </div>`).join("")}
+    </div>` : '';
+
+  content.innerHTML = `<div style="max-width:800px;margin:0 auto">
+    <h2 style="font-size:16px;font-weight:700;margin-bottom:16px">❤️ 내 맛집 ${total}곳</h2>
+    ${starSection}${placeSection}
+  </div>`;
 }
 
 let currentPage = "map";
@@ -801,10 +864,12 @@ window.setPage = function(page, el) {
   if (el) el.classList.add("on");
   document.getElementById("sidebar").classList.toggle("hidden", page !== "map");
   document.getElementById("mapArea").classList.toggle("hidden", page !== "map");
+  document.getElementById("searchPage").classList.toggle("hidden", page !== "search");
   document.getElementById("rankPage").classList.toggle("hidden", page !== "rank");
   document.getElementById("myPage").classList.toggle("hidden", page !== "my");
   if (page === "rank") renderRankPage();
   if (page === "my") renderMyPage();
+  if (page === "search") document.getElementById("placeSearch")?.focus();
 };
 
 // 모바일 지도/리스트 전환
@@ -896,6 +961,126 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove("show"), 2500);
 }
 window.showToast = showToast;
+
+window.focusPlaceOnMapFromSaved = function(lat, lng) {
+  if (!map) return;
+  setPage('map', document.querySelector('.ptab'));
+  setTimeout(() => {
+    map.setCenter(new kakao.maps.LatLng(lat, lng));
+    map.setLevel(4);
+  }, 150);
+};
+
+window.removePlaceSave = async function(placeId) {
+  if (!currentUser) return;
+  savedPlaces = savedPlaces.filter(p => p.id !== placeId);
+  await setDoc(doc(db, "users", currentUser.uid), { savedPlaces }, { merge: true });
+  showToast("저장 취소됐어요");
+  renderMyPage();
+};
+
+// ── 일반 맛집 검색 (카카오맵 Places API) ──
+let placeResults = [];
+let savedPlaces = []; // Firebase users/{uid}/savedPlaces
+
+window.searchPlaces = function() {
+  const keyword = document.getElementById("placeSearch").value.trim();
+  if (!keyword) { showToast("검색어를 입력해주세요"); return; }
+  const resultsDiv = document.getElementById("placeResults");
+  resultsDiv.innerHTML = '<p style="text-align:center;color:var(--text3);padding:30px">검색 중...</p>';
+
+  const ps = new kakao.maps.services.Places();
+  ps.keywordSearch(keyword, function(data, status) {
+    if (status !== kakao.maps.services.Status.OK) {
+      resultsDiv.innerHTML = '<p style="text-align:center;color:var(--text3);padding:30px">검색 결과가 없어요</p>';
+      return;
+    }
+    placeResults = data;
+    renderPlaceResults();
+  }, { size: 15 });
+};
+
+function renderPlaceResults() {
+  const resultsDiv = document.getElementById("placeResults");
+  if (!placeResults.length) {
+    resultsDiv.innerHTML = '<p style="text-align:center;color:var(--text3);padding:30px">검색 결과가 없어요</p>';
+    return;
+  }
+  const catIcon = (cat) => {
+    if (cat.includes("한식")) return "🍚";
+    if (cat.includes("일식")) return "🍣";
+    if (cat.includes("중식")) return "🍜";
+    if (cat.includes("양식")) return "🍝";
+    if (cat.includes("카페") || cat.includes("디저트")) return "☕";
+    if (cat.includes("치킨")) return "🍗";
+    if (cat.includes("피자") || cat.includes("버거")) return "🍔";
+    return "🍽️";
+  };
+  resultsDiv.innerHTML = `
+    <p style="font-size:13px;color:var(--text3);margin-bottom:12px">${placeResults.length}개 결과</p>
+    ${placeResults.map((p, i) => {
+      const isSaved = savedPlaces.some(s => s.id === p.id);
+      return `<div class="place-card" id="pcard-${p.id}">
+        <div class="place-icon">${catIcon(p.category_name)}</div>
+        <div class="place-info">
+          <div class="place-name">${p.place_name}</div>
+          <div class="place-cat">${p.category_name.split(">").pop().trim()}</div>
+          <div class="place-addr">${p.road_address_name || p.address_name}</div>
+          <div class="place-btns">
+            <button class="place-map-btn" onclick="focusPlaceOnMap(${i})">🗺 지도보기</button>
+            <button class="place-save-btn ${isSaved?'saved':''}" id="psave-${p.id}" onclick="togglePlaceSave('${p.id}', ${i})">
+              ${isSaved ? '❤️ 저장됨' : '🤍 저장'}
+            </button>
+            ${p.place_url ? `<a href="${p.place_url}" target="_blank" style="font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;text-decoration:none">카카오맵</a>` : ''}
+          </div>
+        </div>
+      </div>`;
+    }).join("")}`;
+}
+
+window.focusPlaceOnMap = function(idx) {
+  const p = placeResults[idx];
+  if (!p || !map) return;
+  setPage('map', document.querySelector('.ptab'));
+  setTimeout(() => {
+    map.setCenter(new kakao.maps.LatLng(p.y, p.x));
+    map.setLevel(4);
+  }, 150);
+};
+
+window.togglePlaceSave = async function(placeId, idx) {
+  if (!currentUser) { showToast("로그인 후 저장할 수 있어요!"); return; }
+  const p = placeResults[idx];
+  const uid = currentUser.uid;
+  const alreadySaved = savedPlaces.findIndex(s => s.id === placeId);
+
+  if (alreadySaved >= 0) {
+    savedPlaces.splice(alreadySaved, 1);
+    showToast("저장 취소됐어요");
+  } else {
+    savedPlaces.push({
+      id: p.id,
+      name: p.place_name,
+      category: p.category_name.split(">").pop().trim(),
+      address: p.road_address_name || p.address_name,
+      url: p.place_url || "",
+      lat: parseFloat(p.y),
+      lng: parseFloat(p.x),
+      savedAt: new Date().toISOString()
+    });
+    showToast("내 맛집에 저장됐어요! ❤️");
+  }
+
+  await setDoc(doc(db, "users", uid), { savedPlaces }, { merge: true });
+  renderPlaceResults();
+  if (currentPage === "my") renderMyPage();
+};
+
+async function loadSavedPlaces() {
+  if (!currentUser) { savedPlaces = []; return; }
+  const snap = await getDoc(doc(db, "users", currentUser.uid));
+  savedPlaces = snap.exists() ? (snap.data().savedPlaces || []) : [];
+}
 
 buildCelebTabs();
 loadRestaurantsFromDB();
