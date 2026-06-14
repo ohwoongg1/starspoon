@@ -304,8 +304,8 @@ window.loginWithGoogle = async function() {
 // ── 카카오 로그인 ──
 window.loginWithKakao = function() {
   window.Kakao.Auth.login({
+    throughTalk: false,
     success: async function(authObj) {
-      // 카카오 사용자 정보 가져오기
       window.Kakao.API.request({
         url: '/v2/user/me',
         success: async function(res) {
@@ -316,14 +316,12 @@ window.loginWithKakao = function() {
             email: res.kakao_account?.email || '',
             provider: 'kakao'
           };
-          // Firestore에 사용자 저장
           await setDoc(doc(db, "users", kakaoUser.uid), {
             displayName: kakaoUser.displayName,
             photoURL: kakaoUser.photoURL,
             email: kakaoUser.email,
             provider: 'kakao'
           }, { merge: true });
-          // 전역 currentUser 설정 (Firebase Auth 우회)
           currentUser = kakaoUser;
           const snap = await getDoc(doc(db, "users", kakaoUser.uid));
           savedList = snap.exists() ? (snap.data().saved || []) : [];
@@ -331,10 +329,10 @@ window.loginWithKakao = function() {
           renderList();
           showToast("카카오 로그인 성공! 환영해요 😊");
         },
-        fail: function(e) { showToast("카카오 사용자 정보 오류"); }
+        fail: function(e) { showToast("카카오 정보 오류: " + JSON.stringify(e)); }
       });
     },
-    fail: function(e) { showToast("카카오 로그인 실패"); }
+    fail: function(e) { showToast("카카오 로그인 실패: " + JSON.stringify(e)); }
   });
 };
 
