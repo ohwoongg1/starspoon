@@ -505,8 +505,15 @@ function filtered() {
   return DATA.filter(d => {
     if (selCeleb !== "전체" && !d.celebs.includes(selCeleb)) return false;
     if (selCat !== "전체" && d.cat !== selCat) return false;
-    if (searchQ && !d.celebs.some(c => c.includes(searchQ)) && d.name.indexOf(searchQ) < 0 &&
-        d.cat.indexOf(searchQ) < 0 && d.comment.indexOf(searchQ) < 0) return false;
+    if (searchQ) {
+      const q = searchQ;
+      const matchCeleb = d.celebs.some(c => c.includes(q));
+      const matchName = d.name.includes(q);
+      const matchCat = d.cat.includes(q);
+      const matchComment = d.comment.includes(q);
+      const matchArea = d.area.includes(q);
+      if (!matchCeleb && !matchName && !matchCat && !matchComment && !matchArea) return false;
+    }
     return true;
   });
 }
@@ -706,8 +713,15 @@ window.focusMap = function(id) {
   const d = DATA.find(x => x.id === id);
   if (!d || !map) return;
   setPage('map', document.querySelector('.ptab'));
-  map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
-  map.setLevel(4);
+  // 모바일이면 지도 뷰로 전환
+  if (window.innerWidth <= 768) {
+    const mapBtn = document.querySelectorAll('.mobile-toggle button')[1];
+    if (mapBtn) setMobileView('map', mapBtn);
+  }
+  setTimeout(() => {
+    map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
+    map.setLevel(4);
+  }, 150);
 };
 
 async function renderRankPage() {
