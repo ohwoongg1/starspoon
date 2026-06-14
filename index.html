@@ -316,10 +316,6 @@ window.logoutUser = async function() {
   renderList();
 };
 
-// 리다이렉트 후 결과 처리
-getRedirectResult(auth).then(result => {
-  if (result?.user) showToast("로그인 됐어요! 환영해요 😊");
-}).catch(e => { console.log(e); });
 
 // ── 인증 상태 감지 ──────────────────────
 onAuthStateChanged(auth, async (user) => {
