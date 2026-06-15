@@ -353,15 +353,32 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <!-- 유튜브 링크 추가 모달 -->
 <div class="yt-modal-overlay" id="ytModalOverlay" onclick="closeYtModal(event)">
-  <div class="yt-modal">
-    <h3 style="margin:0 0 8px;font-size:16px">📺 유튜브 링크 추가</h3>
-    <p style="font-size:13px;color:var(--text2);margin:0 0 16px" id="ytModalRestName"></p>
-    <input type="text" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=..." 
-      style="width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:10px;font-size:13px;outline:none;box-sizing:border-box">
-    <p style="font-size:12px;color:var(--text3);margin:8px 0 16px">※ 해당 맛집이 실제로 나오는 영상 링크를 입력해주세요. 허위 링크는 신고로 자동 삭제됩니다.</p>
-    <div style="display:flex;gap:8px;justify-content:flex-end">
-      <button onclick="closeYtModal()" style="padding:8px 16px;border:1px solid var(--border2);border-radius:8px;background:none;cursor:pointer;font-size:13px">취소</button>
-      <button onclick="submitYtLink()" style="padding:8px 16px;background:#CC0000;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">등록</button>
+  <div class="yt-modal" style="width:560px;max-width:95vw">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <h3 style="margin:0;font-size:16px">📺 유튜브 링크 추가</h3>
+      <button onclick="closeYtModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text2);margin:0 0 12px;font-weight:600" id="ytModalRestName"></p>
+    
+    <!-- 유튜브 검색창 -->
+    <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:12px">
+      <p style="font-size:12px;color:var(--text3);margin-bottom:8px">① 아래 버튼으로 유튜브에서 영상을 찾으세요</p>
+      <button onclick="searchYoutubeForRest()" style="width:100%;padding:10px;background:#FF0000;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        유튜브에서 "<span id="ytSearchQuery"></span>" 검색하기
+      </button>
+    </div>
+
+    <!-- URL 입력 -->
+    <div style="background:#f9f9f9;border-radius:10px;padding:12px">
+      <p style="font-size:12px;color:var(--text3);margin-bottom:8px">② 영상 URL을 복사해서 여기 붙여넣기 후 등록하세요</p>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=..." 
+          style="flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box"
+          onfocus="this.style.borderColor='#CC0000'" onblur="this.style.borderColor='var(--border2)'">
+        <button onclick="submitYtLink()" style="padding:9px 18px;background:#CC0000;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap">등록</button>
+      </div>
+      <p style="font-size:11px;color:var(--text3);margin-top:6px">※ 허위 링크는 신고 3회 시 자동 삭제됩니다</p>
     </div>
   </div>
 </div>
@@ -741,14 +758,23 @@ window.openModal = async function(id) {
 // 유튜브 링크 모달
 let ytTargetId = '';
 let ytTargetName = '';
+let ytTargetCeleb = '';
 
 window.openYtModal = function(id, name) {
   if (!currentUser) { showToast('로그인 후 링크를 추가할 수 있어요!'); return; }
   ytTargetId = id;
   ytTargetName = name;
-  document.getElementById('ytModalRestName').textContent = name;
+  const d = DATA.find(x => x.id === id);
+  ytTargetCeleb = d ? (d.celeb || '') : '';
+  document.getElementById('ytModalRestName').textContent = '🍽️ ' + name;
+  document.getElementById('ytSearchQuery').textContent = (ytTargetCeleb ? ytTargetCeleb + ' ' : '') + name;
   document.getElementById('ytUrlInput').value = '';
   document.getElementById('ytModalOverlay').classList.add('show');
+};
+
+window.searchYoutubeForRest = function() {
+  const query = encodeURIComponent((ytTargetCeleb ? ytTargetCeleb + ' ' : '') + ytTargetName);
+  window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
 };
 
 window.closeYtModal = function(e) {
