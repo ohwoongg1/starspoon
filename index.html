@@ -84,6 +84,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .yt-btn:hover{background:rgba(204,0,0,0.12)}
 .map-btn{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 9px;background:none;cursor:pointer;font-weight:500}
 .map-btn:hover{background:var(--bg2)}
+.yt-add-btn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#CC0000;background:rgba(204,0,0,0.06);border:1px solid rgba(204,0,0,0.18);border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:500}
+.yt-add-btn:hover{background:rgba(204,0,0,0.12)}
+.yt-report-btn{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;text-decoration:underline;padding:0}
+.yt-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:none;align-items:center;justify-content:center}
+.yt-modal-overlay.show{display:flex}
+.yt-modal{background:var(--bg);border-radius:16px;width:420px;max-width:92vw;padding:24px;position:relative}
 
 .rating-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .stars{display:flex;gap:2px}
@@ -344,6 +350,21 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <div class="toast" id="toast"><i class="ti ti-check"></i><span id="toastMsg"></span></div>
+
+<!-- 유튜브 링크 추가 모달 -->
+<div class="yt-modal-overlay" id="ytModalOverlay" onclick="closeYtModal(event)">
+  <div class="yt-modal">
+    <h3 style="margin:0 0 8px;font-size:16px">📺 유튜브 링크 추가</h3>
+    <p style="font-size:13px;color:var(--text2);margin:0 0 16px" id="ytModalRestName"></p>
+    <input type="text" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=..." 
+      style="width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:10px;font-size:13px;outline:none;box-sizing:border-box">
+    <p style="font-size:12px;color:var(--text3);margin:8px 0 16px">※ 해당 맛집이 실제로 나오는 영상 링크를 입력해주세요. 허위 링크는 신고로 자동 삭제됩니다.</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button onclick="closeYtModal()" style="padding:8px 16px;border:1px solid var(--border2);border-radius:8px;background:none;cursor:pointer;font-size:13px">취소</button>
+      <button onclick="submitYtLink()" style="padding:8px 16px;background:#CC0000;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">등록</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
@@ -663,6 +684,15 @@ function renderList() {
         <button class="map-btn" onclick="focusMap('${d.id}')"><i class="ti ti-map-pin"></i>지도</button>
         <button class="map-btn" onclick="openModal('${d.id}')"><i class="ti ti-message"></i>댓글</button>
       </div>
+      <div class="card-yt" id="yt-${d.id}">
+        ${d.yt
+          ? `<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+               <a class="yt-btn" href="${d.yt}" target="_blank"><i class="ti ti-brand-youtube"></i>유튜브 보기</a>
+               <button class="yt-report-btn" onclick="reportYt('${d.id}')">🚩 신고</button>
+             </div>`
+          : `<button class="yt-add-btn" style="margin-top:8px" onclick="openYtModal('${d.id}','${d.name}')"><i class="ti ti-brand-youtube"></i>유튜브 링크 추가</button>`
+        }
+      </div>
     </div>`;
   }).join("");
   loadRatings(items);
@@ -706,6 +736,64 @@ window.openModal = async function(id) {
   document.getElementById("modalTitle").textContent = `💬 ${d.name} 댓글`;
   document.getElementById("modalOverlay").classList.add("show");
   await loadComments(id);
+};
+
+// 유튜브 링크 모달
+let ytTargetId = '';
+let ytTargetName = '';
+
+window.openYtModal = function(id, name) {
+  if (!currentUser) { showToast('로그인 후 링크를 추가할 수 있어요!'); return; }
+  ytTargetId = id;
+  ytTargetName = name;
+  document.getElementById('ytModalRestName').textContent = name;
+  document.getElementById('ytUrlInput').value = '';
+  document.getElementById('ytModalOverlay').classList.add('show');
+};
+
+window.closeYtModal = function(e) {
+  if (!e || e.target === document.getElementById('ytModalOverlay')) {
+    document.getElementById('ytModalOverlay').classList.remove('show');
+  }
+};
+
+window.submitYtLink = async function() {
+  const url = document.getElementById('ytUrlInput').value.trim();
+  if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+    showToast('유튜브 링크만 등록할 수 있어요!'); return;
+  }
+  try {
+    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const ref = doc(db, 'restaurants', ytTargetId);
+    await updateDoc(ref, { yt: url, ytBy: currentUser.uid, ytReports: 0 });
+    document.getElementById('ytModalOverlay').classList.remove('show');
+    document.getElementById('yt-' + ytTargetId).innerHTML = 
+      `<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+         <a class="yt-btn" href="${url}" target="_blank"><i class="ti ti-brand-youtube"></i>유튜브 보기</a>
+         <button class="yt-report-btn" onclick="reportYt('${ytTargetId}')">🚩 신고</button>
+       </div>`;
+    showToast('유튜브 링크가 등록됐어요! 감사합니다 🎉');
+  } catch(e) { showToast('등록 실패: ' + e.message); }
+};
+
+window.reportYt = async function(id) {
+  if (!currentUser) { showToast('로그인 후 신고할 수 있어요!'); return; }
+  if (!confirm('이 유튜브 링크가 잘못됐나요? 신고하시겠어요?')) return;
+  try {
+    const { doc, getDoc, updateDoc, deleteField } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const ref = doc(db, 'restaurants', id);
+    const snap = await getDoc(ref);
+    const reports = (snap.data().ytReports || 0) + 1;
+    if (reports >= 3) {
+      await updateDoc(ref, { yt: deleteField(), ytBy: deleteField(), ytReports: deleteField() });
+      document.getElementById('yt-' + id).innerHTML = 
+        `<button class="yt-add-btn" style="margin-top:8px" onclick="openYtModal('${id}','${snap.data().name}')"><i class="ti ti-brand-youtube"></i>유튜브 링크 추가</button>`;
+      showToast('신고 3회로 링크가 삭제됐어요.');
+    } else {
+      await updateDoc(ref, { ytReports: reports });
+      showToast(`신고가 접수됐어요. (${reports}/3)`);
+    }
+  } catch(e) { showToast('신고 실패: ' + e.message); }
 };
 
 window.closeModal = function(e) {
