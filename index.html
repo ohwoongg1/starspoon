@@ -356,14 +356,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="yt-modal">
     <h3 style="margin:0 0 8px;font-size:16px">📺 유튜브 링크 추가</h3>
     <p style="font-size:13px;color:var(--text2);margin:0 0 16px" id="ytModalRestName"></p>
-    <div style="display:flex;gap:8px;margin-bottom:10px">
-      <input type="text" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=..." 
-        style="flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:10px;font-size:13px;outline:none;box-sizing:border-box">
-    </div>
-    <button onclick="searchYoutubeForRest()" style="width:100%;padding:10px;background:#FF0000;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px">
-      <i class="ti ti-brand-youtube"></i> 유튜브에서 영상 찾기 (새 탭)
-    </button>
-    <p style="font-size:12px;color:var(--text3);margin:0 0 16px">① 위 버튼으로 유튜브에서 영상을 찾고 → ② URL을 복사해서 위 입력창에 붙여넣기 후 등록하세요.<br>허위 링크는 신고 3회로 자동 삭제됩니다.</p>
+    <input type="text" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=..." 
+      style="width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:10px;font-size:13px;outline:none;box-sizing:border-box">
+    <p style="font-size:12px;color:var(--text3);margin:8px 0 16px">※ 해당 맛집이 실제로 나오는 영상 링크를 입력해주세요. 허위 링크는 신고로 자동 삭제됩니다.</p>
     <div style="display:flex;gap:8px;justify-content:flex-end">
       <button onclick="closeYtModal()" style="padding:8px 16px;border:1px solid var(--border2);border-radius:8px;background:none;cursor:pointer;font-size:13px">취소</button>
       <button onclick="submitYtLink()" style="padding:8px 16px;background:#CC0000;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">등록</button>
@@ -746,23 +741,14 @@ window.openModal = async function(id) {
 // 유튜브 링크 모달
 let ytTargetId = '';
 let ytTargetName = '';
-let ytTargetCeleb = '';
 
 window.openYtModal = function(id, name) {
   if (!currentUser) { showToast('로그인 후 링크를 추가할 수 있어요!'); return; }
   ytTargetId = id;
   ytTargetName = name;
-  // 연예인 정보 찾기
-  const d = DATA.find(x => x.id === id);
-  ytTargetCeleb = d ? (d.celeb || '') : '';
   document.getElementById('ytModalRestName').textContent = name;
   document.getElementById('ytUrlInput').value = '';
   document.getElementById('ytModalOverlay').classList.add('show');
-};
-
-window.searchYoutubeForRest = function() {
-  const query = encodeURIComponent(ytTargetCeleb + ' ' + ytTargetName);
-  window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
 };
 
 window.closeYtModal = function(e) {
