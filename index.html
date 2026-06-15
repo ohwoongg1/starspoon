@@ -342,7 +342,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC5nf84GbQQ_5vIDwhIvTZ5zPqf7nrnSxU",
@@ -374,9 +374,26 @@ const COLORS = {"성시경":"#F59E0B","이영자":"#EF4444","백종원":"#3B82F6
 let DATA = [];
 
 // Firebase에서 맛집 데이터 불러오기
-async function loadRestaurantsFromDB() {
+// 고정 연예인 목록 (탭용)
+const CELEBS = ["성시경", "허영만", "이영자", "백종원", "나얼", "홍진경", "쯔양", "유재석", "풍자", "입짧은햇님", "히밥", "승우아빠"];
+
+async function loadRestaurantsFromDB(celeb = null, cat = null, keyword = null) {
   try {
-    const snap = await getDocs(collection(db, "restaurants"));
+    document.getElementById("listCount").textContent = "로딩 중...";
+    let q = collection(db, "restaurants");
+
+    // 연예인 필터
+    if (celeb && celeb !== "전체") {
+      q = query(q, where("celeb", "==", celeb), orderBy("name"), limit(100));
+    } else if (keyword) {
+      // 키워드 검색은 전체에서 이름으로
+      q = query(q, orderBy("name"), limit(200));
+    } else {
+      // 기본: 성시경 맛집
+      q = query(q, where("celeb", "==", "성시경"), orderBy("name"), limit(100));
+    }
+
+    const snap = await getDocs(q);
     DATA = [];
     snap.forEach(doc => {
       const d = doc.data();
@@ -399,12 +416,29 @@ async function loadRestaurantsFromDB() {
     showToast(`맛집 ${DATA.length}개 불러왔어요! 🍽️`);
   } catch(e) {
     console.log('DB 로드 오류:', e);
-    // 오류 시 기본 샘플 데이터
-    DATA = [
-      {id:"r1",name:"우래옥",celebs:["성시경","나얼"],celeb:"성시경",cat:"냉면",area:"중구",comment:"평양냉면의 정석.",yt:"",lat:37.5663,lng:126.9997,visits:8},
-    ];
-    DATA.forEach(d => { if (!d.celeb) d.celeb = d.celebs[0]; });
-    render();
+    // 인덱스 오류 시 전체 로드로 폴백
+    try {
+      const snap = await getDocs(query(collection(db, "restaurants"), limit(100)));
+      DATA = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        DATA.push({
+          id: doc.id,
+          name: d.name || '',
+          celebs: d.celebs || [d.celeb || ''],
+          celeb: d.celeb || (d.celebs && d.celebs[0]) || '',
+          cat: d.category || d.cat || '한식',
+          area: d.area || '',
+          comment: d.comment || '',
+          yt: d.video_url || d.yt || '',
+          lat: d.lat || 37.5665,
+          lng: d.lng || 126.9780,
+          visits: d.visits || 0,
+        });
+      });
+      DATA.forEach(d => { if (!d.celeb) d.celeb = d.celebs[0]; });
+      render();
+    } catch(e2) { console.log('폴백 오류:', e2); }
   }
 }
 
@@ -952,10 +986,9 @@ window.addEventListener('resize', function() {
 window.setCeleb = function(el, name) {
   document.querySelectorAll(".ctab").forEach(b => b.classList.remove("on"));
   el.classList.add("on"); selCeleb = name;
-  // 검색어 초기화
   searchQ = "";
   document.getElementById("mainSearch").value = "";
-  render();
+  loadRestaurantsFromDB(name === "전체" ? null : name);
 };
 window.setCategory = function(el, cat) {
   document.querySelectorAll(".chip").forEach(b => b.classList.remove("on"));
@@ -993,10 +1026,9 @@ window.doSearch = function(q) {
 };
 
 function buildCelebTabs() {
-  const celebs = ["전체", ...new Set(DATA.map(d => d.celeb))];
   const container = document.getElementById("celebTabs");
-  container.innerHTML = celebs.map(c =>
-    `<button class="ctab${c==="전체"?" on":""}" onclick="setCeleb(this,'${c}')">${c}</button>`
+  container.innerHTML = ["전체", ...CELEBS].map(c =>
+    `<button class="ctab${c==="성시경"?" on":""}" onclick="setCeleb(this,'${c}')">${c}</button>`
   ).join("");
 }
 
@@ -1131,7 +1163,7 @@ async function loadSavedPlaces() {
 }
 
 buildCelebTabs();
-loadRestaurantsFromDB();
+loadRestaurantsFromDB("성시경");
 initKakaoLogin();
 </script>
 </body>
