@@ -90,6 +90,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .yt-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:none;align-items:center;justify-content:center}
 .yt-modal-overlay.show{display:flex}
 .yt-modal{background:var(--bg);border-radius:16px;width:420px;max-width:92vw;padding:24px;position:relative}
+.report-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:none;align-items:center;justify-content:center}
+.report-modal-overlay.show{display:flex}
+.report-modal{background:var(--bg);border-radius:16px;width:560px;max-width:95vw;padding:24px;position:relative;max-height:90vh;overflow-y:auto}
 
 .rating-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
 .stars{display:flex;gap:2px}
@@ -279,6 +282,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="ptab" onclick="setPage('search',this)">🔍 일반 검색</div>
   <div class="ptab" onclick="setPage('rank',this)">🏆 TOP 100</div>
   <div class="ptab" onclick="setPage('my',this)">❤️ 내 맛집</div>
+  <div style="margin-left:auto;padding:8px 16px;display:flex;align-items:center">
+    <button onclick="openReportModal()" style="background:var(--gold);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+      <i class="ti ti-plus"></i> 맛집 제보
+    </button>
+  </div>
 </div>
 
 <div class="main">
@@ -350,6 +358,70 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </div>
 
 <div class="toast" id="toast"><i class="ti ti-check"></i><span id="toastMsg"></span></div>
+
+<!-- 맛집 제보 모달 -->
+<div class="report-modal-overlay" id="reportModalOverlay" onclick="closeReportModal(event)">
+  <div class="report-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="margin:0;font-size:16px">⭐ 스타 맛집 제보</h3>
+      <button onclick="closeReportModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px">연예인이 방문한 맛집을 알고 계신가요? 제보해주세요!</p>
+
+    <!-- 식당 검색 -->
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">🍽️ 식당 이름 검색</label>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="reportRestSearch" placeholder="식당 이름 입력 후 검색..."
+          style="flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none"
+          onkeydown="if(event.key==='Enter')searchReportRest()"
+          onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
+        <button onclick="searchReportRest()" style="padding:9px 14px;background:var(--gold);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">검색</button>
+      </div>
+      <div id="reportRestResults" style="margin-top:8px"></div>
+    </div>
+
+    <!-- 선택된 식당 -->
+    <div id="reportRestSelected" style="display:none;background:var(--bg2);border-radius:8px;padding:10px 12px;margin-bottom:12px;border-left:3px solid var(--gold)">
+      <div style="font-weight:600;font-size:13px" id="reportRestName"></div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px" id="reportRestAddr"></div>
+    </div>
+
+    <!-- 연예인 이름 -->
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">⭐ 연예인 이름</label>
+      <input type="text" id="reportCeleb" placeholder="예: 성시경, 풍자, 쯔양..."
+        style="width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box"
+        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
+    </div>
+
+    <!-- 유튜브 링크 -->
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">📺 유튜브 영상 링크</label>
+      <button onclick="searchYoutubeForReport()" id="reportYtSearchBtn" style="width:100%;padding:9px;background:#FF0000;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        유튜브에서 검색하기
+      </button>
+      <input type="text" id="reportYtUrl" placeholder="https://www.youtube.com/watch?v=..."
+        style="width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box"
+        onfocus="this.style.borderColor='#CC0000'" onblur="this.style.borderColor='var(--border2)'">
+    </div>
+
+    <!-- 코멘트 -->
+    <div style="margin-bottom:16px">
+      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">💬 한줄 코멘트 (선택)</label>
+      <input type="text" id="reportComment" placeholder="예: 먹을텐데 12화에 나온 맛집이에요"
+        style="width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box"
+        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
+    </div>
+
+    <p style="font-size:11px;color:var(--text3);margin-bottom:12px">※ 허위 제보는 신고로 자동 삭제됩니다. 로그인 후 제보 가능해요.</p>
+
+    <button onclick="submitReport()" style="width:100%;padding:12px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">
+      제보하기 🎉
+    </button>
+  </div>
+</div>
 
 <!-- 유튜브 링크 추가 모달 -->
 <div class="yt-modal-overlay" id="ytModalOverlay" onclick="closeYtModal(event)">
@@ -775,6 +847,116 @@ window.openYtModal = function(id, name) {
 window.searchYoutubeForRest = function() {
   const query = encodeURIComponent((ytTargetCeleb ? ytTargetCeleb + ' ' : '') + ytTargetName);
   window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
+};
+
+// ── 맛집 제보 모달 ──
+let reportRestData = null;
+
+window.openReportModal = function() {
+  if (!currentUser) { showToast('로그인 후 제보할 수 있어요!'); return; }
+  document.getElementById('reportRestSearch').value = '';
+  document.getElementById('reportRestResults').innerHTML = '';
+  document.getElementById('reportRestSelected').style.display = 'none';
+  document.getElementById('reportCeleb').value = '';
+  document.getElementById('reportYtUrl').value = '';
+  document.getElementById('reportComment').value = '';
+  reportRestData = null;
+  document.getElementById('reportModalOverlay').classList.add('show');
+};
+
+window.closeReportModal = function(e) {
+  if (!e || e.target === document.getElementById('reportModalOverlay')) {
+    document.getElementById('reportModalOverlay').classList.remove('show');
+  }
+};
+
+window.searchReportRest = function() {
+  const keyword = document.getElementById('reportRestSearch').value.trim();
+  if (!keyword) { showToast('식당 이름을 입력해주세요'); return; }
+  const resultsDiv = document.getElementById('reportRestResults');
+  resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 중...</p>';
+  const ps = new kakao.maps.services.Places();
+  ps.keywordSearch(keyword, function(data, status) {
+    if (status !== kakao.maps.services.Status.OK || !data.length) {
+      resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요</p>';
+      return;
+    }
+    resultsDiv.innerHTML = data.slice(0,5).map((p,i) => `
+      <div onclick="selectReportRest(${i})" style="padding:8px 10px;border:1px solid var(--border2);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all .15s" 
+        onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)'">
+        <div style="font-weight:600;font-size:13px">${p.place_name}</div>
+        <div style="font-size:11px;color:var(--text3)">${p.road_address_name||p.address_name}</div>
+      </div>`).join('');
+    window._reportSearchResults = data;
+  }, {size:5});
+};
+
+window.selectReportRest = function(idx) {
+  const p = window._reportSearchResults[idx];
+  reportRestData = {
+    name: p.place_name,
+    address: p.road_address_name || p.address_name,
+    lat: parseFloat(p.y),
+    lng: parseFloat(p.x),
+    category: p.category_name.split('>').pop().trim()
+  };
+  document.getElementById('reportRestName').textContent = '🍽️ ' + p.place_name;
+  document.getElementById('reportRestAddr').textContent = p.road_address_name || p.address_name;
+  document.getElementById('reportRestSelected').style.display = 'block';
+  document.getElementById('reportRestResults').innerHTML = '';
+  document.getElementById('reportRestSearch').value = p.place_name;
+  // 연예인 입력란으로 포커스
+  document.getElementById('reportCeleb').focus();
+};
+
+window.searchYoutubeForReport = function() {
+  const celeb = document.getElementById('reportCeleb').value.trim();
+  const rest = reportRestData ? reportRestData.name : document.getElementById('reportRestSearch').value.trim();
+  if (!celeb && !rest) { showToast('연예인 이름과 식당명을 먼저 입력해주세요'); return; }
+  const query = encodeURIComponent(`${celeb} ${rest}`);
+  window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
+};
+
+window.submitReport = async function() {
+  if (!currentUser) { showToast('로그인 후 제보할 수 있어요!'); return; }
+  if (!reportRestData) { showToast('식당을 검색해서 선택해주세요!'); return; }
+  const celeb = document.getElementById('reportCeleb').value.trim();
+  if (!celeb) { showToast('연예인 이름을 입력해주세요!'); return; }
+  const ytUrl = document.getElementById('reportYtUrl').value.trim();
+  if (!ytUrl) { showToast('유튜브 링크를 입력해주세요!'); return; }
+  if (!ytUrl.includes('youtube.com') && !ytUrl.includes('youtu.be')) {
+    showToast('유튜브 링크만 등록할 수 있어요!'); return;
+  }
+  const comment = document.getElementById('reportComment').value.trim();
+
+  try {
+    const data = {
+      name: reportRestData.name,
+      celeb: celeb,
+      celebs: [celeb],
+      source: `${celeb} 제보`,
+      comment: comment || `${celeb} 방송출연 맛집`,
+      category: reportRestData.category || '한식',
+      cat: reportRestData.category || '한식',
+      area: reportRestData.address.split(' ').slice(0,2).join(' '),
+      address: reportRestData.address,
+      lat: reportRestData.lat,
+      lng: reportRestData.lng,
+      yt: ytUrl,
+      ytBy: currentUser.uid,
+      ytReports: 0,
+      reportedBy: currentUser.uid,
+      reportedAt: new Date().toISOString(),
+      visits: 1,
+      status: 'pending' // 운영자 승인 대기
+    };
+    
+    await addDoc(collection(db, 'restaurants'), data);
+    document.getElementById('reportModalOverlay').classList.remove('show');
+    showToast('제보해주셔서 감사해요! 검토 후 게시될 거예요 🎉');
+  } catch(e) {
+    showToast('제보 실패: ' + e.message);
+  }
 };
 
 window.closeYtModal = function(e) {
