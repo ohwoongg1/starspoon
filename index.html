@@ -257,7 +257,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
   </div>
   <div class="header-right">
     <button class="btn-report" onclick="openReportModal()">
-      <i class="ti ti-plus"></i><span>맛집 제보</span>
+      <i class="ti ti-plus"></i><span>맛집 등록</span>
     </button>
     <div id="authArea"></div>
   </div>
@@ -350,11 +350,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 <!-- ── 토스트 ── -->
 <div class="toast" id="toast"><i class="ti ti-check"></i><span id="toastMsg"></span></div>
 
-<!-- ── 맛집 제보 모달 ── -->
+<!-- ── 맛집 등록 모달 ── -->
 <div class="overlay" id="reportOverlay" onclick="closeReportModal(event)">
   <div class="modal report-modal">
     <div class="modal-hd">
-      <span class="modal-title">⭐ 스타 맛집 제보</span>
+      <span class="modal-title">⭐ 스타 맛집 등록</span>
       <button class="modal-close" onclick="closeReportModal()">✕</button>
     </div>
     <div class="modal-bd">
@@ -393,7 +393,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
         <input type="text" class="form-input" id="repComment" placeholder="예: 먹을텐데 12화에 나온 맛집이에요">
       </div>
       <p class="notice">※ 허위 제보는 신고로 자동 삭제됩니다. 맛집 등록 시 10점, 링크 추가 시 5점 적립!</p>
-      <button class="btn-primary" onclick="submitReport()">제보하기 🎉</button>
+      <button class="btn-primary" onclick="submitReport()">등록하기 🎉</button>
     </div>
   </div>
 </div>
@@ -585,7 +585,7 @@ async function renderCuratorList() {
         <div class="curator-avatar star-curator">${c.icon}</div>
         <div class="curator-info">
           <div class="curator-name">${c.name}</div>
-          <div class="curator-sub"><i class="ti ti-map-pin" style="font-size:10px"></i> 맛집 로딩중</div>
+          <div class="curator-sub"><i class="ti ti-map-pin" style="font-size:10px"></i> ${c.desc}</div>
         </div>
       </div>`;
     }).join('');
@@ -1083,11 +1083,11 @@ window.submitReport = async function() {
     await updateDoc(userRef, {registeredRests: [...regRests, repRestData.name]});
 
     document.getElementById('reportOverlay').classList.remove('show');
-    showToast('제보 완료! 🎉 +15pt 적립됐어요!');
+    showToast('등록 완료! 🎉 +15pt 적립됐어요!');
 
     // 현재 큐레이터와 같으면 리스트 새로고침
     if (celeb === selCurator) await loadRests(celeb);
-  } catch(e) { showToast('제보 실패: ' + e.message); }
+  } catch(e) { showToast('등록 실패: ' + e.message); }
 };
 
 // ── 유튜브 링크 추가 ──
