@@ -1123,6 +1123,7 @@ function renderPlaceResults() {
           <div class="place-addr">${p.road_address_name || p.address_name}</div>
           <div class="place-btns">
             <button class="place-map-btn" onclick="focusPlaceOnMap(${i})">🗺 지도보기</button>
+            <a class="place-map-btn" href="https://map.kakao.com/link/search/${encodeURIComponent(p.place_name)}" target="_blank" style="color:#F59E0B;border-color:#F59E0B;text-decoration:none">길찾기</a>
             <button class="place-save-btn ${isSaved?'saved':''}" id="psave-${p.id}" onclick="togglePlaceSave('${p.id}', ${i})">
               ${isSaved ? '❤️ 저장됨' : '🤍 저장'}
             </button>
@@ -1133,31 +1134,13 @@ function renderPlaceResults() {
     }).join("")}`;
 }
 
-let searchPlaceMarker = null; // 일반 검색 핀
-
 window.focusPlaceOnMap = function(idx) {
   const p = placeResults[idx];
   if (!p || !map) return;
   setPage('map', document.querySelector('.ptab'));
   setTimeout(() => {
-    const lat = parseFloat(p.y), lng = parseFloat(p.x);
-    const pos = new kakao.maps.LatLng(lat, lng);
-    map.setCenter(pos);
+    map.setCenter(new kakao.maps.LatLng(p.y, p.x));
     map.setLevel(4);
-
-    // 기존 검색 핀 제거
-    if (searchPlaceMarker) searchPlaceMarker.setMap(null);
-
-    // 파란색 핀 표시
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#3B82F6"/><text x="18" y="24" text-anchor="middle" font-size="16">🔍</text></svg>`;
-    const img = new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), new kakao.maps.Size(36, 42), {offset: new kakao.maps.Point(18, 42)});
-    searchPlaceMarker = new kakao.maps.Marker({map, position: pos, image: img, title: p.place_name});
-
-    // 인포윈도우 표시
-    const infowindow = new kakao.maps.InfoWindow({
-      content: `<div style="padding:8px 12px;font-size:13px;font-weight:600;color:#1C1C1A;min-width:120px">${p.place_name}<br><span style="font-size:11px;color:#6B6B67;font-weight:400">${p.road_address_name||p.address_name}</span></div>`
-    });
-    infowindow.open(map, searchPlaceMarker);
   }, 150);
 };
 
