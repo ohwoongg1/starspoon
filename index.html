@@ -615,7 +615,23 @@ function renderList() {
   list.innerHTML = items.map(d => {
     const isSaved = savedList.includes(d.id);
     const isMulti = d.celebs.length > 1;
-    const celebBadges = d.celebs.map(c => `<span class="badge" style="background:${COLORS[c]}22;color:${COLORS[c]}">${c}</span>`).join(" ");
+    const celebBadges = d.celebs.map(c => {
+      const source = {
+        "허영만": "식객 백반기행",
+        "성시경": "먹을텐데",
+        "이영자": "전참시",
+        "백종원": "골목식당",
+        "나얼": "나얼의 맛",
+        "홍진경": "홍진경 맛집",
+        "쯔양": "쯔양",
+        "유재석": "유재석",
+        "풍자": "또간집",
+        "입짧은햇님": "입짧은햇님",
+        "히밥": "히밥",
+        "승우아빠": "승우아빠"
+      }[c] || c;
+      return `<span class="badge" style="background:${COLORS[c]}22;color:${COLORS[c]||'#B45309'}">${c}</span><span style="font-size:11px;color:var(--text3)">· ${source}</span>`;
+    }).join(" ");
     return `<div class="card" id="card-${d.id}">
       <div class="card-top">
         <div class="card-icon" style="${isMulti ? 'background:linear-gradient(135deg,#FFD700,#F59E0B);font-size:22px' : ''}">${isMulti ? '👑' : '⭐'}</div>
