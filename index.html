@@ -5,472 +5,417 @@
 <meta name="google-site-verification" content="XGoCpZb8cXF7IvyeIMGRJJJXuccKIIS26WrqtbAdujo" />
 <meta name="naver-site-verification" content="6f4b79f996ee96a01d32863c2fd978e0a215db4b" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Starspoon — 연예인 맛집 지도</title>
+<title>Starspoon — 연예인 맛집 큐레이터 플랫폼</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=25b433faf5d746c938cbcc7658f650b0&libraries=services"></script>
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --gold:#F59E0B;--bg:#fff;--bg2:#F8F8F6;--bg3:#F1F0EC;
-  --text:#1C1C1A;--text2:#6B6B67;--text3:#9B9B97;
-  --border:#E4E3DF;--border2:#D0CFC9;--radius:10px;
+  --gold:#F59E0B;--gold2:#FCD34D;--gold-bg:rgba(245,158,11,0.08);
+  --bg:#FAFAF8;--bg2:#F4F3EF;--bg3:#EEECEA;--white:#fff;
+  --text:#1A1A18;--text2:#5A5A56;--text3:#9A9A96;
+  --border:#E8E7E3;--border2:#D4D3CF;
+  --red:#EF4444;--blue:#3B82F6;--green:#10B981;--purple:#8B5CF6;
+  --spoon:#9A9A96;--silver:#94A3B8;--gold-grade:#F59E0B;--star:#F59E0B;
+  --radius:10px;--radius-lg:16px;--radius-xl:20px;
+  --shadow:0 2px 8px rgba(0,0,0,0.06);--shadow-lg:0 8px 24px rgba(0,0,0,0.10);
   --kakao:#FEE500;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg3);color:var(--text);font-size:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 
-.header{background:var(--bg);border-bottom:1px solid var(--border);padding:0 24px;height:58px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
-.logo{display:flex;align-items:center;gap:9px;text-decoration:none;flex-shrink:0}
-.logo-icon{width:34px;height:34px;background:var(--gold);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:18px}
-.logo-text{font-size:17px;font-weight:600;color:var(--text)}
+/* ── 헤더 ── */
+.header{background:var(--white);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow)}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0}
+.logo-icon{width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.logo-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
 .logo-text span{color:var(--gold)}
-.search-wrap{flex:1;max-width:500px;position:relative}
-.search-wrap input{width:100%;height:38px;border-radius:19px;border:1.5px solid var(--border2);background:var(--bg2);padding:0 14px 0 40px;font-size:14px;color:var(--text);outline:none;transition:border-color .2s}
-.search-wrap input:focus{border-color:var(--gold);background:#fff}
-.search-wrap input::placeholder{color:var(--text3)}
-.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:17px}
+.header-search{flex:1;max-width:420px;position:relative}
+.header-search input{width:100%;height:36px;border-radius:18px;border:1.5px solid var(--border2);background:var(--bg2);padding:0 14px 0 38px;font-size:13px;color:var(--text);outline:none;transition:all .2s}
+.header-search input:focus{border-color:var(--gold);background:var(--white);box-shadow:0 0 0 3px rgba(245,158,11,0.12)}
+.header-search .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:8px}
-.hbtn{border:1.5px solid var(--border2);border-radius:8px;padding:6px 14px;font-size:13px;color:var(--text2);background:none;cursor:pointer;font-weight:500;transition:all .15s}
-.hbtn:hover{background:var(--bg2)}
-.user-info{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
-.user-avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.btn-report{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+.btn-report:hover{background:#D97706}
+.btn-login-g{background:var(--white);color:#444;border:1.5px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.btn-login-k{background:var(--kakao);color:#000;border:none;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px}
+.user-info{display:flex;align-items:center;gap:8px;font-size:13px}
+.user-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:2px solid var(--gold)}
+.user-grade{font-size:11px;font-weight:700;padding:2px 7px;border-radius:10px;background:var(--gold-bg);color:var(--gold)}
+.btn-logout{background:none;border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--text3);cursor:pointer}
 
-/* 로그인 버튼들 */
-.login-area{display:flex;gap:6px;align-items:center}
-.login-btn-google{background:#fff;color:#444;border:1.5px solid var(--border2);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
-.login-btn-google:hover{background:var(--bg2)}
-.login-btn-kakao{background:var(--kakao);color:#000;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
-.login-btn-kakao:hover{background:#F0D900}
-.kakao-icon{width:18px;height:18px;display:inline-block;vertical-align:middle}
-.logout-btn{background:none;border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text3);cursor:pointer}
-.logout-btn:hover{background:var(--bg2)}
+/* ── 카테고리 바 ── */
+.cat-bar{background:var(--white);border-bottom:1px solid var(--border);padding:0 20px;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;height:44px;align-items:center}
+.cat-bar::-webkit-scrollbar{display:none}
+.cat{border:1.5px solid var(--border2);border-radius:16px;padding:4px 13px;font-size:12px;font-weight:500;color:var(--text2);background:var(--white);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.cat:hover{border-color:var(--gold);color:var(--gold)}
+.cat.on{background:var(--gold);border-color:var(--gold);color:#fff}
 
-.filter-bar{background:var(--bg);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
-.filter-bar::-webkit-scrollbar{display:none}
-.chip{border:1.5px solid var(--border2);border-radius:20px;padding:5px 15px;font-size:13px;color:var(--text2);background:var(--bg);cursor:pointer;white-space:nowrap;font-weight:500;transition:all .15s}
-.chip:hover{border-color:var(--gold);color:var(--gold)}
-.chip.on{background:var(--gold);border-color:var(--gold);color:#fff}
+/* ── 메인 레이아웃 ── */
+.layout{display:flex;height:calc(100vh - 100px)}
 
-.page-tabs{background:var(--bg);border-bottom:1px solid var(--border);padding:0 24px;display:flex;gap:0}
-.ptab{padding:12px 20px;font-size:14px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .15s}
-.ptab:hover{color:var(--text)}
-.ptab.on{color:var(--gold);border-bottom-color:var(--gold)}
-
-.main{display:flex;height:calc(100vh - 143px)}
-.sidebar{width:360px;flex-shrink:0;background:var(--bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
-.celeb-tabs{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:6px;flex-wrap:wrap}
-.ctab{border:1.5px solid var(--border2);border-radius:20px;padding:5px 13px;font-size:12px;font-weight:500;color:var(--text2);background:none;cursor:pointer;white-space:nowrap;transition:all .15s}
-.ctab:hover{border-color:var(--gold);color:var(--gold)}
+/* ── 왼쪽: 큐레이터 패널 ── */
+.curator-panel{width:220px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.curator-panel-header{padding:14px 16px 10px;border-bottom:1px solid var(--border)}
+.curator-panel-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.curator-tabs{display:flex;gap:4px;margin-bottom:0}
+.ctab{flex:1;padding:5px;font-size:12px;font-weight:600;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;text-align:center;color:var(--text2);background:none;transition:all .15s}
 .ctab.on{background:var(--gold);border-color:var(--gold);color:#fff}
-.list-header{padding:10px 16px;font-size:12px;color:var(--text3);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.list-header strong{color:var(--text);font-weight:600}
-.list{flex:1;overflow-y:auto}
-.list::-webkit-scrollbar{width:4px}
-.list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
-
-.card{padding:16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
-.card:hover,.card.active{background:var(--bg2)}
-.card-top{display:flex;align-items:flex-start;gap:11px;margin-bottom:10px}
-.card-icon{width:38px;height:38px;flex-shrink:0;background:rgba(245,158,11,0.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.card-info{flex:1;min-width:0}
-.card-name{font-weight:600;font-size:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.badge{background:rgba(245,158,11,0.12);color:#B45309;border-radius:5px;padding:2px 7px;font-size:11px;font-weight:600}
-.meta-dot{color:var(--border2)}
-.meta-sub{font-size:12px;color:var(--text3)}
-.comment{font-size:13px;color:var(--text2);line-height:1.55;padding:9px 11px;background:var(--bg2);border-radius:8px;border-left:2.5px solid var(--gold);margin-bottom:10px}
-.card-foot{display:flex;align-items:center;gap:7px}
-.yt-btn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#CC0000;background:rgba(204,0,0,0.06);border:1px solid rgba(204,0,0,0.18);border-radius:6px;padding:4px 9px;text-decoration:none;font-weight:500}
-.yt-btn:hover{background:rgba(204,0,0,0.12)}
-.map-btn{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 9px;background:none;cursor:pointer;font-weight:500}
-.map-btn:hover{background:var(--bg2)}
-.yt-add-btn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:#CC0000;background:rgba(204,0,0,0.06);border:1px solid rgba(204,0,0,0.18);border-radius:6px;padding:4px 9px;cursor:pointer;font-weight:500}
-.yt-add-btn:hover{background:rgba(204,0,0,0.12)}
-.yt-report-btn{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;text-decoration:underline;padding:0}
-.yt-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:none;align-items:center;justify-content:center}
-.yt-modal-overlay.show{display:flex}
-.yt-modal{background:var(--bg);border-radius:16px;width:420px;max-width:92vw;padding:24px;position:relative}
-.report-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:none;align-items:center;justify-content:center}
-.report-modal-overlay.show{display:flex}
-.report-modal{background:var(--bg);border-radius:16px;width:560px;max-width:95vw;padding:24px;position:relative;max-height:90vh;overflow-y:auto}
-
-.rating-row{display:flex;align-items:center;gap:6px;margin-bottom:8px}
-.stars{display:flex;gap:2px}
-.star{font-size:16px;cursor:pointer;color:#D0CFC9;transition:color .1s}
-.star.on{color:var(--gold)}
-.rating-count{font-size:12px;color:var(--text3)}
-.save-btn{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 9px;background:none;cursor:pointer}
-.save-btn:hover{background:var(--bg2)}
-.save-btn.saved{color:var(--gold);border-color:var(--gold)}
-
-.rank-badge{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.curator-list{flex:1;overflow-y:auto;padding:8px}
+.curator-list::-webkit-scrollbar{width:3px}
+.curator-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.curator-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:10px;cursor:pointer;transition:background .12s;margin-bottom:2px}
+.curator-item:hover,.curator-item.on{background:var(--gold-bg)}
+.curator-item.on .curator-name{color:var(--gold);font-weight:700}
+.curator-avatar{width:36px;height:36px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;overflow:hidden;border:2px solid var(--border)}
+.curator-avatar img{width:100%;height:100%;object-fit:cover}
+.curator-avatar.star-curator{border-color:var(--gold);background:var(--gold-bg)}
+.curator-info{flex:1;min-width:0}
+.curator-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.curator-sub{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px;margin-top:1px}
+.curator-rank{font-size:10px;font-weight:700;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .rank-1{background:#FFD700;color:#7B5800}
 .rank-2{background:#C0C0C0;color:#555}
 .rank-3{background:#CD7F32;color:#fff}
-.rank-n{background:var(--bg3);color:var(--text3)}
-.empty{padding:48px 20px;text-align:center;color:var(--text3)}
-.empty i{font-size:32px;display:block;margin-bottom:10px;opacity:.4}
+.rank-n{background:var(--bg3);color:var(--text3);font-size:9px}
 
-.map-area{flex:1;position:relative;overflow:hidden}
-#kakao-map{width:100%;height:100%}
+/* ── 가운데: 맛집 리스트 ── */
+.list-panel{width:380px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.list-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.list-title{font-size:13px;font-weight:700;color:var(--text)}
+.list-count{font-size:12px;color:var(--text3)}
+.sort-select{border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:12px;color:var(--text2);background:var(--white);cursor:pointer;outline:none}
+.list-body{flex:1;overflow-y:auto}
+.list-body::-webkit-scrollbar{width:4px}
+.list-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-.rank-page{flex:1;overflow-y:auto;background:var(--bg3);padding:20px}
-.rank-page.hidden{display:none}
-.rank-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;max-width:1200px;margin:0 auto}
-.rank-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;align-items:flex-start;gap:12px;transition:box-shadow .15s}
-.rank-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+/* ── 맛집 카드 ── */
+.rest-card{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;position:relative}
+.rest-card:hover,.rest-card.on{background:var(--bg2)}
+.rest-card-top{display:flex;gap:10px;margin-bottom:8px}
+.rest-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
+.rest-info{flex:1;min-width:0}
+.rest-name{font-weight:700;font-size:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rest-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:4px}
+.rest-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:var(--gold-bg);color:#B45309}
+.rest-cat{font-size:11px;color:var(--text3)}
+.rest-area{font-size:11px;color:var(--text3)}
+.rest-comment{font-size:12px;color:var(--text2);line-height:1.5;padding:7px 10px;background:var(--bg2);border-radius:8px;border-left:2.5px solid var(--gold);margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.rest-foot{display:flex;align-items:center;gap:6px}
+.rest-rating{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);font-weight:600}
+.rest-rating-count{font-size:11px;color:var(--text3);font-weight:400}
+.rest-saves{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:2px}
+.rest-btns{margin-left:auto;display:flex;gap:4px}
+.btn-sm{border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text2);background:none;cursor:pointer;display:flex;align-items:center;gap:3px;transition:all .15s;white-space:nowrap}
+.btn-sm:hover{background:var(--bg2)}
+.btn-sm.saved{color:var(--gold);border-color:var(--gold);background:var(--gold-bg)}
+.btn-sm.map{color:var(--gold);border-color:var(--gold)}
+.rest-link{display:flex;align-items:center;gap:4px;margin-top:6px}
+.link-btn{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:3px 8px;border-radius:5px;text-decoration:none;font-weight:500;border:1px solid}
+.link-yt{color:#CC0000;background:rgba(204,0,0,0.05);border-color:rgba(204,0,0,0.2)}
+.link-add{color:var(--text3);background:var(--bg2);border-color:var(--border2);cursor:pointer}
+
+/* ── 오른쪽: 지도+상세 ── */
+.map-panel{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.map-tabs{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 16px;gap:0;flex-shrink:0}
+.mtab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .15s;white-space:nowrap}
+.mtab:hover{color:var(--text)}
+.mtab.on{color:var(--gold);border-bottom-color:var(--gold)}
+#kakao-map{width:100%;flex:1}
+.map-wrap{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column}
+
+/* ── 순위 페이지 ── */
+.rank-page{flex:1;overflow-y:auto;background:var(--bg);padding:20px;display:none}
+.rank-page.show{display:block}
+.rank-section{margin-bottom:28px}
+.rank-section-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.rank-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.rank-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;align-items:center;gap:10px;transition:box-shadow .15s}
+.rank-card:hover{box-shadow:var(--shadow)}
+.rank-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
 .rank-info{flex:1;min-width:0}
-.rank-name{font-weight:600;font-size:15px;margin-bottom:4px}
-.rank-meta{font-size:12px;color:var(--text3);margin-bottom:6px}
-.rank-score{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--text2)}
+.rank-name{font-weight:600;font-size:14px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-meta{font-size:11px;color:var(--text3)}
+.rank-score{font-size:13px;font-weight:700;color:var(--gold)}
 
-.my-page{flex:1;overflow-y:auto;background:var(--bg3);padding:20px}
-.my-page.hidden{display:none}
-.my-empty{text-align:center;padding:60px 20px;color:var(--text3)}
-.my-empty i{font-size:48px;display:block;margin-bottom:12px;opacity:.3}
+/* ── 마이 페이지 ── */
+.my-page{flex:1;overflow-y:auto;background:var(--bg);padding:20px;display:none}
+.my-page.show{display:block}
+.my-profile{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:16px}
+.my-avatar{width:60px;height:60px;border-radius:50%;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:28px;border:3px solid var(--gold);flex-shrink:0;overflow:hidden}
+.my-avatar img{width:100%;height:100%;object-fit:cover}
+.my-name{font-size:16px;font-weight:700;margin-bottom:4px}
+.my-grade-badge{display:inline-flex;align-items:center;gap:4px;background:var(--gold-bg);color:var(--gold);font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px;margin-bottom:8px}
+.my-points{font-size:13px;color:var(--text2)}
+.my-points strong{color:var(--gold);font-size:16px}
+.my-stats{display:flex;gap:16px;margin-top:8px}
+.my-stat{text-align:center}
+.my-stat-num{font-size:18px;font-weight:700;color:var(--text)}
+.my-stat-label{font-size:11px;color:var(--text3)}
+.point-history{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+.point-history-title{font-size:13px;font-weight:700;margin-bottom:12px}
+.point-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.point-item:last-child{border-bottom:none}
+.point-plus{color:var(--green);font-weight:700}
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:none;align-items:center;justify-content:center}
-.modal-overlay.show{display:flex}
-.modal{background:var(--bg);border-radius:16px;width:480px;max-width:90vw;max-height:80vh;overflow:hidden;display:flex;flex-direction:column}
-.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.modal-title{font-weight:600;font-size:16px}
-.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1}
-.modal-body{flex:1;overflow-y:auto;padding:16px 20px}
-.comment-list{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+/* ── 모달 ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:500;display:none;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.modal{background:var(--white);border-radius:var(--radius-lg);width:500px;max-width:92vw;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)}
+.modal-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.modal-title{font-size:15px;font-weight:700}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3);line-height:1;padding:0}
+.modal-bd{flex:1;overflow-y:auto;padding:16px 20px}
+
+/* ── 제보 모달 ── */
+.report-modal{width:560px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px}
+.form-input{width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;transition:border-color .2s;background:var(--white)}
+.form-input:focus{border-color:var(--gold)}
+.form-hint{font-size:11px;color:var(--text3);margin-top:4px}
+.search-result-item{padding:8px 10px;border:1px solid var(--border2);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+.search-result-item:hover{border-color:var(--gold);background:var(--gold-bg)}
+.search-result-name{font-weight:600;font-size:13px}
+.search-result-addr{font-size:11px;color:var(--text3);margin-top:2px}
+.selected-rest{background:var(--gold-bg);border:1.5px solid var(--gold);border-radius:8px;padding:10px 12px;margin-bottom:14px;display:none}
+.selected-rest-name{font-weight:700;font-size:13px;color:var(--gold)}
+.selected-rest-addr{font-size:11px;color:var(--text2);margin-top:2px}
+.link-type-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.link-type-tag{font-size:11px;background:var(--bg2);border:1px solid var(--border2);border-radius:12px;padding:3px 10px;color:var(--text3)}
+.btn-yt-search{width:100%;padding:9px;background:#FF0000;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{width:100%;padding:12px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:#D97706}
+.notice{font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.6}
+
+/* ── 댓글 모달 ── */
+.comment-list{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
 .comment-item{background:var(--bg2);border-radius:10px;padding:12px}
 .comment-user{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .comment-avatar{width:26px;height:26px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff;font-weight:600;flex-shrink:0;overflow:hidden}
 .comment-avatar img{width:100%;height:100%;object-fit:cover}
-.comment-name{font-size:13px;font-weight:500}
+.comment-name{font-size:13px;font-weight:600}
+.comment-grade{font-size:10px;color:var(--gold);font-weight:700}
 .comment-date{font-size:11px;color:var(--text3);margin-left:auto}
 .comment-stars{font-size:13px;margin-bottom:4px}
 .comment-text{font-size:13px;color:var(--text2);line-height:1.5}
 .comment-form{border-top:1px solid var(--border);padding-top:14px}
-.comment-form textarea{width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:10px;font-size:13px;font-family:inherit;resize:none;height:70px;outline:none}
+.star-row{display:flex;gap:4px;margin-bottom:8px}
+.star{font-size:22px;cursor:pointer;color:var(--border2);transition:color .1s}
+.star.on{color:var(--gold)}
+.comment-form textarea{width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:10px;font-size:13px;font-family:inherit;resize:none;height:70px;outline:none;transition:border-color .2s}
 .comment-form textarea:focus{border-color:var(--gold)}
-.comment-form-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
-.rating-input{display:flex;gap:4px}
-.rating-input .star{font-size:20px}
-.submit-comment{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer}
-.submit-comment:hover{background:#D97706}
-.no-login-msg{text-align:center;padding:20px;color:var(--text3);font-size:13px}
-.login-options{display:flex;gap:8px;justify-content:center;margin-top:10px;flex-wrap:wrap}
+.comment-form-foot{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.btn-submit{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer}
 
-.custom-overlay{position:relative;background:var(--bg);border:1px solid var(--border2);border-radius:12px;padding:12px 14px;min-width:180px;max-width:220px;box-shadow:0 6px 18px rgba(0,0,0,0.12);cursor:pointer}
-.custom-overlay .tt-name{font-weight:600;font-size:14px;margin-bottom:2px;color:#1C1C1A}
-.custom-overlay .tt-who{font-size:11px;color:#B45309;font-weight:600;margin-bottom:5px}
-.custom-overlay .tt-comment{font-size:12px;color:#6B6B67;line-height:1.45}
-
-.toast{position:fixed;bottom:22px;right:22px;background:#1C1C1A;color:#fff;padding:11px 20px;border-radius:10px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;box-shadow:0 6px 16px rgba(0,0,0,0.2)}
-
-.place-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;transition:box-shadow .15s}
-.place-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
-.place-icon{width:40px;height:40px;background:var(--bg2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.place-info{flex:1;min-width:0}
-.place-name{font-weight:600;font-size:15px;margin-bottom:3px}
-.place-cat{font-size:12px;color:var(--gold);font-weight:600;margin-bottom:2px}
-.place-addr{font-size:12px;color:var(--text3);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.place-btns{display:flex;gap:6px}
-.place-map-btn{font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;background:none;cursor:pointer}
-.place-save-btn{font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;background:none;cursor:pointer}
-.place-save-btn.saved{color:var(--gold);border-color:var(--gold);background:rgba(245,158,11,0.08)}
+/* ── 토스트 ── */
+.toast{position:fixed;bottom:20px;right:20px;background:#1A1A18;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;box-shadow:var(--shadow-lg);max-width:320px}
 .toast.show{display:flex}
-.map-area.hidden{display:none}
-.sidebar.hidden{display:none}
 
-/* 모바일 최적화 */
-@media (max-width: 768px) {
-  .header{padding:0 12px;height:52px;gap:8px}
-  .logo-text{font-size:15px}
-  .search-wrap{max-width:none}
-  .search-wrap input{height:34px;font-size:13px;padding:0 10px 0 34px}
-  .hbtn{display:none}
-  .login-btn-google{padding:5px 8px;font-size:12px}
-  .login-btn-kakao{padding:5px 8px;font-size:12px}
-  .user-info span{display:none}
-  .logout-btn{padding:4px 8px;font-size:11px}
+/* ── 지도 커스텀 오버레이 ── */
+.map-tip{background:var(--white);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;min-width:160px;max-width:200px;box-shadow:var(--shadow);cursor:pointer}
+.map-tip-name{font-weight:700;font-size:13px;color:var(--text);margin-bottom:2px}
+.map-tip-who{font-size:10px;color:#B45309;font-weight:700;margin-bottom:3px}
+.map-tip-comment{font-size:11px;color:var(--text2);line-height:1.4}
 
-  .filter-bar{padding:8px 12px}
-  .chip{padding:4px 12px;font-size:12px}
-  .page-tabs{padding:0 12px}
-  .ptab{padding:10px 12px;font-size:13px}
+/* ── 빈 상태 ── */
+.empty{padding:48px 20px;text-align:center;color:var(--text3)}
+.empty i{font-size:36px;display:block;margin-bottom:10px;opacity:.35}
+.empty p{font-size:14px}
 
-  .main{flex-direction:column;height:calc(100vh - 130px);position:relative}
-  .sidebar{width:100%;height:100%;border-right:none;flex:1}
-  .map-area{width:100%;height:100%;flex:1}
+/* ── 페이지 탭 (상단) ── */
+.page-nav{background:var(--white);border-bottom:1px solid var(--border);display:flex;padding:0 20px;gap:0;flex-shrink:0}
+.pnav{padding:11px 18px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2.5px solid transparent;transition:all .15s;white-space:nowrap}
+.pnav:hover{color:var(--text)}
+.pnav.on{color:var(--gold);border-bottom-color:var(--gold)}
 
-  .rank-page{padding:12px}
-  .rank-grid{grid-template-columns:1fr}
-  .my-page{padding:12px}
-  .modal{max-width:95vw;max-height:88vh}
-  .card{padding:12px}
-  .celeb-tabs{padding:10px 12px}
-}
-
-/* 모바일 지도/리스트 전환 버튼 */
-.mobile-toggle{display:none}
-@media (max-width: 768px) {
-  .mobile-toggle{
-    display:flex;
-    position:fixed;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:150;
-    background:#1C1C1A;
-    border-radius:24px;
-    padding:4px;
-    gap:4px;
-    box-shadow:0 4px 16px rgba(0,0,0,0.3)
-  }
-  .mobile-toggle button{
-    border:none;
-    border-radius:20px;
-    padding:9px 22px;
-    font-size:13px;
-    font-weight:600;
-    cursor:pointer;
-    background:none;
-    color:#fff;
-    transition:all .15s
-  }
-  .mobile-toggle button.on{background:#fff;color:#1C1C1A}
+/* ── 모바일 ── */
+@media(max-width:768px){
+  .curator-panel{display:none}
+  .list-panel{width:100%}
+  .map-panel{display:none}
+  .layout{height:calc(100vh - 88px)}
+  .header{padding:0 12px;gap:8px}
+  .logo-text{font-size:14px}
+  .header-search{max-width:none;flex:1}
+  .btn-report span{display:none}
+  .cat-bar{padding:0 12px}
 }
 </style>
 </head>
 <body>
 
+<!-- ── 헤더 ── -->
 <header class="header">
-  <a class="logo" href="index.html">
+  <a class="logo" href="/">
     <div class="logo-icon">🥄</div>
     <span class="logo-text">Star<span>spoon</span></span>
   </a>
-  <div class="search-wrap">
-    <i class="ti ti-search search-icon"></i>
-    <input type="text" id="mainSearch" placeholder="연예인·음식·지역 검색  예: 중구, 성시경" oninput="doSearch(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value);this.blur()}">
+  <div class="header-search">
+    <i class="ti ti-search si"></i>
+    <input type="text" id="mainSearch" placeholder="맛집·연예인·지역 검색" oninput="doSearch(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value)}">
   </div>
   <div class="header-right">
-    <div id="authArea">
-      <div class="login-area">
-        <button class="login-btn-google" onclick="loginWithGoogle()">
-          <i class="ti ti-brand-google"></i> 구글
-        </button>
-        <button class="login-btn-kakao" onclick="loginWithKakao()">
-          <svg class="kakao-icon" viewBox="0 0 18 18" fill="none"><path fill="#000" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
-          카카오
-        </button>
-      </div>
-    </div>
-    <button class="hbtn" onclick="location.href='admin.html'">관리자</button>
+    <button class="btn-report" onclick="openReportModal()">
+      <i class="ti ti-plus"></i><span>맛집 제보</span>
+    </button>
+    <div id="authArea"></div>
   </div>
 </header>
 
-<div class="filter-bar">
-  <button class="chip on" onclick="setCategory(this,'전체')">전체</button>
-  <button class="chip" onclick="setCategory(this,'국밥·탕')">국밥·탕</button>
-  <button class="chip" onclick="setCategory(this,'한식')">한식</button>
-  <button class="chip" onclick="setCategory(this,'냉면')">냉면</button>
-  <button class="chip" onclick="setCategory(this,'고기')">고기</button>
-  <button class="chip" onclick="setCategory(this,'중식')">중식</button>
-  <button class="chip" onclick="setCategory(this,'일식')">일식</button>
-  <button class="chip" onclick="setCategory(this,'분식')">분식</button>
-  <button class="chip" onclick="setCategory(this,'카페·디저트')">카페·디저트</button>
+<!-- ── 카테고리 바 ── -->
+<div class="cat-bar">
+  <button class="cat on" onclick="setCat(this,'전체')">전체</button>
+  <button class="cat" onclick="setCat(this,'한식')">🍚 한식</button>
+  <button class="cat" onclick="setCat(this,'국밥·탕')">🍲 국밥·탕</button>
+  <button class="cat" onclick="setCat(this,'고기')">🥩 고기</button>
+  <button class="cat" onclick="setCat(this,'냉면')">🍜 냉면</button>
+  <button class="cat" onclick="setCat(this,'중식')">🥡 중식</button>
+  <button class="cat" onclick="setCat(this,'일식')">🍣 일식</button>
+  <button class="cat" onclick="setCat(this,'분식')">🍢 분식</button>
+  <button class="cat" onclick="setCat(this,'해산물')">🦞 해산물</button>
+  <button class="cat" onclick="setCat(this,'양식')">🍝 양식</button>
+  <button class="cat" onclick="setCat(this,'제과·빵')">🥐 제과·빵</button>
+  <button class="cat" onclick="setCat(this,'카페·디저트')">☕ 카페·디저트</button>
 </div>
 
-<div class="page-tabs">
-  <div class="ptab on" onclick="setPage('map',this)">🗺 스타 맛집</div>
-  <div class="ptab" onclick="setPage('search',this)">🔍 일반 검색</div>
-  <div class="ptab" onclick="setPage('rank',this)">🏆 TOP 100</div>
-  <div class="ptab" onclick="setPage('my',this)">❤️ 내 맛집</div>
-  <div style="margin-left:auto;padding:8px 16px;display:flex;align-items:center">
-    <button onclick="openReportModal()" style="background:var(--gold);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
-      <i class="ti ti-plus"></i> 맛집 제보
-    </button>
+<!-- ── 페이지 네비 ── -->
+<div class="page-nav">
+  <div class="pnav on" onclick="setPage('main',this)">🗺 스타 맛집</div>
+  <div class="pnav" onclick="setPage('rank',this)">🏆 순위</div>
+  <div class="pnav" onclick="setPage('my',this)">🥄 내 스푼</div>
+</div>
+
+<!-- ── 메인 레이아웃 ── -->
+<div class="layout" id="mainLayout">
+
+  <!-- 큐레이터 패널 -->
+  <div class="curator-panel">
+    <div class="curator-panel-header">
+      <div class="curator-panel-title">큐레이터</div>
+      <div class="curator-tabs">
+        <button class="ctab on" onclick="setCuratorTab('star',this)">⭐ 스타</button>
+        <button class="ctab" onclick="setCuratorTab('user',this)">🥄 일반인</button>
+      </div>
+    </div>
+    <div class="curator-list" id="curatorList"></div>
   </div>
-</div>
 
-<div class="main">
-  <aside class="sidebar" id="sidebar">
-    <div class="celeb-tabs" id="celebTabs"></div>
+  <!-- 맛집 리스트 -->
+  <div class="list-panel">
     <div class="list-header">
-      <span>맛집 목록</span>
-      <strong id="listCount">0곳</strong>
-    </div>
-    <div class="list" id="restaurantList"></div>
-  </aside>
-
-  <div class="map-area" id="mapArea">
-    <div id="kakao-map"></div>
-    <!-- PC에서 리스트로 돌아가기 버튼 -->
-    <button id="backToList" onclick="showSidebar()" style="display:none;position:absolute;top:12px;left:12px;z-index:10;background:#fff;border:1.5px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.12);gap:6px;align-items:center">
-      ← 리스트
-    </button>
-  </div>
-
-  <!-- 모바일 지도/리스트 전환 버튼 -->
-  <div class="mobile-toggle" id="mobileToggle">
-    <button class="on" onclick="setMobileView('list',this)">📋 리스트</button>
-    <button onclick="setMobileView('map',this)">🗺 지도</button>
-  </div>
-
-  <!-- 일반 맛집 검색 페이지 -->
-  <div class="rank-page hidden" id="searchPage">
-    <div style="max-width:800px;margin:0 auto">
-      <h2 style="font-size:18px;font-weight:700;margin-bottom:6px">🔍 일반 맛집 검색</h2>
-      <p style="font-size:13px;color:var(--text3);margin-bottom:16px">카카오맵에서 전국 음식점을 검색하고 내 맛집으로 저장하세요</p>
-      <div style="display:flex;gap:8px;margin-bottom:16px">
-        <input id="placeSearch" type="text" placeholder="예: 강남 삼겹살, 홍대 파스타, 부산 국밥..."
-          style="flex:1;height:42px;border-radius:10px;border:1.5px solid var(--border2);padding:0 14px;font-size:14px;outline:none"
-          onkeydown="if(event.key==='Enter')searchPlaces()"
-          onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
-        <button onclick="searchPlaces()" style="height:42px;padding:0 20px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer">검색</button>
+      <span class="list-title" id="listTitle">성시경 맛집</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="list-count" id="listCount">0곳</span>
+        <select class="sort-select" onchange="setSort(this.value)">
+          <option value="rating">평점순</option>
+          <option value="saves">저장순</option>
+          <option value="recent">최신순</option>
+        </select>
       </div>
-      <div id="placeResults"></div>
+    </div>
+    <div class="list-body" id="restList"></div>
+  </div>
+
+  <!-- 지도 패널 -->
+  <div class="map-panel">
+    <div class="map-tabs">
+      <div class="mtab on" onclick="setMapTab('map',this)">🗺 지도</div>
+      <div class="mtab" onclick="setMapTab('detail',this)">📋 상세</div>
+    </div>
+    <div class="map-wrap">
+      <div id="kakao-map"></div>
     </div>
   </div>
 
-  <div class="rank-page hidden" id="rankPage">
-    <div style="max-width:1200px;margin:0 auto 16px">
-      <h2 style="font-size:18px;font-weight:700">🏆 스타스푼 TOP 100</h2>
-      <p style="font-size:13px;color:var(--text3);margin-top:4px">연예인 방문 횟수 기준 · 댓글/평점 쌓이면 자동 반영</p>
-    </div>
-    <div class="rank-grid" id="rankGrid"></div>
-  </div>
+</div>
 
-  <div class="my-page hidden" id="myPage">
-    <div id="myContent"></div>
+<!-- ── 순위 페이지 ── -->
+<div class="rank-page" id="rankPage">
+  <div class="rank-section">
+    <div class="rank-section-title">🏆 큐레이터 순위</div>
+    <div class="rank-grid" id="curatorRankGrid"></div>
+  </div>
+  <div class="rank-section">
+    <div class="rank-section-title">⭐ 전국 맛집 TOP 100</div>
+    <div class="rank-grid" id="restRankGrid"></div>
   </div>
 </div>
 
-<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitle">맛집 정보</div>
-      <button class="modal-close" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="comment-list" id="commentList"></div>
-      <div class="comment-form" id="commentForm">
-        <div id="commentFormInner"></div>
-      </div>
-    </div>
-  </div>
+<!-- ── 내 스푼 페이지 ── -->
+<div class="my-page" id="myPage">
+  <div id="myContent"></div>
 </div>
 
+<!-- ── 토스트 ── -->
 <div class="toast" id="toast"><i class="ti ti-check"></i><span id="toastMsg"></span></div>
 
-<!-- 맛집 제보 모달 -->
-<div class="report-modal-overlay" id="reportModalOverlay" onclick="closeReportModal(event)">
-  <div class="report-modal">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-      <h3 style="margin:0;font-size:16px">⭐ 스타 맛집 제보</h3>
-      <button onclick="closeReportModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+<!-- ── 맛집 제보 모달 ── -->
+<div class="overlay" id="reportOverlay" onclick="closeReportModal(event)">
+  <div class="modal report-modal">
+    <div class="modal-hd">
+      <span class="modal-title">⭐ 스타 맛집 제보</span>
+      <button class="modal-close" onclick="closeReportModal()">✕</button>
     </div>
-    <p style="font-size:13px;color:var(--text3);margin-bottom:16px">연예인이 방문한 맛집을 알고 계신가요? 제보해주세요!</p>
-
-    <!-- 식당 검색 -->
-    <div style="margin-bottom:12px">
-      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">🍽️ 식당 이름 검색</label>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="reportRestSearch" placeholder="식당 이름 입력 후 검색..."
-          style="flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none"
-          onkeydown="if(event.key==='Enter')searchReportRest()"
-          onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
-        <button onclick="searchReportRest()" style="padding:9px 14px;background:var(--gold);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">검색</button>
+    <div class="modal-bd">
+      <div class="form-group">
+        <label class="form-label">🍽️ 식당 검색</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" class="form-input" id="repRestSearch" placeholder="식당 이름 입력 후 검색..." onkeydown="if(event.key==='Enter')searchRepRest()" style="flex:1">
+          <button onclick="searchRepRest()" style="padding:9px 14px;background:var(--gold);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;flex-shrink:0">검색</button>
+        </div>
+        <div id="repRestResults" style="margin-top:8px"></div>
       </div>
-      <div id="reportRestResults" style="margin-top:8px"></div>
-    </div>
-
-    <!-- 선택된 식당 -->
-    <div id="reportRestSelected" style="display:none;background:var(--bg2);border-radius:8px;padding:10px 12px;margin-bottom:12px;border-left:3px solid var(--gold)">
-      <div style="font-weight:600;font-size:13px" id="reportRestName"></div>
-      <div style="font-size:12px;color:var(--text3);margin-top:2px" id="reportRestAddr"></div>
-    </div>
-
-    <!-- 연예인 이름 -->
-    <div style="margin-bottom:12px">
-      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">⭐ 연예인 이름</label>
-      <input type="text" id="reportCeleb" placeholder="예: 성시경, 풍자, 쯔양..."
-        style="width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box"
-        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
-    </div>
-
-    <!-- 증거 링크 -->
-    <div style="margin-bottom:12px">
-      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">🔗 증거 링크</label>
-      <p style="font-size:11px;color:var(--text3);margin-bottom:8px">유튜브, 인스타그램, 뉴스 기사, 블로그 등 연예인 방문을 확인할 수 있는 링크를 입력해주세요</p>
-      
-      <!-- 유튜브 검색 버튼 -->
-      <button onclick="searchYoutubeForReport()" style="width:100%;padding:9px;background:#FF0000;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-        📺 유튜브에서 검색하기
-      </button>
-
-      <input type="text" id="reportYtUrl" placeholder="https://www.youtube.com/ 또는 https://www.instagram.com/ 또는 뉴스/블로그 링크..."
-        style="width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box;margin-bottom:8px"
-        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
-      
-      <!-- 예시 링크 타입 -->
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <span style="font-size:11px;background:#f9f9f9;border:1px solid var(--border2);border-radius:20px;padding:3px 10px;color:var(--text3)">📺 유튜브</span>
-        <span style="font-size:11px;background:#f9f9f9;border:1px solid var(--border2);border-radius:20px;padding:3px 10px;color:var(--text3)">📸 인스타그램</span>
-        <span style="font-size:11px;background:#f9f9f9;border:1px solid var(--border2);border-radius:20px;padding:3px 10px;color:var(--text3)">📰 뉴스 기사</span>
-        <span style="font-size:11px;background:#f9f9f9;border:1px solid var(--border2);border-radius:20px;padding:3px 10px;color:var(--text3)">📝 블로그</span>
+      <div class="selected-rest" id="repRestSelected">
+        <div class="selected-rest-name" id="repRestName"></div>
+        <div class="selected-rest-addr" id="repRestAddr"></div>
       </div>
+      <div class="form-group">
+        <label class="form-label">⭐ 연예인 / 큐레이터 이름</label>
+        <input type="text" class="form-input" id="repCeleb" placeholder="예: 성시경, 풍자, 홍길동...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">🔗 증거 링크</label>
+        <button class="btn-yt-search" onclick="searchYtForRep()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          📺 유튜브에서 검색하기
+        </button>
+        <input type="text" class="form-input" id="repLink" placeholder="https://youtube.com/ 또는 instagram.com/ 또는 뉴스/블로그...">
+        <div class="link-type-tags">
+          <span class="link-type-tag">📺 유튜브</span>
+          <span class="link-type-tag">📸 인스타그램</span>
+          <span class="link-type-tag">📰 뉴스</span>
+          <span class="link-type-tag">📝 블로그</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">💬 한줄 코멘트 (선택)</label>
+        <input type="text" class="form-input" id="repComment" placeholder="예: 먹을텐데 12화에 나온 맛집이에요">
+      </div>
+      <p class="notice">※ 허위 제보는 신고로 자동 삭제됩니다. 맛집 등록 시 10점, 링크 추가 시 5점 적립!</p>
+      <button class="btn-primary" onclick="submitReport()">제보하기 🎉</button>
     </div>
-
-    <!-- 코멘트 -->
-    <div style="margin-bottom:16px">
-      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:6px">💬 한줄 코멘트 (선택)</label>
-      <input type="text" id="reportComment" placeholder="예: 먹을텐데 12화에 나온 맛집이에요"
-        style="width:100%;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box"
-        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'">
-    </div>
-
-    <p style="font-size:11px;color:var(--text3);margin-bottom:12px">※ 허위 제보는 신고로 자동 삭제됩니다. 유튜브·인스타·뉴스·블로그 링크 모두 가능해요. 로그인 후 제보 가능해요.</p>
-
-    <button onclick="submitReport()" style="width:100%;padding:12px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">
-      제보하기 🎉
-    </button>
   </div>
 </div>
 
-<!-- 유튜브 링크 추가 모달 -->
-<div class="yt-modal-overlay" id="ytModalOverlay" onclick="closeYtModal(event)">
-  <div class="yt-modal" style="width:560px;max-width:95vw">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <h3 style="margin:0;font-size:16px">📺 유튜브 링크 추가</h3>
-      <button onclick="closeYtModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)">✕</button>
+<!-- ── 댓글 모달 ── -->
+<div class="overlay" id="commentOverlay" onclick="closeCommentModal(event)">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title" id="commentModalTitle">댓글</span>
+      <button class="modal-close" onclick="closeCommentModal()">✕</button>
     </div>
-    <p style="font-size:13px;color:var(--text2);margin:0 0 12px;font-weight:600" id="ytModalRestName"></p>
-    
-    <!-- 유튜브 검색창 -->
-    <div style="background:#f9f9f9;border-radius:10px;padding:12px;margin-bottom:12px">
-      <p style="font-size:12px;color:var(--text3);margin-bottom:8px">① 아래 버튼으로 유튜브에서 영상을 찾으세요</p>
-      <button onclick="searchYoutubeForRest()" style="width:100%;padding:10px;background:#FF0000;color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-        유튜브에서 "<span id="ytSearchQuery"></span>" 검색하기
-      </button>
-    </div>
-
-    <!-- URL 입력 -->
-    <div style="background:#f9f9f9;border-radius:10px;padding:12px">
-      <p style="font-size:12px;color:var(--text3);margin-bottom:8px">② 영상 URL을 복사해서 여기 붙여넣기 후 등록하세요</p>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="ytUrlInput" placeholder="https://www.youtube.com/watch?v=..." 
-          style="flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;outline:none;box-sizing:border-box"
-          onfocus="this.style.borderColor='#CC0000'" onblur="this.style.borderColor='var(--border2)'">
-        <button onclick="submitYtLink()" style="padding:9px 18px;background:#CC0000;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap">등록</button>
-      </div>
-      <p style="font-size:11px;color:var(--text3);margin-top:6px">※ 허위 링크는 신고 3회 시 자동 삭제됩니다</p>
+    <div class="modal-bd">
+      <div class="comment-list" id="commentList"></div>
+      <div class="comment-form" id="commentForm"></div>
     </div>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, limit, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, query, orderBy, where, limit, serverTimestamp, increment, getCountFromServer } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyC5nf84GbQQ_5vIDwhIvTZ5zPqf7nrnSxU",
@@ -478,662 +423,375 @@ const firebaseConfig = {
   projectId: "starspoon-120d7",
   storageBucket: "starspoon-120d7.firebasestorage.app",
   messagingSenderId: "672370227821",
-  appId: "1:672370227821:web:aea1d9c6ca8587842a5d64",
-  measurementId: "G-J8B76Y0LHW"
+  appId: "1:672370227821:web:aea1d9c6ca8587842a5d64"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
-
-// 카카오 SDK 초기화
 window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
 
+// ── 상태 ──
 let currentUser = null;
-let selCeleb = "전체", selCat = "전체", searchQ = "";
-let map, markers = [], overlays = [];
-let currentModalId = null;
-let myRating = 0;
-let savedList = [];
-
-const COLORS = {"성시경":"#F59E0B","이영자":"#EF4444","백종원":"#3B82F6","나얼":"#8B5CF6","홍진경":"#10B981"};
-
+let currentUserData = null;
 let DATA = [];
+let selCurator = '성시경';
+let selCuratorTab = 'star';
+let selCat = '전체';
+let selSort = 'rating';
+let searchQ = '';
+let currentPage = 'main';
+let map, markers = [], overlays = [];
+let savedList = [];
+let currentCommentId = null;
+let myRating = 0;
+let repRestData = null;
 
-// Firebase에서 맛집 데이터 불러오기
-// 고정 연예인 목록 (탭용)
-const CELEBS = ["성시경", "허영만", "이영자", "백종원", "나얼", "홍진경", "쯔양", "유재석", "풍자", "입짧은햇님", "히밥", "승우아빠"];
+// ── 고정 스타 큐레이터 ──
+const STAR_CURATORS = [
+  {name:'성시경', icon:'🎵', color:'#F59E0B'},
+  {name:'풍자', icon:'😄', color:'#EF4444'},
+  {name:'백종원', icon:'👨‍🍳', color:'#3B82F6'},
+  {name:'이영자', icon:'😋', color:'#10B981'},
+  {name:'나얼', icon:'🎤', color:'#8B5CF6'},
+  {name:'홍진경', icon:'💃', color:'#EC4899'},
+  {name:'쯔양', icon:'🍖', color:'#F97316'},
+  {name:'유재석', icon:'😆', color:'#06B6D4'},
+  {name:'히밥', icon:'🍱', color:'#84CC16'},
+  {name:'승우아빠', icon:'👨‍👧', color:'#A78BFA'},
+  {name:'입짧은햇님', icon:'🌸', color:'#FB7185'},
+];
 
-async function loadRestaurantsFromDB(celeb = null, cat = null, keyword = null) {
-  try {
-    document.getElementById("listCount").textContent = "로딩 중...";
-    let q = collection(db, "restaurants");
-
-    // 연예인 필터
-    if (celeb && celeb !== "전체") {
-      q = query(q, where("celeb", "==", celeb), orderBy("name"), limit(100));
-    } else if (keyword) {
-      // 키워드 검색은 전체에서 이름으로
-      q = query(q, orderBy("name"), limit(200));
-    } else {
-      // 기본: 성시경 맛집
-      q = query(q, where("celeb", "==", "성시경"), orderBy("name"), limit(100));
-    }
-
-    const snap = await getDocs(q);
-    DATA = [];
-    snap.forEach(doc => {
-      const d = doc.data();
-      DATA.push({
-        id: doc.id,
-        name: d.name || '',
-        celebs: d.celebs || [d.celeb || ''],
-        celeb: d.celeb || (d.celebs && d.celebs[0]) || '',
-        cat: d.category || d.cat || '한식',
-        area: d.area || '',
-        comment: d.comment || '',
-        yt: d.video_url || d.yt || '',
-        lat: d.lat || 37.5665,
-        lng: d.lng || 126.9780,
-        visits: d.visits || 0,
-      });
-    });
-    DATA.forEach(d => { if (!d.celeb) d.celeb = d.celebs[0]; });
-    render();
-    showToast(`맛집 ${DATA.length}개 불러왔어요! 🍽️`);
-  } catch(e) {
-    console.log('DB 로드 오류:', e);
-    // 인덱스 오류 시 전체 로드로 폴백
-    try {
-      const snap = await getDocs(query(collection(db, "restaurants"), limit(100)));
-      DATA = [];
-      snap.forEach(doc => {
-        const d = doc.data();
-        DATA.push({
-          id: doc.id,
-          name: d.name || '',
-          celebs: d.celebs || [d.celeb || ''],
-          celeb: d.celeb || (d.celebs && d.celebs[0]) || '',
-          cat: d.category || d.cat || '한식',
-          area: d.area || '',
-          comment: d.comment || '',
-          yt: d.video_url || d.yt || '',
-          lat: d.lat || 37.5665,
-          lng: d.lng || 126.9780,
-          visits: d.visits || 0,
-        });
-      });
-      DATA.forEach(d => { if (!d.celeb) d.celeb = d.celebs[0]; });
-      render();
-    } catch(e2) { console.log('폴백 오류:', e2); }
-  }
+// ── 등급 시스템 ──
+function getGrade(points) {
+  if (points >= 700) return {name:'별스푼', icon:'⭐', color:'#F59E0B'};
+  if (points >= 300) return {name:'금스푼', icon:'🥇', color:'#F59E0B'};
+  if (points >= 100) return {name:'은스푼', icon:'🥈', color:'#94A3B8'};
+  return {name:'스푼', icon:'🥄', color:'#9A9A96'};
 }
 
-let scoreCache = {};
+function getGradeMultiplier(points) {
+  if (points >= 700) return 10;
+  if (points >= 300) return 5;
+  if (points >= 100) return 3;
+  return 1;
+}
+
+// ── 포인트 지급 ──
+async function addPoints(uid, points, reason) {
+  if (!uid) return;
+  const userRef = doc(db, 'users', uid);
+  await updateDoc(userRef, {
+    points: increment(points),
+    [`pointHistory`]: [...((await getDoc(userRef)).data()?.pointHistory || []),
+      {points, reason, at: new Date().toISOString()}].slice(-50)
+  });
+  if (currentUser?.uid === uid) {
+    currentUserData = (await getDoc(userRef)).data();
+    renderAuthArea();
+  }
+}
 
 // ── 구글 로그인 ──
 window.loginWithGoogle = async function() {
   try {
-    await signInWithPopup(auth, googleProvider);
-  } catch(e) { showToast("구글 로그인 실패: " + e.message); }
-};
-
-// ── 카카오 로그인 (SDK 2.x authorize 방식) ──
-window.loginWithKakao = function() {
-  window.Kakao.Auth.authorize({
-    redirectUri: window.location.origin
-  });
-};
-
-// 페이지 로드 시 카카오 토큰 처리
-async function initKakaoLogin() {
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (code) {
-      window.history.replaceState({}, '', window.location.pathname);
-      // Vercel 서버리스 함수로 토큰 교환 (CORS 우회)
-      const res = await fetch('/api/kakao-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: code,
-          redirectUri: window.location.origin
-        })
+    const result = await signInWithPopup(auth, googleProvider);
+    const user = result.user;
+    const userRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        displayName: user.displayName || '사용자',
+        photoURL: user.photoURL || '',
+        email: user.email || '',
+        points: 20,
+        pointHistory: [{points:20, reason:'회원가입 보너스', at: new Date().toISOString()}],
+        saved: [],
+        registeredRests: [],
+        createdAt: new Date().toISOString()
       });
-      const tokenData = await res.json();
-      if (tokenData.access_token) {
-        window.Kakao.Auth.setAccessToken(tokenData.access_token);
-        await fetchKakaoUser();
-      }
-    } else if (window.Kakao.Auth.getAccessToken()) {
-      await fetchKakaoUser();
+      showToast('환영해요! 🎉 가입 보너스 20점 적립!');
     }
-  } catch(e) { console.log('카카오 초기화 오류:', e); }
-}
+  } catch(e) { showToast('로그인 실패: ' + e.message); }
+};
 
-async function fetchKakaoUser() {
-  try {
-    const res = await window.Kakao.API.request({url: '/v2/user/me'});
-    const kakaoUser = {
-      uid: 'kakao_' + res.id,
-      displayName: res.kakao_account?.profile?.nickname || res.properties?.nickname || '카카오 사용자',
-      photoURL: res.kakao_account?.profile?.profile_image_url || res.properties?.profile_image || '',
-      email: res.kakao_account?.email || '',
-      provider: 'kakao'
-    };
-    await setDoc(doc(db, "users", kakaoUser.uid), {
-      displayName: kakaoUser.displayName,
-      photoURL: kakaoUser.photoURL,
-      email: kakaoUser.email,
-      provider: 'kakao'
-    }, { merge: true });
-    currentUser = kakaoUser;
-    const snap = await getDoc(doc(db, "users", kakaoUser.uid));
-    savedList = snap.exists() ? (snap.data().saved || []) : [];
-    savedPlaces = snap.exists() ? (snap.data().savedPlaces || []) : [];
-    renderAuthArea();
-    renderList();
-    showToast("카카오 로그인 성공! 환영해요 😊");
-  } catch(e) { console.log('카카오 사용자 정보 오류:', e); }
-}
+window.loginWithKakao = function() {
+  window.Kakao.Auth.authorize({ redirectUri: window.location.origin });
+};
 
 window.logoutUser = async function() {
-  if (currentUser?.provider === 'kakao') {
-    window.Kakao.Auth.logout(() => {});
-    currentUser = null;
-    savedList = [];
-    renderAuthArea();
-    renderList();
-    showToast("로그아웃됐어요");
-  } else {
-    await signOut(auth);
-    savedList = [];
-    renderAuthArea();
-    renderList();
-  }
+  await signOut(auth);
+  currentUser = null; currentUserData = null; savedList = [];
+  renderAuthArea();
+  showToast('로그아웃됐어요');
 };
 
-// ── 인증 상태 (구글) ──
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     currentUser = user;
-    const snap = await getDoc(doc(db, "users", user.uid));
-    savedList = snap.exists() ? (snap.data().saved || []) : [];
-    savedPlaces = snap.exists() ? (snap.data().savedPlaces || []) : [];
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    currentUserData = snap.exists() ? snap.data() : null;
+    savedList = currentUserData?.saved || [];
     renderAuthArea();
     renderList();
-    if (map) renderPins();
-  } else if (!currentUser?.provider) {
-    currentUser = null;
-    savedList = [];
-    savedPlaces = [];
+  } else {
+    currentUser = null; currentUserData = null; savedList = [];
     renderAuthArea();
     renderList();
-    if (map) renderPins();
   }
 });
 
 function renderAuthArea() {
-  const area = document.getElementById("authArea");
+  const area = document.getElementById('authArea');
   if (currentUser) {
-    const name = currentUser.displayName || currentUser.email || '사용자';
+    const pts = currentUserData?.points || 0;
+    const grade = getGrade(pts);
+    const name = currentUser.displayName || '사용자';
     const photo = currentUser.photoURL || '';
     area.innerHTML = `
       <div class="user-info">
         ${photo ? `<img class="user-avatar" src="${photo}" onerror="this.style.display='none'">` : ''}
-        <span>${name}</span>
-        <button class="logout-btn" onclick="logoutUser()">로그아웃</button>
+        <span style="font-size:13px;font-weight:600">${name}</span>
+        <span class="user-grade">${grade.icon} ${grade.name}</span>
+        <span style="font-size:12px;color:var(--gold);font-weight:700">${pts}pt</span>
+        <button class="btn-logout" onclick="logoutUser()">로그아웃</button>
       </div>`;
   } else {
     area.innerHTML = `
-      <div class="login-area">
-        <button class="login-btn-google" onclick="loginWithGoogle()">
-          <i class="ti ti-brand-google"></i> 구글
-        </button>
-        <button class="login-btn-kakao" onclick="loginWithKakao()">
-          <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path fill="#000" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
-          카카오
-        </button>
-      </div>`;
+      <button class="btn-login-g" onclick="loginWithGoogle()"><i class="ti ti-brand-google"></i> 구글</button>
+      <button class="btn-login-k" onclick="loginWithKakao()">
+        <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path fill="#000" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
+        카카오
+      </button>`;
   }
 }
 
-async function getScore(d) {
-  if (scoreCache[d.id]) return scoreCache[d.id];
-  const commSnap = await getDocs(collection(db, "restaurants", d.id, "comments"));
-  let totalRating = 0, ratingCount = 0, commentCount = commSnap.size;
-  commSnap.forEach(c => { if(c.data().rating) { totalRating += c.data().rating; ratingCount++; } });
-  const avgRating = ratingCount > 0 ? totalRating / ratingCount : 0;
-  const ratingScore = (avgRating / 5) * 40;
-  const commentScore = Math.min(commentCount / 10, 1) * 30;
-  const visitScore = Math.min((d.visits || 0) / 10, 1) * 30;
-  const total = Math.round(ratingScore + commentScore + visitScore);
-  scoreCache[d.id] = {total, avgRating: avgRating.toFixed(1), commentCount, visits: d.visits||0};
-  return scoreCache[d.id];
+// ── 큐레이터 탭 ──
+window.setCuratorTab = function(tab, el) {
+  selCuratorTab = tab;
+  document.querySelectorAll('.ctab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  renderCuratorList();
+};
+
+async function renderCuratorList() {
+  const list = document.getElementById('curatorList');
+  if (selCuratorTab === 'star') {
+    list.innerHTML = STAR_CURATORS.map((c, i) => {
+      const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+      return `<div class="curator-item${selCurator===c.name?' on':''}" onclick="selectCurator('${c.name}')">
+        <div class="rank-num ${rankClass}" style="font-size:10px">${i+1}</div>
+        <div class="curator-avatar star-curator">${c.icon}</div>
+        <div class="curator-info">
+          <div class="curator-name">${c.name}</div>
+          <div class="curator-sub"><i class="ti ti-map-pin" style="font-size:10px"></i> 맛집 로딩중</div>
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    // 일반 큐레이터 (등록 10개 이상)
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), orderBy('points', 'desc'), limit(20)));
+      const users = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if ((data.registeredRests || []).length >= 10) {
+          users.push({id: d.id, ...data});
+        }
+      });
+      if (!users.length) {
+        list.innerHTML = `<div class="empty"><i class="ti ti-user"></i><p>아직 일반 큐레이터가 없어요<br><small>맛집 10개 이상 등록하면 활성화!</small></p></div>`;
+        return;
+      }
+      list.innerHTML = users.map((u, i) => {
+        const grade = getGrade(u.points || 0);
+        const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+        return `<div class="curator-item${selCurator===u.displayName?' on':''}" onclick="selectCurator('${u.displayName}','${u.id}')">
+          <div class="rank-num ${rankClass}" style="font-size:10px">${i+1}</div>
+          <div class="curator-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : grade.icon}</div>
+          <div class="curator-info">
+            <div class="curator-name">${u.displayName}</div>
+            <div class="curator-sub">${grade.icon} ${grade.name} · ${u.points||0}pt</div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) {
+      list.innerHTML = `<div class="empty"><p>불러오기 실패</p></div>`;
+    }
+  }
+}
+
+window.selectCurator = async function(name, uid) {
+  selCurator = name;
+  document.getElementById('listTitle').textContent = name + ' 맛집';
+  renderCuratorList();
+  await loadRests(name);
+};
+
+// ── 데이터 로드 ──
+async function loadRests(celeb) {
+  try {
+    document.getElementById('listCount').textContent = '로딩 중...';
+    let q = query(collection(db, 'restaurants'), where('celeb', '==', celeb), orderBy('name'), limit(100));
+    const snap = await getDocs(q);
+    DATA = [];
+    snap.forEach(d => {
+      const r = d.data();
+      DATA.push({
+        id: d.id,
+        name: r.name || '',
+        celeb: r.celeb || '',
+        celebs: r.celebs || [r.celeb || ''],
+        cat: r.category || r.cat || '한식',
+        area: r.area || '',
+        comment: r.comment || '',
+        yt: r.video_url || r.yt || '',
+        lat: r.lat || 37.5665,
+        lng: r.lng || 126.9780,
+        visits: r.visits || 0,
+        saves: r.saves || 0,
+        avgRating: r.avgRating || 0,
+        ratingCount: r.ratingCount || 0,
+        registeredBy: r.registeredBy || null,
+      });
+    });
+    renderList();
+    renderPins();
+  } catch(e) {
+    console.log('로드 오류:', e);
+    try {
+      const snap = await getDocs(query(collection(db, 'restaurants'), limit(100)));
+      DATA = [];
+      snap.forEach(d => {
+        const r = d.data();
+        if (r.celeb === celeb) DATA.push({id:d.id, name:r.name||'', celeb:r.celeb||'', celebs:r.celebs||[r.celeb||''], cat:r.category||r.cat||'한식', area:r.area||'', comment:r.comment||'', yt:r.video_url||r.yt||'', lat:r.lat||37.5665, lng:r.lng||126.9780, visits:r.visits||0, saves:r.saves||0, avgRating:r.avgRating||0, ratingCount:r.ratingCount||0});
+      });
+      renderList();
+      renderPins();
+    } catch(e2) {}
+  }
 }
 
 function filtered() {
-  return DATA.filter(d => {
-    if (selCeleb !== "전체" && !d.celebs.includes(selCeleb)) return false;
-    if (selCat !== "전체" && d.cat !== selCat) return false;
+  let items = DATA.filter(d => {
+    if (selCat !== '전체' && d.cat !== selCat) return false;
     if (searchQ) {
       const q = searchQ;
-      const matchCeleb = d.celebs.some(c => c.includes(q));
-      const matchName = d.name.includes(q);
-      const matchCat = d.cat.includes(q);
-      const matchComment = d.comment.includes(q);
-      const matchArea = d.area.includes(q);
-      if (!matchCeleb && !matchName && !matchCat && !matchComment && !matchArea) return false;
+      if (!d.name.includes(q) && !d.area.includes(q) && !d.comment.includes(q) && !d.celeb.includes(q)) return false;
     }
     return true;
   });
+  if (selSort === 'rating') items.sort((a,b) => (b.avgRating||0)-(a.avgRating||0));
+  else if (selSort === 'saves') items.sort((a,b) => (b.saves||0)-(a.saves||0));
+  else items.sort((a,b) => (b.visits||0)-(a.visits||0));
+  return items;
 }
 
 function renderList() {
-  const list = document.getElementById("restaurantList");
   const items = filtered();
-  document.getElementById("listCount").textContent = items.length + "곳";
-  if (!items.length) { list.innerHTML = '<div class="empty"><i class="ti ti-mood-empty"></i>검색 결과가 없어요</div>'; return; }
-  list.innerHTML = items.map(d => {
+  document.getElementById('listCount').textContent = items.length + '곳';
+  const list = document.getElementById('restList');
+  if (!items.length) {
+    list.innerHTML = '<div class="empty"><i class="ti ti-mood-empty"></i><p>맛집이 없어요</p></div>';
+    return;
+  }
+  list.innerHTML = items.map((d, i) => {
     const isSaved = savedList.includes(d.id);
-    const isMulti = d.celebs.length > 1;
-    const celebBadges = d.celebs.map(c => {
-      const source = {
-        "허영만": "허영만 방송출연",
-        "성시경": "성시경 방송출연",
-        "이영자": "이영자 방송출연",
-        "백종원": "백종원 방송출연",
-        "나얼": "나얼 방송출연",
-        "홍진경": "홍진경 방송출연",
-        "쯔양": "쯔양 방송출연",
-        "유재석": "유재석 방송출연",
-        "풍자": "풍자 방송출연",
-        "입짧은햇님": "입짧은햇님 방송출연",
-        "히밥": "히밥 방송출연",
-        "승우아빠": "승우아빠 방송출연"
-      }[c] || c;
-      return `<span class="badge" style="background:${COLORS[c]}22;color:${COLORS[c]||'#B45309'}">${c}</span><span style="font-size:11px;color:var(--text3)">· ${source}</span>`;
-    }).join(" ");
-    return `<div class="card" id="card-${d.id}">
-      <div class="card-top">
-        <div class="card-icon" style="${isMulti ? 'background:linear-gradient(135deg,#FFD700,#F59E0B);font-size:22px' : ''}">${isMulti ? '👑' : '⭐'}</div>
-        <div class="card-info">
-          <div class="card-name">${d.name}${isMulti ? ' <span style="font-size:11px;color:#B45309;font-weight:700">스타 핫플 🔥</span>' : ''}</div>
-          <div class="card-meta">
-            ${celebBadges}
-            <span class="meta-dot">·</span>
-            <span class="meta-sub">${d.cat}</span>
-            <span class="meta-dot">·</span>
-            <span class="meta-sub">${d.area}</span>
+    const stars = d.avgRating ? '★'.repeat(Math.round(d.avgRating)) + '☆'.repeat(5-Math.round(d.avgRating)) : '';
+    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+    return `<div class="rest-card" id="card-${d.id}" onclick="focusCard('${d.id}')">
+      <div class="rest-card-top">
+        <div class="rest-rank rank-num ${rankClass}">${i+1}</div>
+        <div class="rest-info">
+          <div class="rest-name">${d.name}</div>
+          <div class="rest-meta">
+            <span class="rest-badge">${d.celeb}</span>
+            <span class="rest-cat">${d.cat}</span>
+            <span style="color:var(--border2)">·</span>
+            <span class="rest-area">${d.area}</span>
           </div>
         </div>
       </div>
-      <div class="comment">"${d.comment}"</div>
-      <div class="rating-row">
-        <div class="stars" id="stars-${d.id}">
-          ${[1,2,3,4,5].map(i=>`<span class="star" onclick="rateRestaurant('${d.id}',${i})">★</span>`).join("")}
+      <div class="rest-comment">"${d.comment || '이 맛집을 소개합니다'}"</div>
+      <div class="rest-foot">
+        <div class="rest-rating">
+          ${d.avgRating ? `<span style="color:var(--gold)">★</span> ${d.avgRating.toFixed(1)}` : '<span style="color:var(--border2)">★</span> 평점없음'}
+          <span class="rest-rating-count">${d.ratingCount ? `(${d.ratingCount})` : ''}</span>
         </div>
-        <span class="rating-count" id="rcount-${d.id}"></span>
-        <button class="save-btn ${isSaved?'saved':''}" onclick="toggleSave('${d.id}')" style="margin-left:auto">
-          <i class="ti ti-heart${isSaved?'-filled':''}"></i>${isSaved?'저장됨':'저장'}
-        </button>
+        <div class="rest-saves"><i class="ti ti-heart" style="font-size:11px"></i> ${d.saves||0}</div>
+        <div class="rest-btns">
+          <a class="btn-sm map" href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" onclick="event.stopPropagation()">🗺️ 길찾기</a>
+          <button class="btn-sm${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')">
+            ${isSaved?'❤️ 저장됨':'🤍 저장'}
+          </button>
+          <button class="btn-sm" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')">
+            💬 댓글
+          </button>
+        </div>
       </div>
-      <div class="card-foot">
-        <a class="map-btn" href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" style="color:#F59E0B;border-color:#F59E0B"><i class="ti ti-map-2"></i>길찾기</a>
-        <button class="map-btn" onclick="focusMap('${d.id}')"><i class="ti ti-map-pin"></i>지도</button>
-        <button class="map-btn" onclick="openModal('${d.id}')"><i class="ti ti-message"></i>댓글</button>
-      </div>
-      <div class="card-yt" id="yt-${d.id}">
+      <div class="rest-link">
         ${d.yt
-          ? `<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-               <a class="yt-btn" href="${d.yt}" target="_blank"><i class="ti ti-brand-youtube"></i>유튜브 보기</a>
-               <button class="yt-report-btn" onclick="reportYt('${d.id}')">🚩 신고</button>
-             </div>`
-          : `<button class="yt-add-btn" style="margin-top:8px" onclick="openYtModal('${d.id}','${d.name}')"><i class="ti ti-brand-youtube"></i>유튜브 링크 추가</button>`
+          ? `<a class="link-btn link-yt" href="${d.yt}" target="_blank" onclick="event.stopPropagation()"><i class="ti ti-brand-youtube"></i> 영상 보기</a>`
+          : `<button class="link-btn link-add" onclick="event.stopPropagation();openYtModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><i class="ti ti-plus"></i> 링크 추가</button>`
         }
       </div>
     </div>`;
-  }).join("");
-  loadRatings(items);
+  }).join('');
 }
 
-async function loadRatings(items) {
-  for (const d of items) {
-    const snap = await getDocs(collection(db, "restaurants", d.id, "comments"));
-    let total = 0, cnt = 0;
-    snap.forEach(c => { if(c.data().rating){total+=c.data().rating;cnt++;} });
-    const el = document.getElementById("rcount-" + d.id);
-    if (el) el.textContent = cnt > 0 ? `★ ${(total/cnt).toFixed(1)} (${cnt})` : "평점 없음";
-  }
-}
-
-window.rateRestaurant = function(id, rating) {
-  if (!currentUser) { showToast("로그인 후 평점을 남길 수 있어요!"); return; }
-  myRating = rating;
-  const stars = document.querySelectorAll(`#stars-${id} .star`);
-  stars.forEach((s,i) => s.classList.toggle("on", i < rating));
-  showToast(`댓글 작성 시 ${rating}점이 반영돼요!`);
-};
-
+// ── 저장 ──
 window.toggleSave = async function(id) {
-  if (!currentUser) { showToast("로그인 후 저장할 수 있어요!"); return; }
-  const uid = currentUser.uid;
+  if (!currentUser) { showToast('로그인 후 저장할 수 있어요!'); return; }
   const idx = savedList.indexOf(id);
-  if (idx >= 0) savedList.splice(idx, 1);
+  const wasSaved = idx >= 0;
+  if (wasSaved) savedList.splice(idx, 1);
   else savedList.push(id);
-  await setDoc(doc(db, "users", uid), {saved: savedList}, {merge: true});
-  scoreCache = {};
+  await setDoc(doc(db, 'users', currentUser.uid), {saved: savedList}, {merge: true});
+
+  // 저장 카운트 업데이트
+  const restRef = doc(db, 'restaurants', id);
+  await updateDoc(restRef, {saves: increment(wasSaved ? -1 : 1)});
+
+  // 등록자에게 포인트 지급
+  if (!wasSaved) {
+    const restSnap = await getDoc(restRef);
+    const registeredBy = restSnap.data()?.registeredBy;
+    if (registeredBy && registeredBy !== currentUser.uid) {
+      const saverPts = currentUserData?.points || 0;
+      const multiplier = getGradeMultiplier(saverPts);
+      await addPoints(registeredBy, multiplier, `내 가게 저장 (${getGrade(saverPts).name})`);
+    }
+  }
+
+  // 달성 보너스 체크
+  if (!wasSaved) await checkAchievements(id);
+
+  const d = DATA.find(x => x.id === id);
+  if (d) d.saves = (d.saves||0) + (wasSaved ? -1 : 1);
   renderList();
-  if (currentPage === "my") renderMyPage();
-  showToast(idx >= 0 ? "저장 취소됐어요" : "내 맛집에 저장됐어요! ❤️");
+  showToast(wasSaved ? '저장 취소됐어요' : '내 스푼에 저장됐어요! ❤️ +2pt');
 };
 
-window.openModal = async function(id) {
-  currentModalId = id;
-  myRating = 0;
-  const d = DATA.find(x => x.id === id);
-  document.getElementById("modalTitle").textContent = `💬 ${d.name} 댓글`;
-  document.getElementById("modalOverlay").classList.add("show");
-  await loadComments(id);
-};
+// ── 달성 보너스 체크 ──
+async function checkAchievements(restId) {
+  const restSnap = await getDoc(doc(db, 'restaurants', restId));
+  const data = restSnap.data();
+  const registeredBy = data?.registeredBy;
+  if (!registeredBy) return;
+  const achievements = data?.achievements || {};
 
-// 유튜브 링크 모달
-let ytTargetId = '';
-let ytTargetName = '';
-let ytTargetCeleb = '';
-
-window.openYtModal = function(id, name) {
-  if (!currentUser) { showToast('로그인 후 링크를 추가할 수 있어요!'); return; }
-  ytTargetId = id;
-  ytTargetName = name;
-  const d = DATA.find(x => x.id === id);
-  ytTargetCeleb = d ? (d.celeb || '') : '';
-  document.getElementById('ytModalRestName').textContent = '🍽️ ' + name;
-  document.getElementById('ytSearchQuery').textContent = (ytTargetCeleb ? ytTargetCeleb + ' ' : '') + name;
-  document.getElementById('ytUrlInput').value = '';
-  document.getElementById('ytModalOverlay').classList.add('show');
-};
-
-window.searchYoutubeForRest = function() {
-  const query = encodeURIComponent((ytTargetCeleb ? ytTargetCeleb + ' ' : '') + ytTargetName);
-  window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
-};
-
-// ── 맛집 제보 모달 ──
-let reportRestData = null;
-
-window.openReportModal = function() {
-  if (!currentUser) { showToast('로그인 후 제보할 수 있어요!'); return; }
-  document.getElementById('reportRestSearch').value = '';
-  document.getElementById('reportRestResults').innerHTML = '';
-  document.getElementById('reportRestSelected').style.display = 'none';
-  document.getElementById('reportCeleb').value = '';
-  document.getElementById('reportYtUrl').value = '';
-  document.getElementById('reportComment').value = '';
-  reportRestData = null;
-  document.getElementById('reportModalOverlay').classList.add('show');
-};
-
-window.closeReportModal = function(e) {
-  if (!e || e.target === document.getElementById('reportModalOverlay')) {
-    document.getElementById('reportModalOverlay').classList.remove('show');
-  }
-};
-
-window.searchReportRest = function() {
-  const keyword = document.getElementById('reportRestSearch').value.trim();
-  if (!keyword) { showToast('식당 이름을 입력해주세요'); return; }
-  const resultsDiv = document.getElementById('reportRestResults');
-  resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 중...</p>';
-  const ps = new kakao.maps.services.Places();
-  ps.keywordSearch(keyword, function(data, status) {
-    if (status !== kakao.maps.services.Status.OK || !data.length) {
-      resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요</p>';
-      return;
-    }
-    resultsDiv.innerHTML = data.slice(0,5).map((p,i) => `
-      <div onclick="selectReportRest(${i})" style="padding:8px 10px;border:1px solid var(--border2);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:all .15s" 
-        onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border2)'">
-        <div style="font-weight:600;font-size:13px">${p.place_name}</div>
-        <div style="font-size:11px;color:var(--text3)">${p.road_address_name||p.address_name}</div>
-      </div>`).join('');
-    window._reportSearchResults = data;
-  }, {size:5});
-};
-
-window.selectReportRest = function(idx) {
-  const p = window._reportSearchResults[idx];
-  reportRestData = {
-    name: p.place_name,
-    address: p.road_address_name || p.address_name,
-    lat: parseFloat(p.y),
-    lng: parseFloat(p.x),
-    category: p.category_name.split('>').pop().trim()
-  };
-  document.getElementById('reportRestName').textContent = '🍽️ ' + p.place_name;
-  document.getElementById('reportRestAddr').textContent = p.road_address_name || p.address_name;
-  document.getElementById('reportRestSelected').style.display = 'block';
-  document.getElementById('reportRestResults').innerHTML = '';
-  document.getElementById('reportRestSearch').value = p.place_name;
-  // 연예인 입력란으로 포커스
-  document.getElementById('reportCeleb').focus();
-};
-
-window.searchYoutubeForReport = function() {
-  const celeb = document.getElementById('reportCeleb').value.trim();
-  const rest = reportRestData ? reportRestData.name : document.getElementById('reportRestSearch').value.trim();
-  if (!celeb && !rest) { showToast('연예인 이름과 식당명을 먼저 입력해주세요'); return; }
-  const query = encodeURIComponent(`${celeb} ${rest}`);
-  window.open('https://www.youtube.com/results?search_query=' + query, '_blank');
-};
-
-window.submitReport = async function() {
-  if (!currentUser) { showToast('로그인 후 제보할 수 있어요!'); return; }
-  if (!reportRestData) { showToast('식당을 검색해서 선택해주세요!'); return; }
-  const celeb = document.getElementById('reportCeleb').value.trim();
-  if (!celeb) { showToast('연예인 이름을 입력해주세요!'); return; }
-  const ytUrl = document.getElementById('reportYtUrl').value.trim();
-  if (!ytUrl) { showToast('증거 링크를 입력해주세요!'); return; }
-  if (!ytUrl.startsWith('http')) {
-    showToast('올바른 링크를 입력해주세요! (http로 시작해야 해요)'); return;
-  }
-  const comment = document.getElementById('reportComment').value.trim();
-
-  try {
-    const data = {
-      name: reportRestData.name,
-      celeb: celeb,
-      celebs: [celeb],
-      source: `${celeb} 제보`,
-      comment: comment || `${celeb} 방송출연 맛집`,
-      category: reportRestData.category || '한식',
-      cat: reportRestData.category || '한식',
-      area: reportRestData.address.split(' ').slice(0,2).join(' '),
-      address: reportRestData.address,
-      lat: reportRestData.lat,
-      lng: reportRestData.lng,
-      yt: ytUrl,
-      ytBy: currentUser.uid,
-      ytReports: 0,
-      reportedBy: currentUser.uid,
-      reportedAt: new Date().toISOString(),
-      visits: 1,
-      status: 'pending' // 운영자 승인 대기
-    };
-    
-    await addDoc(collection(db, 'restaurants'), data);
-    document.getElementById('reportModalOverlay').classList.remove('show');
-    showToast('제보해주셔서 감사해요! 검토 후 게시될 거예요 🎉');
-  } catch(e) {
-    showToast('제보 실패: ' + e.message);
-  }
-};
-
-window.closeYtModal = function(e) {
-  if (!e || e.target === document.getElementById('ytModalOverlay')) {
-    document.getElementById('ytModalOverlay').classList.remove('show');
-  }
-};
-
-window.submitYtLink = async function() {
-  const url = document.getElementById('ytUrlInput').value.trim();
-  if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
-    showToast('유튜브 링크만 등록할 수 있어요!'); return;
-  }
-  try {
-    const ref = doc(db, 'restaurants', ytTargetId);
-    await updateDoc(ref, { yt: url, ytBy: currentUser.uid, ytReports: 0 });
-    document.getElementById('ytModalOverlay').classList.remove('show');
-    document.getElementById('yt-' + ytTargetId).innerHTML = 
-      `<div style="display:flex;align-items:center;gap:8px;margin-top:8px">
-         <a class="yt-btn" href="${url}" target="_blank"><i class="ti ti-brand-youtube"></i>유튜브 보기</a>
-         <button class="yt-report-btn" onclick="reportYt('${ytTargetId}')">🚩 신고</button>
-       </div>`;
-    showToast('유튜브 링크가 등록됐어요! 감사합니다 🎉');
-  } catch(e) { showToast('등록 실패: ' + e.message); }
-};
-
-window.reportYt = async function(id) {
-  if (!currentUser) { showToast('로그인 후 신고할 수 있어요!'); return; }
-  if (!confirm('이 유튜브 링크가 잘못됐나요? 신고하시겠어요?')) return;
-  try {
-    const ref = doc(db, 'restaurants', id);
-    const snap = await getDoc(ref);
-    const reports = (snap.data().ytReports || 0) + 1;
-    if (reports >= 3) {
-      await updateDoc(ref, { yt: deleteField(), ytBy: deleteField(), ytReports: deleteField() });
-      document.getElementById('yt-' + id).innerHTML = 
-        `<button class="yt-add-btn" style="margin-top:8px" onclick="openYtModal('${id}','${snap.data().name}')"><i class="ti ti-brand-youtube"></i>유튜브 링크 추가</button>`;
-      showToast('신고 3회로 링크가 삭제됐어요.');
-    } else {
-      await updateDoc(ref, { ytReports: reports });
-      showToast(`신고가 접수됐어요. (${reports}/3)`);
-    }
-  } catch(e) { showToast('신고 실패: ' + e.message); }
-};
-
-window.closeModal = function(e) {
-  if (!e || e.target === document.getElementById("modalOverlay")) {
-    document.getElementById("modalOverlay").classList.remove("show");
-    currentModalId = null;
-    myRating = 0;
-  }
-};
-
-async function loadComments(id) {
-  const snap = await getDocs(query(collection(db, "restaurants", id, "comments"), orderBy("createdAt", "desc")));
-  const list = document.getElementById("commentList");
-  const ADMIN_UID = "관리자UID"; // 관리자 UID
-
-  if (snap.empty) {
-    list.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:16px 0">첫 번째 댓글을 남겨보세요!</p>';
-  } else {
-    list.innerHTML = "";
-    snap.forEach(c => {
-      const data = c.data();
-      const isMyComment = currentUser && data.uid === currentUser.uid;
-      const isAdmin = currentUser && (currentUser.email === 'ohwoongg1@gmail.com' || currentUser.uid === ADMIN_UID);
-      const canDelete = isMyComment || isAdmin;
-
-      const div = document.createElement("div");
-      div.className = "comment-item";
-      div.innerHTML = `
-        <div class="comment-user">
-          <div class="comment-avatar">${data.photoURL ? `<img src="${data.photoURL}">` : data.displayName?.[0]||'?'}</div>
-          <span class="comment-name">${data.displayName||'익명'}</span>
-          <span class="comment-date">${data.updatedAt ? '수정됨 ' : ''}${(data.updatedAt||data.createdAt)?.toDate?.()?.toLocaleDateString('ko-KR')||''}</span>
-          ${canDelete ? `<button onclick="deleteComment('${id}','${c.id}')" style="margin-left:6px;background:none;border:none;color:#EF4444;cursor:pointer;font-size:12px;padding:2px 6px;border-radius:4px;border:1px solid #EF444433" title="삭제">🗑️</button>` : ''}
-        </div>
-        ${data.rating ? `<div class="comment-stars">${'★'.repeat(data.rating)}${'☆'.repeat(5-data.rating)} ${data.rating}점</div>` : ''}
-        <div class="comment-text">${data.text}</div>`;
-      list.appendChild(div);
-    });
-  }
-
-  const form = document.getElementById("commentFormInner");
-  if (currentUser) {
-    // 내 기존 댓글 확인
-    const myCommentSnap = await getDocs(query(
-      collection(db, "restaurants", id, "comments"),
-      where("uid", "==", currentUser.uid)
-    ));
-    const myComment = myCommentSnap.empty ? null : myCommentSnap.docs[0].data();
-    const btnText = myComment ? "수정" : "등록";
-    const placeholder = myComment ? "댓글을 수정할 수 있어요" : "이 맛집에 대한 솔직한 후기를 남겨주세요...";
-
-    form.innerHTML = `
-      ${myComment ? '<p style="font-size:12px;color:var(--gold);margin-bottom:6px">✏️ 이미 댓글을 남기셨어요. 수정할 수 있어요!</p>' : ''}
-      <textarea id="commentText" placeholder="${placeholder}">${myComment ? myComment.text : ''}</textarea>
-      <div class="comment-form-bottom">
-        <div class="rating-input" id="modalStars">
-          ${[1,2,3,4,5].map(i=>`<span class="star${myComment && i <= myComment.rating ? ' on' : ''}" onclick="setModalRating(${i})">★</span>`).join("")}
-          <span style="font-size:12px;color:var(--text3);margin-left:4px" id="modalRatingText">${myComment ? myComment.rating+'점' : '평점 선택'}</span>
-        </div>
-        <button class="submit-comment" onclick="submitComment()">${btnText}</button>
-      </div>`;
-
-    if (myComment) myRating = myComment.rating;
-  } else {
-    form.innerHTML = `<div class="no-login-msg"><i class="ti ti-lock" style="font-size:24px;display:block;margin-bottom:8px"></i>로그인 후 댓글을 남길 수 있어요<div class="login-options"><button class="login-btn-google" onclick="loginWithGoogle()"><i class="ti ti-brand-google"></i> 구글</button><button class="login-btn-kakao" onclick="loginWithKakao()">🟡 카카오</button></div></div>`;
+  // 저장 50명 달성
+  if ((data.saves||0) >= 50 && !achievements.saves50) {
+    await updateDoc(doc(db, 'restaurants', restId), {'achievements.saves50': true});
+    await addPoints(registeredBy, 30, '내 가게 저장 50명 달성 보너스');
+    showToast('🎉 저장 50명 달성! 30pt 보너스!');
   }
 }
 
-window.setModalRating = function(r) {
-  myRating = r;
-  document.querySelectorAll("#modalStars .star").forEach((s,i) => s.classList.toggle("on", i < r));
-  document.getElementById("modalRatingText").textContent = r + "점";
-};
-
-window.deleteComment = async function(restaurantId, commentId) {
-  if (!confirm("댓글을 삭제할까요?")) return;
-  await deleteDoc(doc(db, "restaurants", restaurantId, "comments", commentId));
-  scoreCache = {};
-  showToast("댓글이 삭제됐어요");
-  await loadComments(restaurantId);
-  loadRatings(filtered());
-};
-
-window.submitComment = async function() {
-  const text = document.getElementById("commentText")?.value?.trim();
-  if (!text) { showToast("댓글 내용을 입력해주세요"); return; }
-  if (!myRating) { showToast("평점을 선택해주세요"); return; }
-
-  // 이미 댓글 작성했는지 확인
-  const existingSnap = await getDocs(query(
-    collection(db, "restaurants", currentModalId, "comments"),
-    where("uid", "==", currentUser.uid)
-  ));
-
-  if (!existingSnap.empty) {
-    // 기존 댓글 수정
-    const existingDoc = existingSnap.docs[0];
-    await updateDoc(existingDoc.ref, {
-      text, rating: myRating,
-      updatedAt: serverTimestamp()
-    });
-    scoreCache = {};
-    showToast("댓글이 수정됐어요! ✏️");
-  } else {
-    // 새 댓글 등록
-    await addDoc(collection(db, "restaurants", currentModalId, "comments"), {
-      text, rating: myRating,
-      displayName: currentUser.displayName || "익명",
-      photoURL: currentUser.photoURL || "",
-      uid: currentUser.uid,
-      createdAt: serverTimestamp()
-    });
-    scoreCache = {};
-    showToast("댓글이 등록됐어요! 🎉");
-  }
-
-  await loadComments(currentModalId);
-  loadRatings(filtered());
-};
-
+// ── 지도 ──
 kakao.maps.load(function() {
-  const container = document.getElementById("kakao-map");
+  const container = document.getElementById('kakao-map');
   map = new kakao.maps.Map(container, {
     center: new kakao.maps.LatLng(37.5550, 126.9700),
     level: 8
@@ -1142,508 +800,470 @@ kakao.maps.load(function() {
   renderPins();
 });
 
-function makeMarkerImage(color, isMulti) {
-  const icon = isMulti ? '👑' : '⭐';
-  const fillColor = isMulti ? '#FFD700' : color;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48"><path d="M20 0C9 0 0 9 0 20c0 14 20 28 20 28S40 34 40 20C40 9 31 0 20 0z" fill="${fillColor}" stroke="${isMulti?'#B8860B':'none'}" stroke-width="${isMulti?2:0}"/><text x="20" y="26" text-anchor="middle" font-size="${isMulti?18:16}">${icon}</text></svg>`;
-  return new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), new kakao.maps.Size(isMulti?40:36, isMulti?48:42), {offset: new kakao.maps.Point(isMulti?20:18, isMulti?48:42)});
-}
-
 function renderPins() {
   markers.forEach(m => m.setMap(null));
   overlays.forEach(o => o.setMap(null));
   markers = []; overlays = [];
   filtered().forEach(d => {
-    const isMulti = d.celebs.length > 1;
     const pos = new kakao.maps.LatLng(d.lat, d.lng);
-    const marker = new kakao.maps.Marker({map, position: pos, image: makeMarkerImage(COLORS[d.celebs[0]]||"#F59E0B", isMulti), title: d.name});
-    const celebList = d.celebs.join(' · ');
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><text x="18" y="24" text-anchor="middle" font-size="14">⭐</text></svg>`;
+    const img = new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), new kakao.maps.Size(36,42), {offset: new kakao.maps.Point(18,42)});
+    const marker = new kakao.maps.Marker({map, position: pos, image: img, title: d.name});
     const overlay = new kakao.maps.CustomOverlay({
       position: pos,
-      content: `<div class="custom-overlay"><div class="tt-name">${isMulti?'👑 ':'⭐ '}${d.name}</div><div class="tt-who">${celebList} 추천</div><div class="tt-comment">${d.comment}</div></div>`,
+      content: `<div class="map-tip"><div class="map-tip-name">⭐ ${d.name}</div><div class="map-tip-who">${d.celeb} 방문</div><div class="map-tip-comment">${d.comment||''}</div></div>`,
       yAnchor: 2.2, zIndex: 3
     });
     kakao.maps.event.addListener(marker, 'mouseover', () => overlay.setMap(map));
     kakao.maps.event.addListener(marker, 'mouseout', () => overlay.setMap(null));
     kakao.maps.event.addListener(marker, 'click', () => {
-      map.setCenter(pos);
-      map.setLevel(4);
+      map.setCenter(pos); map.setLevel(4);
       const isSaved = savedList.includes(d.id);
-      const infoContent = `<div style="padding:14px 16px;min-width:200px;max-width:260px;font-family:-apple-system,sans-serif">
-        <div style="font-weight:700;font-size:14px;color:#1C1C1A;margin-bottom:3px">⭐ ${d.name}</div>
-        <div style="font-size:11px;color:#B45309;font-weight:600;margin-bottom:2px">${d.celebs.join(' · ')} 방문</div>
-        <div style="font-size:11px;color:#9B9B97;margin-bottom:10px">${d.cat} · ${d.area}</div>
+      const infoContent = `<div style="padding:12px 14px;min-width:180px;max-width:240px;font-family:-apple-system,sans-serif">
+        <div style="font-weight:700;font-size:14px;color:#1A1A18;margin-bottom:3px">⭐ ${d.name}</div>
+        <div style="font-size:11px;color:#B45309;font-weight:600;margin-bottom:2px">${d.celeb} 방문</div>
+        <div style="font-size:11px;color:#9A9A96;margin-bottom:10px">${d.cat} · ${d.area}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank"
-            style="font-size:12px;color:#F59E0B;border:1px solid #F59E0B;border-radius:6px;padding:5px 10px;text-decoration:none;font-weight:600">
-            🗺️ 길찾기
-          </a>
-          <button onclick="toggleSave('${d.id}')"
-            style="font-size:12px;color:${isSaved?'#F59E0B':'#6B6B67'};border:1px solid ${isSaved?'#F59E0B':'#D0CFC9'};border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">
-            ${isSaved?'❤️ 저장됨':'🤍 저장'}
-          </button>
-          <button onclick="openModal('${d.id}')"
-            style="font-size:12px;color:#6B6B67;border:1px solid #D0CFC9;border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">
-            💬 댓글
-          </button>
+          <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" style="font-size:12px;color:#F59E0B;border:1px solid #F59E0B;border-radius:6px;padding:5px 10px;text-decoration:none;font-weight:600">🗺️ 길찾기</a>
+          <button onclick="toggleSave('${d.id}')" style="font-size:12px;color:${isSaved?'#F59E0B':'#6B6B67'};border:1px solid ${isSaved?'#F59E0B':'#D4D3CF'};border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">${isSaved?'❤️ 저장됨':'🤍 저장'}</button>
+          <button onclick="openCommentModal('${d.id}','${d.name}')" style="font-size:12px;color:#6B6B67;border:1px solid #D4D3CF;border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">💬 댓글</button>
         </div>
       </div>`;
-      const infoWindow = new kakao.maps.InfoWindow({ content: infoContent, removable: true });
-      infoWindow.open(map, marker);
+      const iw = new kakao.maps.InfoWindow({content: infoContent, removable: true});
+      iw.open(map, marker);
     });
     markers.push(marker); overlays.push(overlay);
   });
 }
 
-window.showSidebar = function() {
-  if (window.innerWidth > 768) {
-    document.getElementById('sidebar').classList.remove('hidden');
-    document.getElementById('sidebar').style.display = '';
-    document.getElementById('backToList').style.display = 'none';
-  }
-};
-
-window.focusMap = function(id) {
+window.focusCard = function(id) {
+  document.querySelectorAll('.rest-card').forEach(c => c.classList.remove('on'));
+  document.getElementById('card-' + id)?.classList.add('on');
   const d = DATA.find(x => x.id === id);
-  if (!d || !map) return;
-  setPage('map', document.querySelector('.ptab'));
-  if (window.innerWidth <= 768) {
-    const mapBtn = document.querySelectorAll('.mobile-toggle button')[1];
-    if (mapBtn) setMobileView('map', mapBtn);
-  } else {
-    // PC에서 지도 클릭 시 사이드바 숨기고 버튼 표시
-    document.getElementById('sidebar').classList.add('hidden');
-    document.getElementById('backToList').style.display = 'flex';
-  }
-  setTimeout(() => {
+  if (d && map) {
     map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
-    map.setLevel(4);
-  }, 150);
+    map.setLevel(5);
+  }
+  // 조회수 증가
+  updateDoc(doc(db, 'restaurants', id), {visits: increment(1)}).catch(()=>{});
 };
 
-async function renderRankPage() {
-  const grid = document.getElementById("rankGrid");
-  grid.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px">순위 계산 중...</p>';
+// ── 댓글 ──
+window.openCommentModal = async function(id, name) {
+  currentCommentId = id; myRating = 0;
+  document.getElementById('commentModalTitle').textContent = `💬 ${name}`;
+  document.getElementById('commentOverlay').classList.add('show');
+  await loadComments(id);
+};
 
-  // 전체 맛집 데이터 불러오기 (현재 필터 무관)
-  try {
-    const snap = await getDocs(query(collection(db, "restaurants"), orderBy("visits", "desc"), limit(100)));
-    const top100 = [];
-    snap.forEach(doc => {
-      const d = doc.data();
-      top100.push({
-        id: doc.id,
-        name: d.name || '',
-        celeb: d.celeb || (d.celebs && d.celebs[0]) || '',
-        cat: d.category || d.cat || '한식',
-        area: d.area || '',
-        comment: d.comment || '',
-        visits: d.visits || 0,
-      });
+window.closeCommentModal = function(e) {
+  if (!e || e.target === document.getElementById('commentOverlay'))
+    document.getElementById('commentOverlay').classList.remove('show');
+};
+
+async function loadComments(id) {
+  const snap = await getDocs(query(collection(db, 'restaurants', id, 'comments'), orderBy('createdAt','desc')));
+  const list = document.getElementById('commentList');
+  if (snap.empty) {
+    list.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:16px 0">첫 번째 댓글을 남겨보세요!</p>';
+  } else {
+    list.innerHTML = '';
+    snap.forEach(c => {
+      const data = c.data();
+      const canDel = currentUser && (data.uid === currentUser.uid || currentUser.email === 'ohwoongg1@gmail.com');
+      const div = document.createElement('div');
+      div.className = 'comment-item';
+      div.innerHTML = `
+        <div class="comment-user">
+          <div class="comment-avatar">${data.photoURL?`<img src="${data.photoURL}">`:(data.displayName?.[0]||'?')}</div>
+          <span class="comment-name">${data.displayName||'익명'}</span>
+          <span class="comment-grade">${getGrade(data.userPoints||0).icon}</span>
+          <span class="comment-date">${data.createdAt?.toDate?.()?.toLocaleDateString('ko-KR')||''}</span>
+          ${canDel?`<button onclick="delComment('${id}','${c.id}')" style="margin-left:6px;background:none;border:none;color:var(--red);cursor:pointer;font-size:12px">🗑️</button>`:''}
+        </div>
+        ${data.rating?`<div class="comment-stars">${'★'.repeat(data.rating)}${'☆'.repeat(5-data.rating)} ${data.rating}점</div>`:''}
+        <div class="comment-text">${data.text}</div>`;
+      list.appendChild(div);
     });
+  }
+  const form = document.getElementById('commentForm');
+  if (currentUser) {
+    const mySnap = await getDocs(query(collection(db,'restaurants',id,'comments'), where('uid','==',currentUser.uid)));
+    const myComment = mySnap.empty ? null : mySnap.docs[0].data();
+    form.innerHTML = `
+      ${myComment?'<p style="font-size:12px;color:var(--gold);margin-bottom:6px">✏️ 이미 댓글을 남기셨어요. 수정 가능해요!</p>':''}
+      <div class="star-row" id="modalStars">
+        ${[1,2,3,4,5].map(i=>`<span class="star${myComment&&i<=myComment.rating?' on':''}" onclick="setRating(${i})">★</span>`).join('')}
+        <span style="font-size:12px;color:var(--text3);margin-left:4px" id="ratingText">${myComment?myComment.rating+'점':'평점 선택'}</span>
+      </div>
+      <textarea id="commentText" placeholder="이 맛집에 대한 솔직한 후기를 남겨주세요...">${myComment?myComment.text:''}</textarea>
+      <div class="comment-form-foot">
+        <span style="font-size:12px;color:var(--text3)">댓글 작성 +3pt</span>
+        <button class="btn-submit" onclick="submitComment()">${myComment?'수정':'등록'}</button>
+      </div>`;
+    if (myComment) myRating = myComment.rating;
+  } else {
+    form.innerHTML = `<div style="text-align:center;padding:16px;color:var(--text3);font-size:13px">
+      로그인 후 댓글을 남길 수 있어요
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:10px">
+        <button class="btn-login-g" onclick="loginWithGoogle()"><i class="ti ti-brand-google"></i> 구글</button>
+      </div>
+    </div>`;
+  }
+}
 
-    if (!top100.length) {
-      grid.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px">아직 데이터가 없어요</p>';
-      return;
+window.setRating = function(r) {
+  myRating = r;
+  document.querySelectorAll('#modalStars .star').forEach((s,i) => s.classList.toggle('on', i<r));
+  document.getElementById('ratingText').textContent = r + '점';
+};
+
+window.delComment = async function(restId, commentId) {
+  if (!confirm('댓글을 삭제할까요?')) return;
+  await deleteDoc(doc(db, 'restaurants', restId, 'comments', commentId));
+  showToast('댓글 삭제됐어요');
+  await loadComments(restId);
+};
+
+window.submitComment = async function() {
+  const text = document.getElementById('commentText')?.value?.trim();
+  if (!text) { showToast('댓글을 입력해주세요'); return; }
+  if (!myRating) { showToast('평점을 선택해주세요'); return; }
+
+  const existSnap = await getDocs(query(collection(db,'restaurants',currentCommentId,'comments'), where('uid','==',currentUser.uid)));
+  const pts = currentUserData?.points || 0;
+
+  if (!existSnap.empty) {
+    await updateDoc(existSnap.docs[0].ref, {text, rating: myRating, updatedAt: serverTimestamp()});
+    showToast('댓글 수정됐어요! ✏️');
+  } else {
+    await addDoc(collection(db,'restaurants',currentCommentId,'comments'), {
+      text, rating: myRating,
+      displayName: currentUser.displayName || '익명',
+      photoURL: currentUser.photoURL || '',
+      uid: currentUser.uid,
+      userPoints: pts,
+      createdAt: serverTimestamp()
+    });
+    // 댓글 작성 포인트
+    await addPoints(currentUser.uid, 3, '댓글 작성');
+
+    // 등록자에게 포인트
+    const restSnap = await getDoc(doc(db,'restaurants',currentCommentId));
+    const registeredBy = restSnap.data()?.registeredBy;
+    if (registeredBy && registeredBy !== currentUser.uid) {
+      const multiplier = getGradeMultiplier(pts);
+      await addPoints(registeredBy, multiplier, `내 가게 댓글 (${getGrade(pts).name})`);
     }
 
-    grid.innerHTML = top100.map((d, i) => {
+    // 평균 평점 업데이트
+    const allComments = await getDocs(collection(db,'restaurants',currentCommentId,'comments'));
+    let total = 0, cnt = 0;
+    allComments.forEach(c => { if(c.data().rating){total+=c.data().rating;cnt++;} });
+    await updateDoc(doc(db,'restaurants',currentCommentId), {
+      avgRating: cnt>0 ? Math.round((total/cnt)*10)/10 : 0,
+      ratingCount: cnt
+    });
+
+    // 댓글 달성 보너스 체크
+    if (cnt >= 20) {
+      const restData = restSnap.data();
+      if (!restData?.achievements?.comments20 && registeredBy) {
+        await updateDoc(doc(db,'restaurants',currentCommentId), {'achievements.comments20': true});
+        await addPoints(registeredBy, 20, '내 가게 댓글 20개 달성 보너스');
+      }
+    }
+
+    showToast('댓글 등록됐어요! 🎉 +3pt');
+  }
+  await loadComments(currentCommentId);
+  // 리스트 새로고침
+  const d = DATA.find(x => x.id === currentCommentId);
+  if (d) { d.avgRating = myRating; }
+  renderList();
+};
+
+// ── 제보 ──
+window.openReportModal = function() {
+  if (!currentUser) { showToast('로그인 후 제보할 수 있어요!'); return; }
+  repRestData = null;
+  document.getElementById('repRestSearch').value = '';
+  document.getElementById('repRestResults').innerHTML = '';
+  document.getElementById('repRestSelected').style.display = 'none';
+  document.getElementById('repCeleb').value = '';
+  document.getElementById('repLink').value = '';
+  document.getElementById('repComment').value = '';
+  document.getElementById('reportOverlay').classList.add('show');
+};
+
+window.closeReportModal = function(e) {
+  if (!e || e.target === document.getElementById('reportOverlay'))
+    document.getElementById('reportOverlay').classList.remove('show');
+};
+
+window.searchRepRest = function() {
+  const keyword = document.getElementById('repRestSearch').value.trim();
+  if (!keyword) { showToast('식당 이름을 입력해주세요'); return; }
+  const resultsDiv = document.getElementById('repRestResults');
+  resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 중...</p>';
+  const ps = new kakao.maps.services.Places();
+  ps.keywordSearch(keyword, function(data, status) {
+    if (status !== kakao.maps.services.Status.OK || !data.length) {
+      resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요</p>';
+      return;
+    }
+    resultsDiv.innerHTML = data.slice(0,5).map((p,i) => `
+      <div class="search-result-item" onclick="selectRepRest(${i})">
+        <div class="search-result-name">${p.place_name}</div>
+        <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
+      </div>`).join('');
+    window._repSearchResults = data;
+  }, {size:5});
+};
+
+window.selectRepRest = function(idx) {
+  const p = window._repSearchResults[idx];
+  repRestData = {
+    name: p.place_name,
+    address: p.road_address_name || p.address_name,
+    lat: parseFloat(p.y),
+    lng: parseFloat(p.x),
+    category: p.category_name.split('>').pop().trim()
+  };
+  document.getElementById('repRestName').textContent = '🍽️ ' + p.place_name;
+  document.getElementById('repRestAddr').textContent = p.road_address_name || p.address_name;
+  document.getElementById('repRestSelected').style.display = 'block';
+  document.getElementById('repRestResults').innerHTML = '';
+  document.getElementById('repRestSearch').value = p.place_name;
+  document.getElementById('repCeleb').focus();
+};
+
+window.searchYtForRep = function() {
+  const celeb = document.getElementById('repCeleb').value.trim();
+  const rest = repRestData?.name || document.getElementById('repRestSearch').value.trim();
+  window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(`${celeb} ${rest}`), '_blank');
+};
+
+window.submitReport = async function() {
+  if (!repRestData) { showToast('식당을 검색해서 선택해주세요!'); return; }
+  const celeb = document.getElementById('repCeleb').value.trim();
+  if (!celeb) { showToast('연예인/큐레이터 이름을 입력해주세요!'); return; }
+  const link = document.getElementById('repLink').value.trim();
+  if (!link) { showToast('증거 링크를 입력해주세요!'); return; }
+  if (!link.startsWith('http')) { showToast('올바른 링크를 입력해주세요!'); return; }
+  const comment = document.getElementById('repComment').value.trim();
+
+  try {
+    const data = {
+      name: repRestData.name,
+      celeb, celebs: [celeb],
+      source: `${celeb} 제보`,
+      comment: comment || `${celeb} 방문 맛집`,
+      category: repRestData.category || '한식',
+      cat: repRestData.category || '한식',
+      area: repRestData.address.split(' ').slice(0,2).join(' '),
+      address: repRestData.address,
+      lat: repRestData.lat, lng: repRestData.lng,
+      yt: link,
+      registeredBy: currentUser.uid,
+      registeredByName: currentUser.displayName || '익명',
+      visits: 0, saves: 0, avgRating: 0, ratingCount: 0,
+      achievements: {},
+      createdAt: new Date().toISOString()
+    };
+    await addDoc(collection(db, 'restaurants'), data);
+
+    // 등록 포인트 10점 + 링크 5점
+    await addPoints(currentUser.uid, 15, `맛집 등록 (${repRestData.name})`);
+
+    // 등록 가게 목록 업데이트
+    const userRef = doc(db, 'users', currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const regRests = userSnap.data()?.registeredRests || [];
+    await updateDoc(userRef, {registeredRests: [...regRests, repRestData.name]});
+
+    document.getElementById('reportOverlay').classList.remove('show');
+    showToast('제보 완료! 🎉 +15pt 적립됐어요!');
+
+    // 현재 큐레이터와 같으면 리스트 새로고침
+    if (celeb === selCurator) await loadRests(celeb);
+  } catch(e) { showToast('제보 실패: ' + e.message); }
+};
+
+// ── 유튜브 링크 추가 ──
+let ytTargetId = '';
+window.openYtModal = function(id, name) {
+  if (!currentUser) { showToast('로그인 후 링크를 추가할 수 있어요!'); return; }
+  ytTargetId = id;
+  const url = prompt(`"${name}"의 증거 링크를 입력해주세요\n(유튜브/인스타/뉴스/블로그)`);
+  if (!url) return;
+  if (!url.startsWith('http')) { showToast('올바른 링크를 입력해주세요!'); return; }
+  updateDoc(doc(db,'restaurants',id), {yt: url, ytBy: currentUser.uid}).then(async () => {
+    await addPoints(currentUser.uid, 5, '링크 추가');
+    showToast('링크 추가됐어요! +5pt 🎉');
+    await loadRests(selCurator);
+  }).catch(e => showToast('실패: ' + e.message));
+};
+
+// ── 순위 페이지 ──
+async function renderRankPage() {
+  // 큐레이터 순위
+  const cGrid = document.getElementById('curatorRankGrid');
+  cGrid.innerHTML = STAR_CURATORS.slice(0,6).map((c, i) => {
+    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+    return `<div class="rank-card">
+      <div class="rank-num ${rankClass}">${i+1}</div>
+      <div style="font-size:24px">${c.icon}</div>
+      <div class="rank-info">
+        <div class="rank-name">${c.name}</div>
+        <div class="rank-meta">스타 큐레이터</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 전국 맛집 TOP
+  const rGrid = document.getElementById('restRankGrid');
+  rGrid.innerHTML = '<p style="color:var(--text3);font-size:13px">로딩 중...</p>';
+  try {
+    const snap = await getDocs(query(collection(db,'restaurants'), orderBy('avgRating','desc'), limit(20)));
+    const tops = [];
+    snap.forEach(d => tops.push({id:d.id, ...d.data()}));
+    rGrid.innerHTML = tops.map((d, i) => {
       const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
       return `<div class="rank-card">
-        <div class="rank-badge ${rankClass}">${i+1}</div>
+        <div class="rank-num ${rankClass}">${i+1}</div>
         <div class="rank-info">
           <div class="rank-name">${d.name}</div>
           <div class="rank-meta">${d.celeb} · ${d.cat} · ${d.area}</div>
-          <div class="rank-score">
-            <span>🎬 방문 ${d.visits}회</span>
-            <span style="margin-left:auto">
-              <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" style="font-size:12px;color:#F59E0B;border:1px solid #F59E0B;border-radius:6px;padding:3px 8px;text-decoration:none">길찾기</a>
-            </span>
-          </div>
         </div>
+        <div class="rank-score">★ ${d.avgRating?.toFixed(1)||'0.0'}</div>
       </div>`;
-    }).join("");
+    }).join('') || '<p style="color:var(--text3);font-size:13px">데이터 없음</p>';
   } catch(e) {
-    console.log('TOP100 오류:', e);
-    // 인덱스 없으면 현재 DATA로 표시
-    const sorted = [...DATA].sort((a,b) => (b.visits||0) - (a.visits||0)).slice(0, 100);
-    grid.innerHTML = sorted.map((d, i) => {
-      const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
-      return `<div class="rank-card">
-        <div class="rank-badge ${rankClass}">${i+1}</div>
-        <div class="rank-info">
-          <div class="rank-name">${d.name}</div>
-          <div class="rank-meta">${d.celeb} · ${d.cat} · ${d.area}</div>
-          <div class="rank-score">
-            <span>🎬 방문 ${d.visits||0}회</span>
-            <span style="margin-left:auto">
-              <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" style="font-size:12px;color:#F59E0B;border:1px solid #F59E0B;border-radius:6px;padding:3px 8px;text-decoration:none">길찾기</a>
-            </span>
-          </div>
-        </div>
-      </div>`;
-    }).join("");
+    rGrid.innerHTML = '<p style="color:var(--text3);font-size:13px">로딩 실패</p>';
   }
 }
 
+// ── 내 스푼 페이지 ──
 function renderMyPage() {
-  const content = document.getElementById("myContent");
+  const content = document.getElementById('myContent');
   if (!currentUser) {
-    content.innerHTML = `<div class="my-empty"><i class="ti ti-heart"></i><p style="font-size:15px;font-weight:600;margin-bottom:8px">로그인이 필요해요</p><div class="login-options" style="margin-top:16px"><button class="login-btn-google" onclick="loginWithGoogle()"><i class="ti ti-brand-google"></i> 구글</button><button class="login-btn-kakao" onclick="loginWithKakao()">🟡 카카오</button></div></div>`;
+    content.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text3)">
+      <div style="font-size:48px;margin-bottom:12px">🥄</div>
+      <p style="font-size:15px;font-weight:600;margin-bottom:8px">로그인이 필요해요</p>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:16px">
+        <button class="btn-login-g" onclick="loginWithGoogle()"><i class="ti ti-brand-google"></i> 구글로 시작하기</button>
+      </div>
+    </div>`;
     return;
   }
-  const myStarData = DATA.filter(d => savedList.includes(d.id));
-  const myPlaceData = savedPlaces || [];
-  const total = myStarData.length + myPlaceData.length;
+  const pts = currentUserData?.points || 0;
+  const grade = getGrade(pts);
+  const pointHistory = currentUserData?.pointHistory || [];
+  const myRests = currentUserData?.registeredRests || [];
+  const mySaved = savedList.length;
 
-  if (!total) {
-    content.innerHTML = `<div class="my-empty"><i class="ti ti-heart"></i><p style="font-size:15px;font-weight:600;margin-bottom:8px">저장한 맛집이 없어요</p><p style="font-size:13px;color:var(--text3)">스타 맛집의 ❤️ 저장 버튼 또는 일반 검색에서 저장해보세요</p></div>`;
-    return;
-  }
-
-  const starSection = myStarData.length ? `
-    <h3 style="font-size:14px;font-weight:700;color:var(--gold);margin:0 0 10px">⭐ 스타 맛집 ${myStarData.length}곳</h3>
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-      ${myStarData.map(d=>`
-      <div class="rank-card" onclick="openModal('${d.id}')">
-        <div class="card-icon">⭐</div>
-        <div class="rank-info">
-          <div class="rank-name">${d.name}</div>
-          <div class="rank-meta">${d.celeb} · ${d.cat} · ${d.area}</div>
-          <div class="rank-score"><span>${d.comment}</span></div>
+  content.innerHTML = `
+    <div class="my-profile">
+      <div class="my-avatar">${currentUser.photoURL ? `<img src="${currentUser.photoURL}">` : grade.icon}</div>
+      <div style="flex:1">
+        <div class="my-name">${currentUser.displayName || '사용자'}</div>
+        <div class="my-grade-badge">${grade.icon} ${grade.name}</div>
+        <div class="my-points">총 <strong>${pts}</strong>pt 보유</div>
+        <div class="my-stats">
+          <div class="my-stat"><div class="my-stat-num">${myRests.length}</div><div class="my-stat-label">등록 맛집</div></div>
+          <div class="my-stat"><div class="my-stat-num">${mySaved}</div><div class="my-stat-label">저장 맛집</div></div>
         </div>
-        <button class="save-btn saved" onclick="event.stopPropagation();toggleSave('${d.id}')"><i class="ti ti-heart-filled"></i></button>
-      </div>`).join("")}
-    </div>` : '';
+      </div>
+    </div>
 
-  const placeSection = myPlaceData.length ? `
-    <h3 style="font-size:14px;font-weight:700;color:#3B82F6;margin:0 0 10px">🔍 내가 찾은 맛집 ${myPlaceData.length}곳</h3>
-    <div style="display:flex;flex-direction:column;gap:10px">
-      ${myPlaceData.map(p=>`
-      <div class="rank-card">
-        <div class="card-icon">🍽️</div>
-        <div class="rank-info">
-          <div class="rank-name">${p.name}</div>
-          <div class="rank-meta">${p.category} · ${p.address}</div>
-          <div class="rank-score" style="gap:8px">
-            <button class="place-map-btn" onclick="focusPlaceOnMapFromSaved(${p.lat},${p.lng})">🗺 지도</button>
-            ${p.url ? `<a href="${p.url}" target="_blank" style="font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;text-decoration:none">카카오맵</a>` : ''}
-          </div>
-        </div>
-        <button class="save-btn saved" onclick="removePlaceSave('${p.id}')"><i class="ti ti-heart-filled"></i></button>
-      </div>`).join("")}
-    </div>` : '';
+    <!-- 등급 진행도 -->
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">🥄 등급 현황</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        ${[{name:'스푼',icon:'🥄',min:0},{name:'은스푼',icon:'🥈',min:100},{name:'금스푼',icon:'🥇',min:300},{name:'별스푼',icon:'⭐',min:700}].map(g => `
+          <div style="text-align:center;opacity:${pts>=g.min?1:0.4}">
+            <div style="font-size:20px">${g.icon}</div>
+            <div style="font-size:10px;font-weight:600;margin-top:2px">${g.name}</div>
+            <div style="font-size:9px;color:var(--text3)">${g.min}pt~</div>
+          </div>`).join('')}
+      </div>
+      <div style="background:var(--bg2);border-radius:4px;height:6px;overflow:hidden">
+        <div style="background:var(--gold);height:100%;width:${Math.min(pts/700*100,100)}%;border-radius:4px;transition:width .5s"></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:right">${pts}/700pt (별스푼까지 ${Math.max(700-pts,0)}pt)</div>
+    </div>
 
-  content.innerHTML = `<div style="max-width:800px;margin:0 auto">
-    <h2 style="font-size:16px;font-weight:700;margin-bottom:16px">❤️ 내 맛집 ${total}곳</h2>
-    ${starSection}${placeSection}
-  </div>`;
+    <!-- 포인트 내역 -->
+    <div class="point-history">
+      <div class="point-history-title">💰 포인트 내역 (최근 10건)</div>
+      ${pointHistory.slice(-10).reverse().map(p => `
+        <div class="point-item">
+          <span>${p.reason}</span>
+          <span class="point-plus">+${p.points}pt</span>
+        </div>`).join('') || '<p style="font-size:13px;color:var(--text3);text-align:center;padding:12px 0">아직 포인트 내역이 없어요</p>'}
+    </div>
+
+    <!-- 포인트 적립 안내 -->
+    <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px">🎯 포인트 적립 방법</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">🍽️ 맛집 등록<br><strong style="color:var(--gold)">+10pt</strong></div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">🔗 링크 추가<br><strong style="color:var(--gold)">+5pt</strong></div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">💬 댓글 작성<br><strong style="color:var(--gold)">+3pt</strong></div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">⭐ 평점 주기<br><strong style="color:var(--gold)">+2pt</strong></div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">👥 저장 50명<br><strong style="color:var(--gold)">+30pt</strong></div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">💬 댓글 20개<br><strong style="color:var(--gold)">+20pt</strong></div>
+      </div>
+    </div>`;
 }
 
-let currentPage = "map";
+// ── 페이지 전환 ──
 window.setPage = function(page, el) {
   currentPage = page;
-  document.querySelectorAll(".ptab").forEach(t => t.classList.remove("on"));
-  if (el) el.classList.add("on");
-  document.getElementById("sidebar").classList.toggle("hidden", page !== "map");
-  document.getElementById("mapArea").classList.toggle("hidden", page !== "map");
-  document.getElementById("searchPage").classList.toggle("hidden", page !== "search");
-  document.getElementById("rankPage").classList.toggle("hidden", page !== "rank");
-  document.getElementById("myPage").classList.toggle("hidden", page !== "my");
-  if (page === "rank") renderRankPage();
-  if (page === "my") renderMyPage();
-  if (page === "search") document.getElementById("placeSearch")?.focus();
-};
-
-// 모바일 지도/리스트 전환
-window.setMobileView = function(view, el) {
-  const isMobile = window.innerWidth <= 768;
-  if (!isMobile) return;
-  document.querySelectorAll('.mobile-toggle button').forEach(b => b.classList.remove('on'));
+  document.querySelectorAll('.pnav').forEach(t => t.classList.remove('on'));
   el.classList.add('on');
-  if (view === 'map') {
-    document.getElementById('sidebar').style.display = 'none';
-    document.getElementById('sidebar').classList.remove('hidden');
-    const mapArea = document.getElementById('mapArea');
-    mapArea.style.display = 'block';
-    mapArea.classList.remove('hidden');
-    setTimeout(() => { if (map) kakao.maps.event.trigger(map, 'resize'); }, 100);
-  } else {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.style.display = 'flex';
-    sidebar.classList.remove('hidden');
-    document.getElementById('mapArea').style.display = 'none';
-  }
+  document.getElementById('mainLayout').style.display = page==='main' ? 'flex' : 'none';
+  document.getElementById('rankPage').classList.toggle('show', page==='rank');
+  document.getElementById('myPage').classList.toggle('show', page==='my');
+  if (page==='rank') renderRankPage();
+  if (page==='my') renderMyPage();
 };
 
-// 화면 크기 변경 시 처리
-window.addEventListener('resize', function() {
-  if (window.innerWidth > 768) {
-    document.getElementById('sidebar').style.display = '';
-    document.getElementById('mapArea').style.display = '';
-  }
-});
-
-window.setCeleb = function(el, name) {
-  document.querySelectorAll(".ctab").forEach(b => b.classList.remove("on"));
-  el.classList.add("on"); selCeleb = name;
-  searchQ = "";
-  document.getElementById("mainSearch").value = "";
-  loadRestaurantsFromDB(name === "전체" ? null : name);
-};
-window.setCategory = function(el, cat) {
-  document.querySelectorAll(".chip").forEach(b => b.classList.remove("on"));
-  el.classList.add("on"); selCat = cat;
-  // 검색어 초기화
-  searchQ = "";
-  document.getElementById("mainSearch").value = "";
-  render();
-};
-window.doSearch = function(q) { 
-  searchQ = q.trim(); 
-  render();
-  // 지역명 검색 시 지도 이동
-  if (q.trim() && map) {
-    const geocoder = new kakao.maps.services.Geocoder();
-    geocoder.addressSearch(q.trim() + ' 서울', function(result, status) {
-      if (status === kakao.maps.services.Status.OK) {
-        const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
-        map.setCenter(coords);
-        map.setLevel(7);
-        renderPins();
-      } else {
-        const ps = new kakao.maps.services.Places();
-        ps.keywordSearch(q.trim(), function(result2, status2) {
-          if (status2 === kakao.maps.services.Status.OK && result2[0]) {
-            const coords = new kakao.maps.LatLng(result2[0].y, result2[0].x);
-            map.setCenter(coords);
-            map.setLevel(7);
-            renderPins();
-          }
-        });
-      }
-    });
-  }
+window.setMapTab = function(tab, el) {
+  document.querySelectorAll('.mtab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
 };
 
-function buildCelebTabs() {
-  const container = document.getElementById("celebTabs");
-  container.innerHTML = ["전체", ...CELEBS].map(c =>
-    `<button class="ctab${c==="성시경"?" on":""}" onclick="setCeleb(this,'${c}')">${c}</button>`
-  ).join("");
-}
+window.setCat = function(el, cat) {
+  selCat = cat;
+  document.querySelectorAll('.cat').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  renderList(); renderPins();
+};
 
-function render() { renderList(); if (map) renderPins(); }
+window.setSort = function(sort) {
+  selSort = sort;
+  renderList();
+};
+
+window.doSearch = function(q) {
+  searchQ = q.trim();
+  renderList(); renderPins();
+};
 
 function showToast(msg) {
-  const t = document.getElementById("toast");
-  document.getElementById("toastMsg").textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2500);
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
 }
 window.showToast = showToast;
 
-window.focusPlaceOnMapFromSaved = function(lat, lng) {
-  if (!map) return;
-  setPage('map', document.querySelector('.ptab'));
-  setTimeout(() => {
-    map.setCenter(new kakao.maps.LatLng(lat, lng));
-    map.setLevel(4);
-  }, 150);
-};
-
-window.removePlaceSave = async function(placeId) {
-  if (!currentUser) return;
-  savedPlaces = savedPlaces.filter(p => p.id !== placeId);
-  await setDoc(doc(db, "users", currentUser.uid), { savedPlaces }, { merge: true });
-  showToast("저장 취소됐어요");
-  renderMyPage();
-};
-
-// ── 일반 맛집 검색 (카카오맵 Places API) ──
-let placeResults = [];
-let savedPlaces = []; // Firebase users/{uid}/savedPlaces
-
-window.searchPlaces = function() {
-  const keyword = document.getElementById("placeSearch").value.trim();
-  if (!keyword) { showToast("검색어를 입력해주세요"); return; }
-  const resultsDiv = document.getElementById("placeResults");
-  resultsDiv.innerHTML = '<p style="text-align:center;color:var(--text3);padding:30px">검색 중...</p>';
-
-  const ps = new kakao.maps.services.Places();
-  ps.keywordSearch(keyword, function(data, status) {
-    if (status !== kakao.maps.services.Status.OK) {
-      resultsDiv.innerHTML = '<p style="text-align:center;color:var(--text3);padding:30px">검색 결과가 없어요</p>';
-      return;
-    }
-    placeResults = data;
-    renderPlaceResults();
-  }, { size: 15 });
-};
-
-function renderPlaceResults() {
-  const resultsDiv = document.getElementById("placeResults");
-  if (!placeResults.length) {
-    resultsDiv.innerHTML = '<p style="text-align:center;color:var(--text3);padding:30px">검색 결과가 없어요</p>';
-    return;
-  }
-  const catIcon = (cat) => {
-    if (cat.includes("한식")) return "🍚";
-    if (cat.includes("일식")) return "🍣";
-    if (cat.includes("중식")) return "🍜";
-    if (cat.includes("양식")) return "🍝";
-    if (cat.includes("카페") || cat.includes("디저트")) return "☕";
-    if (cat.includes("치킨")) return "🍗";
-    if (cat.includes("피자") || cat.includes("버거")) return "🍔";
-    return "🍽️";
-  };
-  resultsDiv.innerHTML = `
-    <p style="font-size:13px;color:var(--text3);margin-bottom:12px">${placeResults.length}개 결과</p>
-    ${placeResults.map((p, i) => {
-      const isSaved = savedPlaces.some(s => s.id === p.id);
-      return `<div class="place-card" id="pcard-${p.id}">
-        <div class="place-icon">${catIcon(p.category_name)}</div>
-        <div class="place-info">
-          <div class="place-name">${p.place_name}</div>
-          <div class="place-cat">${p.category_name.split(">").pop().trim()}</div>
-          <div class="place-addr">${p.road_address_name || p.address_name}</div>
-          <div class="place-btns">
-            <button class="place-map-btn" onclick="focusPlaceOnMap(${i})">🗺 지도보기</button>
-            <a class="place-map-btn" href="https://map.kakao.com/link/search/${encodeURIComponent(p.place_name)}" target="_blank" style="color:#F59E0B;border-color:#F59E0B;text-decoration:none">길찾기</a>
-            <button class="place-save-btn ${isSaved?'saved':''}" id="psave-${p.id}" onclick="togglePlaceSave('${p.id}', ${i})">
-              ${isSaved ? '❤️ 저장됨' : '🤍 저장'}
-            </button>
-            ${p.place_url ? `<a href="${p.place_url}" target="_blank" style="font-size:12px;color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:4px 10px;text-decoration:none">카카오맵</a>` : ''}
-          </div>
-        </div>
-      </div>`;
-    }).join("")}`;
-}
-
-let searchPlaceMarker = null;
-let searchPlaceInfowindow = null;
-let currentSearchIdx = null;
-
-window.focusPlaceOnMap = function(idx) {
-  const p = placeResults[idx];
-  if (!p || !map) return;
-  currentSearchIdx = idx;
-  setPage('map', document.querySelector('.ptab'));
-  setTimeout(() => {
-    const lat = parseFloat(p.y), lng = parseFloat(p.x);
-    const pos = new kakao.maps.LatLng(lat, lng);
-    map.setCenter(pos);
-    map.setLevel(4);
-
-    // 기존 핀+말풍선 제거
-    if (searchPlaceMarker) searchPlaceMarker.setMap(null);
-    if (searchPlaceInfowindow) searchPlaceInfowindow.close();
-
-    // 파란색 핀
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="38" height="46" viewBox="0 0 38 46"><path d="M19 0C9 0 0 9 0 19c0 13 19 27 19 27S38 32 38 19C38 9 29 0 19 0z" fill="#3B82F6" stroke="#1D4ED8" stroke-width="1.5"/><text x="19" y="26" text-anchor="middle" font-size="15">🔍</text></svg>`;
-    const img = new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), new kakao.maps.Size(38, 46), {offset: new kakao.maps.Point(19, 46)});
-    searchPlaceMarker = new kakao.maps.Marker({map, position: pos, image: img, title: p.place_name});
-
-    // 핀 클릭 시 정보창
-    const isSaved = savedPlaces.some(s => s.id === p.id);
-    const infoContent = `<div style="padding:12px 14px;min-width:180px;max-width:240px;font-family:-apple-system,sans-serif">
-      <div style="font-weight:700;font-size:14px;color:#1C1C1A;margin-bottom:4px">🔍 ${p.place_name}</div>
-      <div style="font-size:11px;color:#6B6B67;margin-bottom:10px">${p.road_address_name||p.address_name}</div>
-      <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <a href="https://map.kakao.com/link/search/${encodeURIComponent(p.place_name)}" target="_blank" style="font-size:12px;color:#F59E0B;border:1px solid #F59E0B;border-radius:6px;padding:4px 10px;text-decoration:none;font-weight:600">길찾기</a>
-        ${p.place_url ? `<a href="${p.place_url}" target="_blank" style="font-size:12px;color:#6B6B67;border:1px solid #D0CFC9;border-radius:6px;padding:4px 10px;text-decoration:none">카카오맵</a>` : ''}
-        <button onclick="togglePlaceSaveFromMap('${p.id}',${idx})" style="font-size:12px;color:${isSaved?'#F59E0B':'#6B6B67'};border:1px solid ${isSaved?'#F59E0B':'#D0CFC9'};border-radius:6px;padding:4px 10px;background:none;cursor:pointer">${isSaved?'❤️ 저장됨':'🤍 저장'}</button>
-      </div>
-    </div>`;
-
-    searchPlaceInfowindow = new kakao.maps.InfoWindow({ content: infoContent, removable: true });
-    searchPlaceInfowindow.open(map, searchPlaceMarker);
-
-    // 핀 클릭해도 정보창 다시 열기
-    kakao.maps.event.addListener(searchPlaceMarker, 'click', () => {
-      searchPlaceInfowindow.open(map, searchPlaceMarker);
-    });
-
-    // 안내 배너
-    const existingBanner = document.getElementById('searchModeBanner');
-    if (existingBanner) existingBanner.remove();
-    const banner = document.createElement('div');
-    banner.id = 'searchModeBanner';
-    banner.style.cssText = 'position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:10;background:#3B82F6;color:#fff;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.2);white-space:nowrap';
-    banner.innerHTML = `🔍 일반검색 결과 보는 중 &nbsp;<button onclick="clearSearchMode()" style="background:rgba(255,255,255,0.3);border:none;color:#fff;border-radius:10px;padding:3px 10px;font-size:12px;cursor:pointer;font-weight:600">✕ 스타맛집으로</button>`;
-    document.getElementById('mapArea').appendChild(banner);
-  }, 150);
-};
-
-window.togglePlaceSaveFromMap = async function(placeId, idx) {
-  if (!currentUser) { showToast("로그인 후 저장할 수 있어요!"); return; }
-  const p = placeResults[idx];
-  const uid = currentUser.uid;
-  const alreadySaved = savedPlaces.findIndex(s => s.id === placeId);
-  if (alreadySaved >= 0) {
-    savedPlaces.splice(alreadySaved, 1);
-    showToast("저장 취소됐어요");
-  } else {
-    savedPlaces.push({
-      id: p.id, name: p.place_name,
-      category: p.category_name.split(">").pop().trim(),
-      address: p.road_address_name || p.address_name,
-      url: p.place_url || "",
-      lat: parseFloat(p.y), lng: parseFloat(p.x),
-      savedAt: new Date().toISOString()
-    });
-    showToast("내 맛집에 저장됐어요! ❤️");
-  }
-  await setDoc(doc(db, "users", uid), { savedPlaces }, { merge: true });
-  // 정보창 새로고침
-  focusPlaceOnMap(idx);
-};
-
-window.clearSearchMode = function() {
-  if (searchPlaceMarker) { searchPlaceMarker.setMap(null); searchPlaceMarker = null; }
-  if (searchPlaceInfowindow) { searchPlaceInfowindow.close(); searchPlaceInfowindow = null; }
-  const banner = document.getElementById('searchModeBanner');
-  if (banner) banner.remove();
-  renderPins();
-};
-
-window.togglePlaceSave = async function(placeId, idx) {
-  if (!currentUser) { showToast("로그인 후 저장할 수 있어요!"); return; }
-  const p = placeResults[idx];
-  const uid = currentUser.uid;
-  const alreadySaved = savedPlaces.findIndex(s => s.id === placeId);
-
-  if (alreadySaved >= 0) {
-    savedPlaces.splice(alreadySaved, 1);
-    showToast("저장 취소됐어요");
-  } else {
-    savedPlaces.push({
-      id: p.id,
-      name: p.place_name,
-      category: p.category_name.split(">").pop().trim(),
-      address: p.road_address_name || p.address_name,
-      url: p.place_url || "",
-      lat: parseFloat(p.y),
-      lng: parseFloat(p.x),
-      savedAt: new Date().toISOString()
-    });
-    showToast("내 맛집에 저장됐어요! ❤️");
-  }
-
-  await setDoc(doc(db, "users", uid), { savedPlaces }, { merge: true });
-  renderPlaceResults();
-  if (currentPage === "my") renderMyPage();
-};
-
-async function loadSavedPlaces() {
-  if (!currentUser) { savedPlaces = []; return; }
-  const snap = await getDoc(doc(db, "users", currentUser.uid));
-  savedPlaces = snap.exists() ? (snap.data().savedPlaces || []) : [];
-}
-
-buildCelebTabs();
-loadRestaurantsFromDB("성시경");
-initKakaoLogin();
+// ── 초기화 ──
+renderAuthArea();
+renderCuratorList();
+loadRests('성시경');
 </script>
 </body>
 </html>
