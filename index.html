@@ -465,15 +465,15 @@ const STAR_CURATORS = [
 
 // ── 등급 시스템 ──
 function getGrade(points) {
-  if (points >= 700) return {name:'별스푼', icon:'⭐', color:'#F59E0B'};
-  if (points >= 300) return {name:'금스푼', icon:'🥇', color:'#F59E0B'};
+  if (points >= 2000) return {name:'별스푼', icon:'⭐', color:'#F59E0B'};
+  if (points >= 500) return {name:'금스푼', icon:'🥇', color:'#D97706'};
   if (points >= 100) return {name:'은스푼', icon:'🥈', color:'#94A3B8'};
   return {name:'스푼', icon:'🥄', color:'#9A9A96'};
 }
 
 function getGradeMultiplier(points) {
-  if (points >= 700) return 10;
-  if (points >= 300) return 5;
+  if (points >= 2000) return 10;
+  if (points >= 500) return 5;
   if (points >= 100) return 3;
   return 1;
 }
@@ -520,6 +520,69 @@ window.loginWithKakao = function() {
   window.Kakao.Auth.authorize({ redirectUri: window.location.origin });
 };
 
+// 카카오 로그인 처리
+async function initKakaoLogin() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code) {
+      window.history.replaceState({}, '', window.location.pathname);
+      showToast('카카오 로그인 처리 중...');
+      const res = await fetch('/api/kakao-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, redirectUri: window.location.origin })
+      });
+      const tokenData = await res.json();
+      if (tokenData.access_token) {
+        window.Kakao.Auth.setAccessToken(tokenData.access_token);
+        await fetchKakaoUser();
+      } else {
+        showToast('카카오 로그인 실패. 다시 시도해주세요.');
+      }
+    } else if (window.Kakao.Auth.getAccessToken()) {
+      await fetchKakaoUser();
+    }
+  } catch(e) { console.log('카카오 초기화 오류:', e); }
+}
+
+async function fetchKakaoUser() {
+  try {
+    const res = await window.Kakao.API.request({url: '/v2/user/me'});
+    const kakaoUser = {
+      uid: 'kakao_' + res.id,
+      displayName: res.kakao_account?.profile?.nickname || res.properties?.nickname || '카카오 사용자',
+      photoURL: res.kakao_account?.profile?.profile_image_url || res.properties?.profile_image || '',
+      email: res.kakao_account?.email || '',
+      provider: 'kakao'
+    };
+    const userRef = doc(db, 'users', kakaoUser.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      await setDoc(userRef, {
+        displayName: kakaoUser.displayName,
+        photoURL: kakaoUser.photoURL,
+        email: kakaoUser.email,
+        provider: 'kakao',
+        points: 20,
+        pointHistory: [{points:20, reason:'회원가입 보너스', at: new Date().toISOString()}],
+        saved: [],
+        registeredRests: [],
+        createdAt: new Date().toISOString()
+      });
+      showToast('카카오 로그인 성공! 🎉 가입 보너스 20pt!');
+    } else {
+      showToast('카카오 로그인 성공! 환영해요 😊');
+    }
+    currentUser = kakaoUser;
+    const userSnap = await getDoc(userRef);
+    currentUserData = userSnap.data();
+    savedList = currentUserData?.saved || [];
+    renderAuthArea();
+    renderList();
+  } catch(e) { console.log('카카오 사용자 오류:', e); showToast('카카오 로그인 실패'); }
+}
+
 window.logoutUser = async function() {
   await signOut(auth);
   currentUser = null; currentUserData = null; savedList = [];
@@ -550,12 +613,26 @@ function renderAuthArea() {
     const name = currentUser.displayName || '사용자';
     const photo = currentUser.photoURL || '';
     area.innerHTML = `
-      <div class="user-info">
-        ${photo ? `<img class="user-avatar" src="${photo}" onerror="this.style.display='none'">` : ''}
-        <span style="font-size:13px;font-weight:600">${name}</span>
-        <span class="user-grade">${grade.icon} ${grade.name}</span>
-        <span style="font-size:12px;color:var(--gold);font-weight:700">${pts}pt</span>
-        <button class="btn-logout" onclick="logoutUser()">로그아웃</button>
+      <div style="position:relative">
+        <div onclick="toggleUserMenu()" style="cursor:pointer;display:flex;align-items:center;gap:6px">
+          ${photo
+            ? `<img class="user-avatar" src="${photo}" onerror="this.outerHTML='<div style=\'width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid var(--gold)\'>${grade.icon}</div>'">`
+            : `<div style="width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid var(--gold)">${grade.icon}</div>`
+          }
+          <span style="font-size:12px;color:var(--gold);font-weight:700">${grade.icon}</span>
+        </div>
+        <div id="userMenu" style="display:none;position:absolute;right:0;top:38px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px;min-width:180px;box-shadow:var(--shadow-lg);z-index:999">
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">${name}</div>
+          <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:8px">${grade.icon} ${grade.name} · ${pts}pt</div>
+          <div style="background:var(--bg2);border-radius:6px;height:4px;margin-bottom:8px;overflow:hidden">
+            <div style="background:var(--gold);height:100%;width:${Math.min(pts/2000*100,100)}%;border-radius:4px"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text3);margin-bottom:10px">별스푼까지 ${Math.max(2000-pts,0)}pt</div>
+          <div style="border-top:1px solid var(--border);padding-top:8px;display:flex;flex-direction:column;gap:6px">
+            <button onclick="setPage('my',document.querySelector('.pnav:nth-child(3)'));toggleUserMenu()" style="background:var(--gold-bg);border:none;border-radius:6px;padding:6px 10px;font-size:12px;color:var(--gold);font-weight:600;cursor:pointer;text-align:left">🥄 내 스푼 보기</button>
+            <button onclick="logoutUser()" style="background:none;border:1px solid var(--border2);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--text3);cursor:pointer;text-align:left">로그아웃</button>
+          </div>
+        </div>
       </div>`;
   } else {
     area.innerHTML = `
@@ -566,6 +643,19 @@ function renderAuthArea() {
       </button>`;
   }
 }
+
+window.toggleUserMenu = function() {
+  const menu = document.getElementById('userMenu');
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+};
+
+// 외부 클릭 시 메뉴 닫기
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('userMenu');
+  if (menu && !menu.parentElement.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
 
 // ── 큐레이터 탭 ──
 window.setCuratorTab = function(tab, el) {
@@ -585,7 +675,7 @@ async function renderCuratorList() {
         <div class="curator-avatar star-curator">${c.icon}</div>
         <div class="curator-info">
           <div class="curator-name">${c.name}</div>
-          <div class="curator-sub"><i class="ti ti-map-pin" style="font-size:10px"></i> ${c.desc}</div>
+  
         </div>
       </div>`;
     }).join('');
@@ -1181,7 +1271,7 @@ function renderMyPage() {
     <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px">
       <div style="font-size:13px;font-weight:700;margin-bottom:10px">🥄 등급 현황</div>
       <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-        ${[{name:'스푼',icon:'🥄',min:0},{name:'은스푼',icon:'🥈',min:100},{name:'금스푼',icon:'🥇',min:300},{name:'별스푼',icon:'⭐',min:700}].map(g => `
+        ${[{name:'스푼',icon:'🥄',min:0},{name:'은스푼',icon:'🥈',min:100},{name:'금스푼',icon:'🥇',min:500},{name:'별스푼',icon:'⭐',min:2000}].map(g => `
           <div style="text-align:center;opacity:${pts>=g.min?1:0.4}">
             <div style="font-size:20px">${g.icon}</div>
             <div style="font-size:10px;font-weight:600;margin-top:2px">${g.name}</div>
@@ -1189,9 +1279,9 @@ function renderMyPage() {
           </div>`).join('')}
       </div>
       <div style="background:var(--bg2);border-radius:4px;height:6px;overflow:hidden">
-        <div style="background:var(--gold);height:100%;width:${Math.min(pts/700*100,100)}%;border-radius:4px;transition:width .5s"></div>
+        <div style="background:var(--gold);height:100%;width:${Math.min(pts/2000*100,100)}%;border-radius:4px;transition:width .5s"></div>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:right">${pts}/700pt (별스푼까지 ${Math.max(700-pts,0)}pt)</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;text-align:right">${pts}/700pt (별스푼까지 ${Math.max(2000-pts,0)}pt)</div>
     </div>
 
     <!-- 포인트 내역 -->
@@ -1264,6 +1354,74 @@ window.showToast = showToast;
 renderAuthArea();
 renderCuratorList();
 loadRests('성시경');
+initKakaoLogin();
+
+// 처음 방문자 팝업
+window.closeIntro = function() {
+  document.getElementById('introOverlay').classList.remove('show');
+  if (document.getElementById('noShowAgain')?.checked) {
+    localStorage.setItem('starspoon_intro', new Date().toDateString());
+  }
+};
+
+const lastSeen = localStorage.getItem('starspoon_intro');
+if (lastSeen !== new Date().toDateString()) {
+  document.getElementById('introOverlay').classList.add('show');
+}
 </script>
+
+<!-- ── 서비스 안내 팝업 ── -->
+<div class="overlay" id="introOverlay" style="z-index:1000">
+  <div class="modal" style="width:520px;max-width:92vw">
+    <div class="modal-hd" style="background:var(--gold);border-radius:16px 16px 0 0">
+      <span class="modal-title" style="color:#fff;font-size:16px">🥄 스타스푼에 오신걸 환영해요!</span>
+      <button class="modal-close" onclick="closeIntro()" style="color:#fff">✕</button>
+    </div>
+    <div class="modal-bd">
+      <p style="font-size:14px;color:var(--text2);margin-bottom:16px;line-height:1.7">
+        <strong style="color:var(--text)">스타스푼</strong>은 연예인과 유튜버들이 직접 방문한 맛집을 지도로 보여주는 <strong style="color:var(--gold)">맛집 큐레이터 플랫폼</strong>이에요.
+      </p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div style="background:var(--bg2);border-radius:10px;padding:14px">
+          <div style="font-size:20px;margin-bottom:6px">⭐</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">스타 맛집 탐색</div>
+          <div style="font-size:12px;color:var(--text3)">성시경, 풍자 등 스타들이 직접 방문한 맛집을 지도에서 찾아보세요</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:10px;padding:14px">
+          <div style="font-size:20px;margin-bottom:6px">🥄</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">나만의 큐레이터</div>
+          <div style="font-size:12px;color:var(--text3)">내가 아는 맛집을 등록하고 스푼 등급을 올려보세요</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:10px;padding:14px">
+          <div style="font-size:20px;margin-bottom:6px">🏆</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">순위 시스템</div>
+          <div style="font-size:12px;color:var(--text3)">평점·저장·댓글로 맛집 순위가 실시간으로 바뀌어요</div>
+        </div>
+        <div style="background:var(--bg2);border-radius:10px;padding:14px">
+          <div style="font-size:20px;margin-bottom:6px">🎯</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px">포인트 적립</div>
+          <div style="font-size:12px;color:var(--text3)">등록·댓글·저장으로 포인트를 모아 스푼→별스푼까지!</div>
+        </div>
+      </div>
+      <div style="background:var(--gold-bg);border:1.5px solid var(--gold);border-radius:10px;padding:12px;margin-bottom:16px">
+        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">🥄 스푼 등급 시스템</div>
+        <div style="display:flex;justify-content:space-between;font-size:12px">
+          <span>🥄 스푼 <span style="color:var(--text3)">(0pt~)</span></span>
+          <span>🥈 은스푼 <span style="color:var(--text3)">(100pt~)</span></span>
+          <span>🥇 금스푼 <span style="color:var(--text3)">(500pt~)</span></span>
+          <span>⭐ 별스푼 <span style="color:var(--text3)">(2000pt~)</span></span>
+        </div>
+      </div>
+      <button onclick="closeIntro()" class="btn-primary">시작하기 🚀</button>
+      <p style="text-align:center;margin-top:10px">
+        <label style="font-size:12px;color:var(--text3);cursor:pointer">
+          <input type="checkbox" id="noShowAgain" style="margin-right:4px">
+          오늘 하루 다시 보지 않기
+        </label>
+      </p>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
