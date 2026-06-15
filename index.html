@@ -1134,14 +1134,53 @@ function renderPlaceResults() {
     }).join("")}`;
 }
 
+let searchPlaceMarker = null;
+let searchPlaceInfowindow = null;
+
 window.focusPlaceOnMap = function(idx) {
   const p = placeResults[idx];
   if (!p || !map) return;
   setPage('map', document.querySelector('.ptab'));
   setTimeout(() => {
-    map.setCenter(new kakao.maps.LatLng(p.y, p.x));
+    const lat = parseFloat(p.y), lng = parseFloat(p.x);
+    const pos = new kakao.maps.LatLng(lat, lng);
+    map.setCenter(pos);
     map.setLevel(4);
+
+    // 기존 검색 핀+말풍선 제거
+    if (searchPlaceMarker) searchPlaceMarker.setMap(null);
+    if (searchPlaceInfowindow) searchPlaceInfowindow.close();
+
+    // 파란색 핀 표시
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="38" height="46" viewBox="0 0 38 46"><path d="M19 0C9 0 0 9 0 19c0 13 19 27 19 27S38 32 38 19C38 9 29 0 19 0z" fill="#3B82F6" stroke="#1D4ED8" stroke-width="1.5"/><text x="19" y="26" text-anchor="middle" font-size="15">🔍</text></svg>`;
+    const img = new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg), new kakao.maps.Size(38, 46), {offset: new kakao.maps.Point(19, 46)});
+    searchPlaceMarker = new kakao.maps.Marker({map, position: pos, image: img, title: p.place_name});
+
+    // 말풍선 표시
+    searchPlaceInfowindow = new kakao.maps.InfoWindow({
+      content: `<div style="padding:8px 12px;font-size:13px;font-weight:600;color:#1C1C1A;min-width:140px;max-width:200px">🔍 ${p.place_name}<br><span style="font-size:11px;color:#6B6B67;font-weight:400">${p.road_address_name||p.address_name}</span></div>`,
+      removable: true
+    });
+    searchPlaceInfowindow.open(map, searchPlaceMarker);
+
+    // 지도 위 안내 버튼 표시
+    const existingBanner = document.getElementById('searchModeBanner');
+    if (existingBanner) existingBanner.remove();
+
+    const banner = document.createElement('div');
+    banner.id = 'searchModeBanner';
+    banner.style.cssText = 'position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:10;background:#3B82F6;color:#fff;border-radius:20px;padding:8px 16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 2px 8px rgba(0,0,0,0.2);white-space:nowrap';
+    banner.innerHTML = `🔍 일반검색 결과 보는 중 &nbsp;<button onclick="clearSearchMode()" style="background:rgba(255,255,255,0.3);border:none;color:#fff;border-radius:10px;padding:3px 10px;font-size:12px;cursor:pointer;font-weight:600">✕ 스타맛집으로</button>`;
+    document.getElementById('mapArea').appendChild(banner);
   }, 150);
+};
+
+window.clearSearchMode = function() {
+  if (searchPlaceMarker) { searchPlaceMarker.setMap(null); searchPlaceMarker = null; }
+  if (searchPlaceInfowindow) { searchPlaceInfowindow.close(); searchPlaceInfowindow = null; }
+  const banner = document.getElementById('searchModeBanner');
+  if (banner) banner.remove();
+  renderPins();
 };
 
 window.togglePlaceSave = async function(placeId, idx) {
