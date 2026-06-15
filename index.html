@@ -763,7 +763,6 @@ window.submitYtLink = async function() {
     showToast('유튜브 링크만 등록할 수 있어요!'); return;
   }
   try {
-    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
     const ref = doc(db, 'restaurants', ytTargetId);
     await updateDoc(ref, { yt: url, ytBy: currentUser.uid, ytReports: 0 });
     document.getElementById('ytModalOverlay').classList.remove('show');
@@ -780,7 +779,6 @@ window.reportYt = async function(id) {
   if (!currentUser) { showToast('로그인 후 신고할 수 있어요!'); return; }
   if (!confirm('이 유튜브 링크가 잘못됐나요? 신고하시겠어요?')) return;
   try {
-    const { doc, getDoc, updateDoc, deleteField } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
     const ref = doc(db, 'restaurants', id);
     const snap = await getDoc(ref);
     const reports = (snap.data().ytReports || 0) + 1;
