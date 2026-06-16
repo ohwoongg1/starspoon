@@ -965,15 +965,33 @@ function normalizeRegion(region) {
     .replace('시청','').trim();
 }
 
+// 서울 구 목록 (area에 "서울" 없이 "용산구"처럼만 저장된 경우 보정)
+const SEOUL_GU = ['종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구',
+  '강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구',
+  '금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
+
 // 지역 매칭 체크
 function matchRegion(r, region) {
   const norm = normalizeRegion(region);
   const area = r.area || '';
   const addr = r.address || '';
   const combined = area + ' ' + addr;
-  // 정규화된 키워드로 매칭
-  return combined.includes(norm) || combined.includes(region) ||
-    area.startsWith(norm) || addr.includes(norm);
+
+  // 직접 매칭
+  if (combined.includes(norm) || combined.includes(region) ||
+      area.startsWith(norm) || addr.includes(norm)) return true;
+
+  // "서울" 검색 시 → area가 서울 구 이름만 있어도 매칭
+  if (norm === '서울') {
+    if (SEOUL_GU.some(gu => area.includes(gu) || addr.includes(gu))) return true;
+  }
+
+  // 구 이름으로 검색 시 (예: "용산구") → area에 "용산구"만 있어도 매칭
+  if (norm.endsWith('구') || norm.endsWith('동') || norm.endsWith('로')) {
+    if (area.includes(norm) || addr.includes(norm)) return true;
+  }
+
+  return false;
 }
 
 // 지역별 전체 맛집 로드 (큐레이터 구분 없이)
