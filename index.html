@@ -475,9 +475,14 @@ let STAR_CURATORS = [];
 
 async function loadStarCurators() {
   try {
-    const snap = await getDocs(query(collection(db, 'curators'), orderBy('order'), where('active','==',true)));
+    const snap = await getDocs(query(collection(db, 'curators'), orderBy('order')));
     STAR_CURATORS = [];
-    snap.forEach(d => STAR_CURATORS.push({id:d.id, ...d.data()}));
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.active !== false) { // active가 false인 것만 제외
+        STAR_CURATORS.push({id:d.id, ...data});
+      }
+    });
     
     // curators 컬렉션이 비어있으면 기본값 사용
     if (!STAR_CURATORS.length) {
