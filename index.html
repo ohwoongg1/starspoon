@@ -2234,6 +2234,16 @@ window.doSearch = async function(q) {
     return;
   }
 
+  // 큐레이터 이름으로 검색하면 해당 큐레이터 데이터 자동 로드
+  const matchedCurator = STAR_CURATORS.find(c => c.name === q.trim() || c.name.includes(q.trim()));
+  if (matchedCurator) {
+    selCurator = matchedCurator.name;
+    document.getElementById('listTitle').textContent = matchedCurator.name + ' 맛집';
+    renderCuratorList();
+    await loadRests(matchedCurator.name);
+    return;
+  }
+
   // 일반 검색 (맛집명/음식/연예인)
   regionFilter = '';
   renderList();
