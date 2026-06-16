@@ -405,6 +405,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
         <label class="form-label">💬 한줄 코멘트 (선택)</label>
         <input type="text" class="form-input" id="repComment" placeholder="예: 먹을텐데 12화에 나온 맛집이에요">
       </div>
+      <!-- 스타 큐레이터 신청 -->
+      <div style="background:var(--bg2);border:1.5px solid var(--border2);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:700;color:var(--text2)">⭐ 스타 큐레이터 신청</span>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;color:var(--text2)">
+            <input type="checkbox" id="requestStarCurator" style="accent-color:var(--gold)">
+            이 연예인을 스타 탭에 추가 신청
+          </label>
+        </div>
+        <p style="font-size:11px;color:var(--text3)">체크하면 운영자 검토 후 스타 큐레이터 탭에 추가될 수 있어요</p>
+      </div>
       <p class="notice">※ 허위 제보는 신고로 자동 삭제됩니다. 맛집 등록 시 10점, 링크 추가 시 5점 적립!</p>
       <button class="btn-primary" onclick="submitReport()">등록하기 🎉</button>
     </div>
@@ -462,20 +473,44 @@ let myRating = 0;
 let repRestData = null;
 
 // ── 고정 스타 큐레이터 ──
-const STAR_CURATORS = [
-  {name:'성시경', icon:'🎵', color:'#F59E0B', desc:'먹을텐데'},
-  {name:'풍자', icon:'😄', color:'#EF4444', desc:'또간집'},
-  {name:'김사원세끼', icon:'🍺', color:'#78716C', desc:'노포투어'},
-  {name:'백종원', icon:'👨‍🍳', color:'#3B82F6', desc:'골목식당'},
-  {name:'이영자', icon:'😋', color:'#10B981', desc:'맛있는녀석들'},
-  {name:'나얼', icon:'🎤', color:'#8B5CF6', desc:'나얼채널'},
-  {name:'홍진경', icon:'💃', color:'#EC4899', desc:'홍진경채널'},
-  {name:'쯔양', icon:'🍖', color:'#F97316', desc:'쯔양채널'},
-  {name:'유재석', icon:'😆', color:'#06B6D4', desc:'유재석채널'},
-  {name:'히밥', icon:'🍱', color:'#84CC16', desc:'히밥채널'},
-  {name:'승우아빠', icon:'👨‍👧', color:'#A78BFA', desc:'승우아빠채널'},
-  {name:'입짧은햇님', icon:'🌸', color:'#FB7185', desc:'입짧은햇님'},
-];
+// 스타 큐레이터 → Firebase curators 컬렉션에서 동적 로드
+let STAR_CURATORS = [];
+
+async function loadStarCurators() {
+  try {
+    const snap = await getDocs(query(collection(db, 'curators'), orderBy('order'), where('active','==',true)));
+    STAR_CURATORS = [];
+    snap.forEach(d => STAR_CURATORS.push({id:d.id, ...d.data()}));
+    
+    // curators 컬렉션이 비어있으면 기본값 사용
+    if (!STAR_CURATORS.length) {
+      STAR_CURATORS = [
+        {name:'성시경', icon:'🎵', color:'#F59E0B', order:1, active:true},
+        {name:'풍자', icon:'😄', color:'#EF4444', order:2, active:true},
+        {name:'김사원세끼', icon:'🍺', color:'#78716C', order:3, active:true},
+        {name:'백종원', icon:'👨‍🍳', color:'#3B82F6', order:4, active:true},
+        {name:'이영자', icon:'😋', color:'#10B981', order:5, active:true},
+        {name:'나얼', icon:'🎤', color:'#8B5CF6', order:6, active:true},
+        {name:'홍진경', icon:'💃', color:'#EC4899', order:7, active:true},
+        {name:'쯔양', icon:'🍖', color:'#F97316', order:8, active:true},
+        {name:'유재석', icon:'😆', color:'#06B6D4', order:9, active:true},
+        {name:'히밥', icon:'🍱', color:'#84CC16', order:10, active:true},
+        {name:'승우아빠', icon:'👨‍👧', color:'#A78BFA', order:11, active:true},
+        {name:'입짧은햇님', icon:'🌸', color:'#FB7185', order:12, active:true},
+      ];
+    }
+  } catch(e) {
+    // 오류시 기본값
+    STAR_CURATORS = [
+      {name:'성시경', icon:'🎵', color:'#F59E0B', order:1, active:true},
+      {name:'풍자', icon:'😄', color:'#EF4444', order:2, active:true},
+      {name:'김사원세끼', icon:'🍺', color:'#78716C', order:3, active:true},
+      {name:'백종원', icon:'👨‍🍳', color:'#3B82F6', order:4, active:true},
+      {name:'이영자', icon:'😋', color:'#10B981', order:5, active:true},
+    ];
+  }
+  renderCuratorList();
+}
 
 // ── 등급 시스템 ──
 function getGrade(points) {
@@ -694,29 +729,34 @@ async function renderCuratorList() {
       </div>`;
     }).join('');
   } else {
-    // 일반 큐레이터 (등록 10개 이상)
+    // 일반 큐레이터 - 맛집 3개 이상 등록한 사람 자동 생성
     try {
-      const snap = await getDocs(query(collection(db, 'users'), orderBy('points', 'desc'), limit(20)));
+      const snap = await getDocs(query(collection(db, 'users'), orderBy('points', 'desc'), limit(50)));
       const users = [];
       snap.forEach(d => {
         const data = d.data();
-        if ((data.registeredRests || []).length >= 10) {
+        if ((data.registeredRests || []).length >= 3) {
           users.push({id: d.id, ...data});
         }
       });
       if (!users.length) {
-        list.innerHTML = `<div class="empty"><i class="ti ti-user"></i><p>아직 일반 큐레이터가 없어요<br><small>맛집 10개 이상 등록하면 활성화!</small></p></div>`;
+        list.innerHTML = `<div class="empty"><i class="ti ti-user"></i>
+          <p>아직 일반 큐레이터가 없어요<br>
+          <small style="color:var(--gold)">맛집 3개 이상 등록하면 자동 활성화!</small></p>
+          <button onclick="openReportModal()" style="margin-top:10px;background:var(--gold);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer">+ 맛집 등록하기</button>
+        </div>`;
         return;
       }
       list.innerHTML = users.map((u, i) => {
         const grade = getGrade(u.points || 0);
         const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
-        return `<div class="curator-item${selCurator===u.displayName?' on':''}" onclick="selectCurator('${u.displayName}','${u.id}')">
+        const restCount = (u.registeredRests||[]).length;
+        return `<div class="curator-item${selCurator===u.displayName?' on':''}" onclick="selectCuratorByUser('${u.displayName}','${u.id}')">
           <div class="rank-num ${rankClass}" style="font-size:10px">${i+1}</div>
           <div class="curator-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : grade.icon}</div>
           <div class="curator-info">
             <div class="curator-name">${u.displayName}</div>
-            <div class="curator-sub">${grade.icon} ${grade.name} · ${u.points||0}pt</div>
+            <div class="curator-sub">${grade.icon} ${grade.name} · 맛집 ${restCount}곳</div>
           </div>
         </div>`;
       }).join('');
@@ -725,6 +765,35 @@ async function renderCuratorList() {
     }
   }
 }
+
+// 일반인 큐레이터 클릭
+window.selectCuratorByUser = async function(name, uid) {
+  selCurator = name;
+  document.getElementById('listTitle').textContent = name + ' 맛집';
+  renderCuratorList();
+  // 해당 사용자가 등록한 맛집 불러오기
+  try {
+    const snap = await getDocs(query(
+      collection(db, 'restaurants'),
+      where('registeredBy', '==', uid),
+      limit(100)
+    ));
+    DATA = [];
+    snap.forEach(d => {
+      const r = d.data();
+      DATA.push({
+        id: d.id, name: r.name||'', celeb: r.celeb||name,
+        celebs: r.celebs||[name], cat: r.category||r.cat||'한식',
+        area: r.area||'', comment: r.comment||'', yt: r.yt||'',
+        lat: r.lat||37.5665, lng: r.lng||126.9780,
+        visits: r.visits||0, saves: r.saves||0,
+        avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+      });
+    });
+    renderList();
+    renderPins();
+  } catch(e) { showToast('불러오기 실패'); }
+};
 
 window.selectCurator = async function(name, uid) {
   selCurator = name;
@@ -1175,7 +1244,7 @@ window.submitReport = async function() {
       achievements: {},
       createdAt: new Date().toISOString()
     };
-    await addDoc(collection(db, 'restaurants'), data);
+    const restRef = await addDoc(collection(db, 'restaurants'), data);
 
     // 등록 포인트 10점 + 링크 5점
     await addPoints(currentUser.uid, 15, `맛집 등록 (${repRestData.name})`);
@@ -1186,11 +1255,37 @@ window.submitReport = async function() {
     const regRests = userSnap.data()?.registeredRests || [];
     await updateDoc(userRef, {registeredRests: [...regRests, repRestData.name]});
 
+    // 스타 큐레이터 신청
+    const requestStar = document.getElementById('requestStarCurator')?.checked;
+    if (requestStar) {
+      // 이미 스타 목록에 있는지 확인
+      const isAlreadyStar = STAR_CURATORS.some(c => c.name === celeb);
+      if (!isAlreadyStar) {
+        await addDoc(collection(db, 'starRequests'), {
+          celebName: celeb,
+          requestedBy: currentUser.uid,
+          requestedByName: currentUser.displayName || '익명',
+          sampleRestName: repRestData.name,
+          sampleRestId: restRef.id,
+          evidenceLink: link,
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        });
+        showToast('등록 완료! 🎉 +15pt · 스타 신청도 접수됐어요!');
+      } else {
+        showToast('등록 완료! 🎉 +15pt 적립됐어요!');
+      }
+    } else {
+      showToast('등록 완료! 🎉 +15pt 적립됐어요!');
+    }
+
     document.getElementById('reportOverlay').classList.remove('show');
-    showToast('등록 완료! 🎉 +15pt 적립됐어요!');
 
     // 현재 큐레이터와 같으면 리스트 새로고침
     if (celeb === selCurator) await loadRests(celeb);
+    
+    // 일반인 탭이면 큐레이터 목록 새로고침
+    if (selCuratorTab === 'user') renderCuratorList();
   } catch(e) { showToast('등록 실패: ' + e.message); }
 };
 
@@ -1584,7 +1679,7 @@ window.showToast = showToast;
 
 // ── 초기화 ──
 renderAuthArea();
-renderCuratorList();
+loadStarCurators(); // Firebase에서 스타 큐레이터 동적 로드
 loadRests('성시경');
 initKakaoLogin();
 
