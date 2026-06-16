@@ -921,7 +921,7 @@ window.selectCuratorByUser = async function(name, uid) {
     const snap = await getDocs(query(
       collection(db, 'restaurants'),
       where('registeredBy', '==', uid),
-      limit(500)
+      limit(100)
     ));
     DATA = [];
     snap.forEach(d => {
@@ -1075,7 +1075,7 @@ async function loadRestsByRegion(region) {
 async function loadRests(celeb) {
   try {
     document.getElementById('listCount').textContent = '로딩 중...';
-    let q = query(collection(db, 'restaurants'), where('celeb', '==', celeb), orderBy('name'), limit(500));
+    let q = query(collection(db, 'restaurants'), where('celeb', '==', celeb), limit(500));
     const snap = await getDocs(q);
     DATA = [];
     snap.forEach(d => {
@@ -1117,7 +1117,7 @@ async function loadRests(celeb) {
   } catch(e) {
     console.log('로드 오류:', e);
     try {
-      const snap = await getDocs(query(collection(db, 'restaurants'), limit(500)));
+      const snap = await getDocs(query(collection(db, 'restaurants'), limit(100)));
       DATA = [];
       snap.forEach(d => {
         const r = d.data();
@@ -2008,7 +2008,7 @@ async function renderRankPage() {
       // 각 스타별 가게 평점 합산
       const starScores = await Promise.all(STAR_CURATORS.map(async (c) => {
         try {
-          const snap = await getDocs(query(collection(db,'restaurants'), where('celeb','==',c.name), limit(500)));
+          const snap = await getDocs(query(collection(db,'restaurants'), where('celeb','==',c.name), limit(100)));
           let totalRating = 0, totalSaves = 0, totalComments = 0, count = 0;
           snap.forEach(d => {
             const data = d.data();
