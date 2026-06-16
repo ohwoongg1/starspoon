@@ -1152,7 +1152,8 @@ kakao.maps.load(function() {
     level: 8
   });
   map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-  renderPins();
+  // 데이터 로드 완료 후 핀 표시
+  setTimeout(() => { if (DATA.length) renderPins(); }, 1500);
 });
 
 function renderPins() {
@@ -1941,7 +1942,7 @@ function isRegionQuery(q) {
   return false;
 }
 
-window.doSearch = function(q) {
+window.doSearch = async function(q) {
   searchQ = q.trim();
   const clearBtn = document.getElementById('clearSearchBtn');
   if (clearBtn) clearBtn.style.display = q.trim() ? 'block' : 'none';
@@ -2053,9 +2054,13 @@ window.showToast = showToast;
 
 // ── 초기화 ──
 renderAuthArea();
-loadStarCurators(); // Firebase에서 스타 큐레이터 동적 로드
-loadRests('성시경');
 initKakaoLogin();
+
+// Firebase 순차 로드
+(async () => {
+  await loadStarCurators(); // 큐레이터 먼저
+  await loadRests('성시경'); // 맛집 다음
+})();
 
 // 처음 방문자 팝업
 window.closeIntro = function() {
