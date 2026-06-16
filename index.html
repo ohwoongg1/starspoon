@@ -1460,7 +1460,6 @@ let myRestData = null;
 window.openMyRestModal = function() {
   if (!currentUser) { showToast('로그인 후 등록할 수 있어요!'); return; }
   myRestData = null;
-  document.getElementById('myRestSearch').value = '';
   document.getElementById('myRestResults').innerHTML = '';
   document.getElementById('myRestSelected').style.display = 'none';
   document.getElementById('myRestComment').value = '';
@@ -1576,7 +1575,7 @@ window.selectKakaoResult = function(idx, mode) {
 };
 
 window.searchMyRest = function() {
-  const keyword = document.getElementById('myRestSearch').value.trim();
+  const keyword = myRestData?.name||'';
   if (!keyword) { showToast('식당 이름을 입력해주세요'); return; }
   const resultsDiv = document.getElementById('myRestResults');
   resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 중...</p>';
@@ -1618,7 +1617,7 @@ window.selectMyRest = function(idx) {
   document.getElementById('myRestAddr').textContent = p.road_address_name || p.address_name;
   document.getElementById('myRestSelected').style.display = 'block';
   document.getElementById('myRestResults').innerHTML = '';
-  document.getElementById('myRestSearch').value = p.place_name;
+  
   // 카테고리 자동 설정
   const cat = p.category_name;
   const select = document.getElementById('myRestCat');
@@ -1637,15 +1636,15 @@ window.selectMyRest = function(idx) {
 };
 
 window.searchYtForMyRest = function() {
-  const name = myRestData?.name || document.getElementById('myRestSearch').value.trim();
+  const name = myRestData?.name || myRestData?.name||'';
   window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(name), '_blank');
 };
 window.searchInstaForMyRest = function() {
-  const name = myRestData?.name || document.getElementById('myRestSearch').value.trim();
+  const name = myRestData?.name || myRestData?.name||'';
   window.open('https://www.instagram.com/explore/tags/' + encodeURIComponent(name), '_blank');
 };
 window.searchNaverForMyRest = function() {
-  const name = myRestData?.name || document.getElementById('myRestSearch').value.trim();
+  const name = myRestData?.name || myRestData?.name||'';
   window.open('https://search.naver.com/search.naver?query=' + encodeURIComponent(name), '_blank');
 };
 
@@ -1698,7 +1697,6 @@ window.submitMyRest = async function() {
 window.openReportModal = function() {
   if (!currentUser) { showToast('로그인 후 제보할 수 있어요!'); return; }
   repRestData = null;
-  document.getElementById('repRestSearch').value = '';
   document.getElementById('repRestResults').innerHTML = '';
   document.getElementById('repRestSelected').style.display = 'none';
   document.getElementById('repCeleb').value = '';
@@ -1713,7 +1711,7 @@ window.closeReportModal = function(e) {
 };
 
 window.searchRepRest = function() {
-  const keyword = document.getElementById('repRestSearch').value.trim();
+  const keyword = repRestData?.name||'';
   if (!keyword) { showToast('식당 이름을 입력해주세요'); return; }
   const resultsDiv = document.getElementById('repRestResults');
   resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 중...</p>';
@@ -1755,13 +1753,13 @@ window.selectRepRest = function(idx) {
   document.getElementById('repRestAddr').textContent = p.road_address_name || p.address_name;
   document.getElementById('repRestSelected').style.display = 'block';
   document.getElementById('repRestResults').innerHTML = '';
-  document.getElementById('repRestSearch').value = p.place_name;
+  
   document.getElementById('repCeleb').focus();
 };
 
 window.searchYtForRep = function() {
   const celeb = document.getElementById('repCeleb').value.trim();
-  const rest = repRestData?.name || document.getElementById('repRestSearch').value.trim();
+  const rest = repRestData?.name || repRestData?.name||'';
   window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(`${celeb} ${rest}`), '_blank');
 };
 
