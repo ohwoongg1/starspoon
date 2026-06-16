@@ -255,7 +255,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
   </a>
   <div class="header-search">
     <i class="ti ti-search si"></i>
-    <input type="text" id="mainSearch" placeholder="맛집·연예인·지역 검색" oninput="doSearch(this.value)" onkeydown="if(event.key==='Enter'){doSearch(this.value)}">
+    <input type="text" id="mainSearch" placeholder="맛집 이름·음식 검색" oninput="doSearch(this.value)" onkeydown="if(event.key==='Escape')clearSearch()">
+    <button id="clearSearchBtn" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0">✕</button>
+  </div>
+  <!-- 지역 검색 (지도 이동용) -->
+  <div style="position:relative;flex-shrink:0">
+    <i class="ti ti-map-pin" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none"></i>
+    <input type="text" id="regionSearch" placeholder="지역 검색 (예: 종로구)" 
+      style="width:160px;height:36px;border-radius:18px;border:1.5px solid var(--border2);background:var(--bg2);padding:0 14px 0 34px;font-size:13px;color:var(--text);outline:none;transition:all .2s"
+      onkeydown="if(event.key==='Enter')searchRegion(this.value)"
+      onfocus="this.style.borderColor='var(--gold)';this.style.background='var(--white)'"
+      onblur="this.style.borderColor='var(--border2)';this.style.background='var(--bg2)'">
+    <button onclick="searchRegion(document.getElementById('regionSearch').value)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gold);font-size:13px;font-weight:700">이동</button>
   </div>
   <div class="header-right">
     <button class="btn-report" onclick="openReportModal()">
@@ -1479,39 +1490,64 @@ window.setSort = function(sort) {
 
 window.doSearch = function(q) {
   searchQ = q.trim();
+  // X 버튼 표시/숨김
+  const clearBtn = document.getElementById('clearSearchBtn');
+  if (clearBtn) clearBtn.style.display = q.trim() ? 'block' : 'none';
   renderList();
   renderPins();
 
+  // 검색어 있으면 필터된 맛집 중 첫번째로 지도 이동
+  if (q.trim() && map) {
+    const items = filtered();
+    if (items.length > 0) {
+      map.setCenter(new kakao.maps.LatLng(items[0].lat, items[0].lng));
+      map.setLevel(6);
+    }
+  }
+};
+
+// 검색 초기화
+window.clearSearch = function() {
+  searchQ = '';
+  document.getElementById('mainSearch').value = '';
+  const clearBtn = document.getElementById('clearSearchBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  renderList();
+  renderPins();
+  // 지도 전체 보기로
+  if (map) {
+    map.setCenter(new kakao.maps.LatLng(37.5550, 126.9700));
+    map.setLevel(8);
+  }
+  showToast('검색이 초기화됐어요');
+};
+
+// 지역 검색 (지도 이동 전용)
+window.searchRegion = function(q) {
   if (!q.trim() || !map) return;
-
-  // 1단계: 현재 데이터에서 해당 지역 맛집 필터링
-  const regionItems = DATA.filter(d => d.area.includes(q.trim()) || d.address?.includes(q.trim()));
-
-  // 2단계: 지역 검색이면 지도 이동
   const geocoder = new kakao.maps.services.Geocoder();
-
-  // 주소 검색 시도
   geocoder.addressSearch(q.trim(), function(result, status) {
     if (status === kakao.maps.services.Status.OK) {
       const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
       map.setCenter(coords);
-      map.setLevel(7);
+      const level = q.trim().endsWith('동') ? 5 : q.trim().endsWith('구') ? 7 : 9;
+      map.setLevel(level);
       renderPins();
+      showToast(q.trim() + ' 지역으로 이동했어요 📍');
       return;
     }
-
-    // 주소 검색 실패 시 키워드 검색
     const ps = new kakao.maps.services.Places();
     ps.keywordSearch(q.trim(), function(result2, status2) {
       if (status2 === kakao.maps.services.Status.OK && result2[0]) {
         const coords = new kakao.maps.LatLng(result2[0].y, result2[0].x);
         map.setCenter(coords);
-        // 구/동 단위면 레벨 7, 시 단위면 레벨 9
-        const level = q.trim().endsWith('구') || q.trim().endsWith('동') ? 7 : 9;
-        map.setLevel(level);
+        map.setLevel(7);
         renderPins();
+        showToast(q.trim() + ' 지역으로 이동했어요 📍');
+      } else {
+        showToast('지역을 찾을 수 없어요');
       }
-    }, {category_group_code: 'AD5'}); // 행정구역 검색
+    });
   });
 };
 
