@@ -274,8 +274,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
     <button id="clearSearchBtn" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0">✕</button>
   </div>
   <div class="header-right">
+    <button class="btn-report" onclick="openMyRestModal()" style="background:var(--white);color:var(--gold);border:1.5px solid var(--gold);margin-right:4px">
+      <i class="ti ti-plus"></i><span>내 맛집</span>
+    </button>
     <button class="btn-report" onclick="openReportModal()">
-      <i class="ti ti-plus"></i><span>맛집 등록</span>
+      <i class="ti ti-star"></i><span>스타 맛집</span>
     </button>
     <div id="authArea"></div>
   </div>
@@ -500,6 +503,7 @@ let savedList = [];
 let currentCommentId = null;
 let myRating = 0;
 let repRestData = null;
+let regionFilter = ''; // 지역 필터 상태
 
 // ── 고정 스타 큐레이터 ──
 // 스타 큐레이터 → Firebase curators 컬렉션에서 동적 로드
@@ -924,7 +928,8 @@ window.selectCuratorByUser = async function(name, uid) {
 
 window.selectCurator = async function(name, uid) {
   selCurator = name;
-  document.getElementById('listTitle').textContent = name + ' 맛집';
+  document.getElementById('listTitle').textContent = 
+    regionFilter ? `${regionFilter} · ${name} 맛집` : name + ' 맛집';
   renderCuratorList();
   await loadRests(name);
 };
@@ -976,6 +981,7 @@ async function loadRests(celeb) {
 function filtered() {
   let items = DATA.filter(d => {
     if (selCat !== '전체' && d.cat !== selCat) return false;
+    if (regionFilter && !d.area.includes(regionFilter) && !(d.address||'').includes(regionFilter)) return false;
     if (searchQ) {
       const q = searchQ;
       if (!d.name.includes(q) && !d.area.includes(q) && !d.comment.includes(q) && !d.celeb.includes(q)) return false;
@@ -1290,6 +1296,134 @@ window.submitComment = async function() {
 };
 
 // ── 제보 ──
+// ── 내 맛집 등록 ──
+let myRestData = null;
+
+window.openMyRestModal = function() {
+  if (!currentUser) { showToast('로그인 후 등록할 수 있어요!'); return; }
+  myRestData = null;
+  document.getElementById('myRestSearch').value = '';
+  document.getElementById('myRestResults').innerHTML = '';
+  document.getElementById('myRestSelected').style.display = 'none';
+  document.getElementById('myRestComment').value = '';
+  document.getElementById('myRestLink').value = '';
+  document.getElementById('myRestOverlay').classList.add('show');
+};
+
+window.closeMyRestModal = function(e) {
+  if (!e || e.target === document.getElementById('myRestOverlay'))
+    document.getElementById('myRestOverlay').classList.remove('show');
+};
+
+window.searchMyRest = function() {
+  const keyword = document.getElementById('myRestSearch').value.trim();
+  if (!keyword) { showToast('식당 이름을 입력해주세요'); return; }
+  const resultsDiv = document.getElementById('myRestResults');
+  resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 중...</p>';
+  const ps = new kakao.maps.services.Places();
+  ps.keywordSearch(keyword, function(data, status) {
+    if (status !== kakao.maps.services.Status.OK || !data.length) {
+      resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요</p>';
+      return;
+    }
+    resultsDiv.innerHTML = data.slice(0,5).map((p,i) => `
+      <div class="search-result-item" onclick="selectMyRest(${i})">
+        <div class="search-result-name">${p.place_name}</div>
+        <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
+      </div>`).join('');
+    window._myRestResults = data;
+  }, {size:5});
+};
+
+window.selectMyRest = function(idx) {
+  const p = window._myRestResults[idx];
+  myRestData = {
+    name: p.place_name,
+    address: p.road_address_name || p.address_name,
+    lat: parseFloat(p.y), lng: parseFloat(p.x),
+    category: p.category_name.split('>').pop().trim()
+  };
+  document.getElementById('myRestName').textContent = '🍽️ ' + p.place_name;
+  document.getElementById('myRestAddr').textContent = p.road_address_name || p.address_name;
+  document.getElementById('myRestSelected').style.display = 'block';
+  document.getElementById('myRestResults').innerHTML = '';
+  document.getElementById('myRestSearch').value = p.place_name;
+  // 카테고리 자동 설정
+  const cat = p.category_name;
+  const select = document.getElementById('myRestCat');
+  if (cat.includes('카페') || cat.includes('디저트')) select.value = '카페·디저트';
+  else if (cat.includes('일식')) select.value = '일식';
+  else if (cat.includes('중식')) select.value = '중식';
+  else if (cat.includes('양식')) select.value = '양식';
+  else if (cat.includes('분식')) select.value = '분식';
+  else if (cat.includes('고기') || cat.includes('삼겹')) select.value = '고기';
+  else if (cat.includes('냉면')) select.value = '냉면';
+  else if (cat.includes('국밥') || cat.includes('탕')) select.value = '국밥·탕';
+  else if (cat.includes('제과') || cat.includes('빵')) select.value = '제과·빵';
+  else if (cat.includes('해산물') || cat.includes('횟집')) select.value = '해산물';
+  else select.value = '한식';
+  document.getElementById('myRestComment').focus();
+};
+
+window.searchYtForMyRest = function() {
+  const name = myRestData?.name || document.getElementById('myRestSearch').value.trim();
+  window.open('https://www.youtube.com/results?search_query=' + encodeURIComponent(name), '_blank');
+};
+window.searchInstaForMyRest = function() {
+  const name = myRestData?.name || document.getElementById('myRestSearch').value.trim();
+  window.open('https://www.instagram.com/explore/tags/' + encodeURIComponent(name), '_blank');
+};
+window.searchNaverForMyRest = function() {
+  const name = myRestData?.name || document.getElementById('myRestSearch').value.trim();
+  window.open('https://search.naver.com/search.naver?query=' + encodeURIComponent(name), '_blank');
+};
+
+window.submitMyRest = async function() {
+  if (!myRestData) { showToast('식당을 검색해서 선택해주세요!'); return; }
+  const comment = document.getElementById('myRestComment').value.trim();
+  if (!comment) { showToast('한줄 코멘트를 입력해주세요!'); return; }
+  const link = document.getElementById('myRestLink').value.trim();
+  const cat = document.getElementById('myRestCat').value;
+
+  try {
+    const data = {
+      name: myRestData.name,
+      celeb: currentUser.displayName || '익명',
+      celebs: [currentUser.displayName || '익명'],
+      comment, cat, category: cat,
+      area: myRestData.address.split(' ').slice(0,2).join(' '),
+      address: myRestData.address,
+      lat: myRestData.lat, lng: myRestData.lng,
+      yt: link || '',
+      registeredBy: currentUser.uid,
+      registeredByName: currentUser.displayName || '익명',
+      isUserRest: true,
+      visits: 0, saves: 0, avgRating: 0, ratingCount: 0,
+      achievements: {},
+      createdAt: new Date().toISOString()
+    };
+
+    await addDoc(collection(db, 'restaurants'), data);
+
+    // 포인트 지급
+    let pts = 10;
+    let reason = `내 맛집 등록 (${myRestData.name})`;
+    if (link) { pts += 5; reason += ' + 링크'; }
+    await addPoints(currentUser.uid, pts, reason);
+
+    // 등록 가게 목록 업데이트
+    const userRef = doc(db, 'users', currentUser.uid);
+    const userSnap = await getDoc(userRef);
+    const regRests = userSnap.data()?.registeredRests || [];
+    await updateDoc(userRef, {registeredRests: [...regRests, myRestData.name]});
+
+    document.getElementById('myRestOverlay').classList.remove('show');
+    showToast(`등록 완료! 🥄 +${pts}pt 적립!`);
+
+    if (selCuratorTab === 'user') renderCuratorList();
+  } catch(e) { showToast('등록 실패: ' + e.message); }
+};
+
 window.openReportModal = function() {
   if (!currentUser) { showToast('로그인 후 제보할 수 있어요!'); return; }
   repRestData = null;
@@ -1766,20 +1900,31 @@ window.doSearch = function(q) {
   searchQ = q.trim();
   const clearBtn = document.getElementById('clearSearchBtn');
   if (clearBtn) clearBtn.style.display = q.trim() ? 'block' : 'none';
-  renderList();
-  renderPins();
 
-  if (!q.trim() || !map) return;
+  if (!q.trim()) {
+    // 초기화
+    regionFilter = '';
+    renderList();
+    renderPins();
+    if (map) { map.setCenter(new kakao.maps.LatLng(37.5550, 126.9700)); map.setLevel(8); }
+    return;
+  }
 
-  // 지역 키워드면 지도 이동 우선
+  // 지역 키워드면 지역 필터 + 지도 이동
   if (isRegionQuery(q.trim())) {
+    regionFilter = q.trim();
+    renderList();
+    renderPins();
     moveToRegion(q.trim());
     return;
   }
 
-  // 맛집/음식 검색이면 필터된 첫번째 맛집으로 이동
+  // 일반 검색 (맛집명/음식/연예인)
+  regionFilter = '';
+  renderList();
+  renderPins();
   const items = filtered();
-  if (items.length > 0) {
+  if (items.length > 0 && map) {
     map.setCenter(new kakao.maps.LatLng(items[0].lat, items[0].lng));
     map.setLevel(6);
   }
@@ -1836,6 +1981,7 @@ function moveToRegion(q) {
 // 검색 초기화
 window.clearSearch = function() {
   searchQ = '';
+  regionFilter = '';
   document.getElementById('mainSearch').value = '';
   const clearBtn = document.getElementById('clearSearchBtn');
   if (clearBtn) clearBtn.style.display = 'none';
@@ -1875,6 +2021,79 @@ if (lastSeen !== new Date().toDateString()) {
   document.getElementById('introOverlay').classList.add('show');
 }
 </script>
+
+<!-- ── 내 맛집 등록 모달 ── -->
+<div class="overlay" id="myRestOverlay" onclick="closeMyRestModal(event)">
+  <div class="modal report-modal">
+    <div class="modal-hd">
+      <span class="modal-title">🥄 내 맛집 등록</span>
+      <button class="modal-close" onclick="closeMyRestModal()">✕</button>
+    </div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:var(--text3);margin-bottom:14px">내가 가본 맛집을 등록하고 큐레이터가 되어보세요!</p>
+
+      <!-- 식당 검색 -->
+      <div class="form-group">
+        <label class="form-label">🍽️ 식당 검색</label>
+        <div style="display:flex;gap:8px">
+          <input type="text" class="form-input" id="myRestSearch" placeholder="식당 이름 입력 후 검색..." onkeydown="if(event.key==='Enter')searchMyRest()" style="flex:1">
+          <button onclick="searchMyRest()" style="padding:9px 14px;background:var(--gold);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;flex-shrink:0">검색</button>
+        </div>
+        <div id="myRestResults" style="margin-top:8px"></div>
+      </div>
+
+      <!-- 선택된 식당 -->
+      <div class="selected-rest" id="myRestSelected">
+        <div class="selected-rest-name" id="myRestName"></div>
+        <div class="selected-rest-addr" id="myRestAddr"></div>
+      </div>
+
+      <!-- 카테고리 -->
+      <div class="form-group">
+        <label class="form-label">🏷️ 카테고리</label>
+        <select class="form-input" id="myRestCat">
+          <option>한식</option>
+          <option>국밥·탕</option>
+          <option>고기</option>
+          <option>냉면</option>
+          <option>중식</option>
+          <option>일식</option>
+          <option>분식</option>
+          <option>해산물</option>
+          <option>양식</option>
+          <option>제과·빵</option>
+          <option>카페·디저트</option>
+        </select>
+      </div>
+
+      <!-- 코멘트 -->
+      <div class="form-group">
+        <label class="form-label">💬 한줄 코멘트</label>
+        <input type="text" class="form-input" id="myRestComment" placeholder="이 맛집의 매력을 한 줄로 표현해주세요">
+      </div>
+
+      <!-- 링크 (선택) -->
+      <div class="form-group">
+        <label class="form-label">🔗 링크 추가 <span style="color:var(--text3);font-weight:400">(선택 · +5pt)</span></label>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+          <button onclick="searchYtForMyRest()" style="width:100%;padding:8px;background:#FF0000;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+            📺 유튜브 검색
+          </button>
+          <div style="display:flex;gap:6px">
+            <button onclick="searchInstaForMyRest()" style="flex:1;padding:7px;background:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📸 인스타</button>
+            <button onclick="searchNaverForMyRest()" style="flex:1;padding:7px;background:#03C75A;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📰 네이버</button>
+          </div>
+        </div>
+        <input type="text" class="form-input" id="myRestLink" placeholder="링크 붙여넣기 (선택사항)">
+      </div>
+
+      <p class="notice">※ 맛집 등록 시 <strong style="color:var(--gold)">+10pt</strong> · 링크 추가 시 <strong style="color:var(--gold)">+5pt</strong> 추가 적립!</p>
+      <p class="notice">※ 맛집 3개 이상 등록하면 일반 큐레이터로 활성화돼요! 🥄</p>
+      <button onclick="submitMyRest()" class="btn-primary">내 맛집 등록하기 🥄</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── 링크 추가 모달 ── -->
 <div class="overlay" id="linkModalOverlay" onclick="closeLinkModal(event)">
