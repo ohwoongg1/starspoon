@@ -932,30 +932,57 @@ window.selectCuratorByUser = async function(name, uid) {
 
 window.selectCurator = async function(name, uid) {
   selCurator = name;
-  document.getElementById('listTitle').textContent = 
-    regionFilter ? `${regionFilter} · ${name} 맛집` : name + ' 맛집';
-  renderCuratorList();
-  await loadRests(name);
+
+  if (regionFilter) {
+    // 지역 검색 중이면 지역+큐레이터 교차 필터
+    document.getElementById('listTitle').textContent = `${regionFilter} · ${name} 맛집`;
+    renderCuratorList();
+    renderList();
+    renderPins();
+    // 배너 업데이트
+    const items = filtered();
+    const banner = document.getElementById('regionBanner');
+    if (banner) {
+      banner.innerHTML = `
+        <span style="color:var(--gold);font-weight:700">📍 ${regionFilter} · ${name}</span>
+        <span style="color:var(--text2)">${items.length}곳</span>`;
+    }
+  } else {
+    document.getElementById('listTitle').textContent = name + ' 맛집';
+    renderCuratorList();
+    await loadRests(name);
+  }
 };
 
 // ── 데이터 로드 ──
-// 지역별 전체 맛집 로드
+// 지역별 전체 맛집 로드 (큐레이터 구분 없이)
 async function loadRestsByRegion(region) {
   try {
     document.getElementById('listCount').textContent = '로딩 중...';
-    document.getElementById('listTitle').textContent = region + ' 맛집';
-    // 전체 맛집 로드 후 지역 필터
+    document.getElementById('listTitle').textContent = region + ' 전체 맛집';
+    
+    const regionKey = region
+      .replace('특별시','').replace('광역시','')
+      .replace('특별자치시','').replace('시','').trim();
+
+    // 전체 맛집 로드
     const snap = await getDocs(query(collection(db, 'restaurants'), limit(300)));
     DATA = [];
     snap.forEach(d => {
       const r = d.data();
-      const addr = (r.area || '') + (r.address || '');
-      const regionKey = region.replace('특별시','').replace('광역시','').replace('특별자치시','');
-      if (addr.includes(regionKey)) {
+      // area 또는 address에 지역 키워드 포함 여부 체크
+      const area = r.area || '';
+      const addr = r.address || '';
+      const combined = area + addr;
+      
+      if (combined.includes(regionKey) || combined.includes(region)) {
         DATA.push({
-          id: d.id, name: r.name||'', celeb: r.celeb||'',
-          celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
-          area: r.area||'', comment: r.comment||'', yt: r.video_url||r.yt||'',
+          id: d.id, name: r.name||'',
+          celeb: r.celeb || (r.celebs&&r.celebs[0]) || '',
+          celebs: r.celebs||[r.celeb||''],
+          cat: r.category||r.cat||'한식',
+          area: r.area||'', comment: r.comment||'',
+          yt: r.video_url||r.yt||'',
           lat: r.lat||37.5665, lng: r.lng||126.9780,
           visits: r.visits||0, saves: r.saves||0,
           avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
@@ -964,9 +991,41 @@ async function loadRestsByRegion(region) {
         });
       }
     });
+
+    // 지역 검색시 큐레이터 필터 해제
+    selCurator = '전체';
+    document.querySelectorAll('.curator-item').forEach(el => el.classList.remove('on'));
+
     renderList();
     renderPins();
-    showToast(`📍 ${region} 맛집 ${DATA.length}곳`);
+    
+    // 리스트 타이틀에 숫자 표시
+    const starCount = DATA.filter(d => STAR_CURATORS.some(c => c.name === d.celeb)).length;
+    const userCount = DATA.filter(d => !STAR_CURATORS.some(c => c.name === d.celeb)).length;
+    
+    let titleMsg = `${region} 전체 맛집`;
+    let countMsg = '';
+    if (starCount > 0 && userCount > 0) {
+      countMsg = `⭐ 스타 ${starCount}곳 · 🥄 일반 ${userCount}곳`;
+    } else if (starCount > 0) {
+      countMsg = `⭐ 스타 맛집 ${starCount}곳`;
+    } else if (userCount > 0) {
+      countMsg = `🥄 일반 맛집 ${userCount}곳`;
+    }
+
+    document.getElementById('listTitle').textContent = titleMsg;
+    document.getElementById('listCount').textContent = DATA.length + '곳';
+
+    // 리스트 상단에 분류 배너 표시
+    if (countMsg) {
+      showRegionBanner(region, countMsg);
+    }
+
+    if (DATA.length > 0) {
+      showToast(`📍 ${region} 맛집 총 ${DATA.length}곳!`);
+    } else {
+      showToast(`📍 ${region}에 등록된 맛집이 없어요`);
+    }
   } catch(e) {
     console.log('지역 로드 오류:', e);
     showToast('지역 검색 실패');
@@ -1021,9 +1080,8 @@ function filtered() {
     if (selCat !== '전체' && d.cat !== selCat) return false;
     if (regionFilter) {
       const addr = (d.area || '') + (d.address || '');
-      // "서울" 검색시 "서울특별시", "서울시" 등도 매칭
-      const r = regionFilter.replace('특별시','').replace('광역시','').replace('특별자치시','');
-      if (!addr.includes(r)) return false;
+      const r = regionFilter.replace('특별시','').replace('광역시','').replace('특별자치시','').replace('시','').trim();
+      if (!addr.includes(r) && !addr.includes(regionFilter)) return false;
     }
     if (searchQ) {
       const q = searchQ;
@@ -1035,6 +1093,30 @@ function filtered() {
   else if (selSort === 'saves') items.sort((a,b) => (b.saves||0)-(a.saves||0));
   else items.sort((a,b) => (b.visits||0)-(a.visits||0));
   return items;
+}
+
+// 지역 배너 표시
+function showRegionBanner(region, countMsg) {
+  const listBody = document.getElementById('restList');
+  const existBanner = document.getElementById('regionBanner');
+  if (existBanner) existBanner.remove();
+  
+  const banner = document.createElement('div');
+  banner.id = 'regionBanner';
+  banner.style.cssText = 'padding:10px 16px;background:var(--gold-bg);border-bottom:1px solid var(--gold);display:flex;align-items:center;justify-content:space-between;font-size:12px;flex-shrink:0';
+  banner.innerHTML = `
+    <span style="color:var(--gold);font-weight:700">📍 ${region} 검색 중</span>
+    <span style="color:var(--text2)">${countMsg}</span>`;
+  
+  // list-panel에 리스트 위에 삽입
+  const listPanel = document.querySelector('.list-panel');
+  const listHeader = listPanel.querySelector('.list-header');
+  listHeader.insertAdjacentElement('afterend', banner);
+}
+
+function hideRegionBanner() {
+  const banner = document.getElementById('regionBanner');
+  if (banner) banner.remove();
 }
 
 function renderList() {
@@ -2034,13 +2116,16 @@ window.clearSearch = async function() {
   document.getElementById('mainSearch').value = '';
   const clearBtn = document.getElementById('clearSearchBtn');
   if (clearBtn) clearBtn.style.display = 'none';
-  document.getElementById('listTitle').textContent = selCurator + ' 맛집';
-  // 현재 선택된 큐레이터 맛집으로 복귀
-  await loadRests(selCurator);
+  // 성시경으로 초기화
+  selCurator = '성시경';
+  document.getElementById('listTitle').textContent = '성시경 맛집';
+  renderCuratorList();
+  await loadRests('성시경');
   if (map) {
     map.setCenter(new kakao.maps.LatLng(37.5550, 126.9700));
     map.setLevel(8);
   }
+  hideRegionBanner();
   showToast('검색이 초기화됐어요');
 };
 
