@@ -274,12 +274,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
     <button id="clearSearchBtn" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0">✕</button>
   </div>
   <div class="header-right">
-    <button class="btn-report" onclick="openMyRestModal()" style="background:var(--white);color:var(--gold);border:1.5px solid var(--gold);margin-right:4px">
-      <i class="ti ti-plus"></i><span>내 맛집</span>
-    </button>
-    <button class="btn-report" onclick="openReportModal()">
-      <i class="ti ti-star"></i><span>스타 맛집</span>
-    </button>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button onclick="openMyRestModal()" style="background:var(--white);color:var(--gold);border:1.5px solid var(--gold);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap">
+        <i class="ti ti-plus"></i> 내 맛집
+      </button>
+      <button onclick="openReportModal()" style="background:var(--gold);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap">
+        <i class="ti ti-star"></i> 스타 맛집
+      </button>
+    </div>
     <div id="authArea"></div>
   </div>
 </header>
@@ -981,7 +983,12 @@ async function loadRests(celeb) {
 function filtered() {
   let items = DATA.filter(d => {
     if (selCat !== '전체' && d.cat !== selCat) return false;
-    if (regionFilter && !d.area.includes(regionFilter) && !(d.address||'').includes(regionFilter)) return false;
+    if (regionFilter) {
+      const addr = (d.area || '') + (d.address || '');
+      // "서울" 검색시 "서울특별시", "서울시" 등도 매칭
+      const r = regionFilter.replace('특별시','').replace('광역시','').replace('특별자치시','');
+      if (!addr.includes(r)) return false;
+    }
     if (searchQ) {
       const q = searchQ;
       if (!d.name.includes(q) && !d.area.includes(q) && !d.comment.includes(q) && !d.celeb.includes(q)) return false;
@@ -1890,10 +1897,12 @@ window.setSort = function(sort) {
 };
 
 // 지역 키워드 판별
+const REGION_KEYWORDS = ['서울','부산','대구','인천','광주','대전','울산','경기','강원','충북','충남','전북','전남','경북','경남','제주','세종'];
 function isRegionQuery(q) {
-  return q.endsWith('구') || q.endsWith('동') || q.endsWith('시') || 
-         q.endsWith('도') || q.endsWith('군') || q.endsWith('로') ||
-         q.includes('구 ') || q.includes('동 ');
+  if (q.endsWith('구') || q.endsWith('동') || q.endsWith('시') || 
+      q.endsWith('도') || q.endsWith('군') || q.endsWith('로')) return true;
+  if (REGION_KEYWORDS.some(r => q === r || q.startsWith(r))) return true;
+  return false;
 }
 
 window.doSearch = function(q) {
@@ -1936,9 +1945,12 @@ function moveToRegion(q) {
   const geocoder = new kakao.maps.services.Geocoder();
 
   // 시/구/동 이름 앞에 "서울 " 붙여서 정확도 높임
-  const searchQuery = q.includes('서울') || q.includes('부산') || 
-    q.includes('대구') || q.includes('인천') || q.includes('광주') ||
-    q.includes('대전') || q.includes('울산') ? q : '서울 ' + q;
+  // 광역시/도 이름이면 그대로, 구/동이면 앞에 지역 안붙임
+  const isMetro = REGION_KEYWORDS.some(r => q === r);
+  const searchQuery = isMetro ? q + '시청' : 
+    (q.includes('서울') || q.includes('부산') || q.includes('대구') || 
+     q.includes('인천') || q.includes('광주') || q.includes('대전') || 
+     q.includes('울산') ? q : '서울 ' + q);
 
   geocoder.addressSearch(searchQuery, function(result, status) {
     if (status === kakao.maps.services.Status.OK) {
