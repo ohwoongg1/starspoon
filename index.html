@@ -1348,7 +1348,34 @@ window.focusCard = function(id) {
   const d = DATA.find(x => x.id === id);
   if (d && map) {
     map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
-    map.setLevel(5);
+    map.setLevel(4);
+
+    // 선택된 마커 강조, 나머지 흐리게
+    const svgNormal = (emoji) => `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="33" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#D4D3CF" opacity="0.5"/><text x="18" y="24" text-anchor="middle" font-size="13">${emoji}</text></svg>`;
+    const svgSelected = (emoji) => `<svg xmlns="http://www.w3.org/2000/svg" width="46" height="54" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><circle cx="18" cy="18" r="16" fill="none" stroke="white" stroke-width="2"/><text x="18" y="24" text-anchor="middle" font-size="14">${emoji}</text></svg>`;
+
+    filtered().forEach((item, idx) => {
+      const marker = markers[idx];
+      if (!marker) return;
+      const emoji = '⭐';
+      if (item.id === id) {
+        const img = new kakao.maps.MarkerImage(
+          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgSelected(emoji)),
+          new kakao.maps.Size(46, 54),
+          {offset: new kakao.maps.Point(23, 54)}
+        );
+        marker.setImage(img);
+        marker.setZIndex(10);
+      } else {
+        const img = new kakao.maps.MarkerImage(
+          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgNormal(emoji)),
+          new kakao.maps.Size(28, 33),
+          {offset: new kakao.maps.Point(14, 33)}
+        );
+        marker.setImage(img);
+        marker.setZIndex(1);
+      }
+    });
   }
   // 조회수 증가
   updateDoc(doc(db, 'restaurants', id), {visits: increment(1)}).catch(()=>{});
