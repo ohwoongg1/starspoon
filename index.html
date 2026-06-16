@@ -955,27 +955,37 @@ window.selectCurator = async function(name, uid) {
 };
 
 // ── 데이터 로드 ──
+// 지역 키워드 정규화 (서울시→서울, 서울특별시→서울)
+function normalizeRegion(region) {
+  return region
+    .replace('특별시','').replace('광역시','')
+    .replace('특별자치시','').replace('특별자치도','')
+    .replace('시청','').trim();
+}
+
+// 지역 매칭 체크
+function matchRegion(r, region) {
+  const norm = normalizeRegion(region);
+  const area = r.area || '';
+  const addr = r.address || '';
+  const combined = area + ' ' + addr;
+  // 정규화된 키워드로 매칭
+  return combined.includes(norm) || combined.includes(region) ||
+    area.startsWith(norm) || addr.includes(norm);
+}
+
 // 지역별 전체 맛집 로드 (큐레이터 구분 없이)
 async function loadRestsByRegion(region) {
   try {
     document.getElementById('listCount').textContent = '로딩 중...';
     document.getElementById('listTitle').textContent = region + ' 전체 맛집';
-    
-    const regionKey = region
-      .replace('특별시','').replace('광역시','')
-      .replace('특별자치시','').replace('시','').trim();
 
     // 전체 맛집 로드
-    const snap = await getDocs(query(collection(db, 'restaurants'), limit(300)));
+    const snap = await getDocs(query(collection(db, 'restaurants'), limit(500)));
     DATA = [];
     snap.forEach(d => {
       const r = d.data();
-      // area 또는 address에 지역 키워드 포함 여부 체크
-      const area = r.area || '';
-      const addr = r.address || '';
-      const combined = area + addr;
-      
-      if (combined.includes(regionKey) || combined.includes(region)) {
+      if (matchRegion(r, region)) {
         DATA.push({
           id: d.id, name: r.name||'',
           celeb: r.celeb || (r.celebs&&r.celebs[0]) || '',
@@ -992,17 +1002,16 @@ async function loadRestsByRegion(region) {
       }
     });
 
-    // 지역 검색시 큐레이터 선택 유지 (하이라이트만 해제)
+    // 큐레이터 하이라이트 해제
     document.querySelectorAll('.curator-item').forEach(el => el.classList.remove('on'));
 
     renderList();
     renderPins();
-    
-    // 리스트 타이틀에 숫자 표시
+
+    // 스타/일반 분류 카운트
     const starCount = DATA.filter(d => STAR_CURATORS.some(c => c.name === d.celeb)).length;
-    const userCount = DATA.filter(d => !STAR_CURATORS.some(c => c.name === d.celeb)).length;
-    
-    let titleMsg = `${region} 전체 맛집`;
+    const userCount = DATA.length - starCount;
+
     let countMsg = '';
     if (starCount > 0 && userCount > 0) {
       countMsg = `⭐ 스타 ${starCount}곳 · 🥄 일반 ${userCount}곳`;
@@ -1012,16 +1021,13 @@ async function loadRestsByRegion(region) {
       countMsg = `🥄 일반 맛집 ${userCount}곳`;
     }
 
-    document.getElementById('listTitle').textContent = titleMsg;
+    document.getElementById('listTitle').textContent = region + ' 전체 맛집';
     document.getElementById('listCount').textContent = DATA.length + '곳';
 
-    // 리스트 상단에 분류 배너 표시
-    if (countMsg) {
-      showRegionBanner(region, countMsg);
-    }
+    if (countMsg) showRegionBanner(region, countMsg);
 
     if (DATA.length > 0) {
-      showToast(`📍 ${region} 맛집 총 ${DATA.length}곳!`);
+      showToast(`📍 ${region} 맛집 ${DATA.length}곳 찾았어요!`);
     } else {
       showToast(`📍 ${region}에 등록된 맛집이 없어요`);
     }
@@ -1086,9 +1092,7 @@ function filtered() {
     }
     if (selCat !== '전체' && d.cat !== selCat) return false;
     if (regionFilter) {
-      const addr = (d.area || '') + (d.address || '');
-      const r = regionFilter.replace('특별시','').replace('광역시','').replace('특별자치시','').replace('시','').trim();
-      if (!addr.includes(r) && !addr.includes(regionFilter)) return false;
+      if (!matchRegion(d, regionFilter)) return false;
     }
     if (searchQ) {
       const q = searchQ;
@@ -2029,9 +2033,9 @@ window.setSort = function(sort) {
 // 지역 키워드 판별
 const REGION_KEYWORDS = ['서울','부산','대구','인천','광주','대전','울산','경기','강원','충북','충남','전북','전남','경북','경남','제주','세종'];
 function isRegionQuery(q) {
-  if (q.endsWith('구') || q.endsWith('동') || q.endsWith('시') || 
-      q.endsWith('도') || q.endsWith('군') || q.endsWith('로')) return true;
-  if (REGION_KEYWORDS.some(r => q === r || q.startsWith(r))) return true;
+  const norm = normalizeRegion(q);
+  if (norm.endsWith('구') || norm.endsWith('동') || norm.endsWith('군') || norm.endsWith('로')) return true;
+  if (REGION_KEYWORDS.some(r => norm === r || norm.startsWith(r) || q.startsWith(r))) return true;
   return false;
 }
 
@@ -2051,7 +2055,7 @@ window.doSearch = async function(q) {
 
   // 지역 키워드면 지역 필터 + 전체 DB 로드 + 지도 이동
   if (isRegionQuery(q.trim())) {
-    regionFilter = q.trim();
+    regionFilter = normalizeRegion(q.trim());
     moveToRegion(q.trim());
     // 전체 DB에서 해당 지역 맛집 로드
     await loadRestsByRegion(q.trim());
