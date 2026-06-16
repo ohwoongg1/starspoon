@@ -1482,19 +1482,26 @@ window.searchMyRest = function() {
   
   function doPlaceSearch() {
     const ps = new kakao.maps.services.Places();
+    // 현재 지도 중심 기준으로 검색 (없으면 서울 시청)
+    const center = map ? map.getCenter() : new kakao.maps.LatLng(37.5665, 126.9780);
+    const options = {
+      size: 15,
+      location: center,
+      sort: kakao.maps.services.SortBy.DISTANCE
+    };
     ps.keywordSearch(keyword, function(data, status) {
       if (status !== kakao.maps.services.Status.OK || !data.length) {
         resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요. 다른 이름으로 검색해보세요</p>';
         return;
       }
       window._myRestResults = data;
-      resultsDiv.innerHTML = data.slice(0,8).map((p,i) => `
+      resultsDiv.innerHTML = data.slice(0,10).map((p,i) => `
         <div class="search-result-item" onclick="selectMyRest(${i})">
           <div class="search-result-name">${p.place_name}</div>
           <div style="font-size:11px;color:var(--gold);margin-bottom:2px">${p.category_name.split('>').slice(-2).join(' > ')}</div>
           <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
         </div>`).join('');
-    }, {size:8});
+    }, options);
   }
 
   // kakao maps 로드 확인
@@ -1619,19 +1626,25 @@ window.searchRepRest = function() {
 
   function doRepSearch() {
     const ps = new kakao.maps.services.Places();
+    const center = map ? map.getCenter() : new kakao.maps.LatLng(37.5665, 126.9780);
+    const options = {
+      size: 15,
+      location: center,
+      sort: kakao.maps.services.SortBy.DISTANCE
+    };
     ps.keywordSearch(keyword, function(data, status) {
       if (status !== kakao.maps.services.Status.OK || !data.length) {
         resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요</p>';
         return;
       }
       window._repSearchResults = data;
-      resultsDiv.innerHTML = data.slice(0,8).map((p,i) => `
+      resultsDiv.innerHTML = data.slice(0,10).map((p,i) => `
         <div class="search-result-item" onclick="selectRepRest(${i})">
           <div class="search-result-name">${p.place_name}</div>
           <div style="font-size:11px;color:var(--gold);margin-bottom:2px">${p.category_name.split('>').slice(-2).join(' > ')}</div>
           <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
         </div>`).join('');
-    }, {size:8});
+    }, options);
   }
 
   if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
