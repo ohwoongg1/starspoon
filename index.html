@@ -2,15 +2,12 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
 <meta name="google-site-verification" content="XGoCpZb8cXF7IvyeIMGRJJJXuccKIIS26WrqtbAdujo" />
 <meta name="naver-site-verification" content="6f4b79f996ee96a01d32863c2fd978e0a215db4b" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Starspoon — 연예인 맛집 큐레이터 플랫폼</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
-<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=25b433faf5d746c938cbcc7658f650b0&libraries=services&v=20250616"></script>
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=25b433faf5d746c938cbcc7658f650b0&libraries=services"></script>
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1485,26 +1482,19 @@ window.searchMyRest = function() {
   
   function doPlaceSearch() {
     const ps = new kakao.maps.services.Places();
-    // 현재 지도 중심 기준으로 검색 (없으면 서울 시청)
-    const center = map ? map.getCenter() : new kakao.maps.LatLng(37.5665, 126.9780);
-    const options = {
-      size: 15,
-      location: center,
-      sort: kakao.maps.services.SortBy.DISTANCE
-    };
     ps.keywordSearch(keyword, function(data, status) {
       if (status !== kakao.maps.services.Status.OK || !data.length) {
         resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요. 다른 이름으로 검색해보세요</p>';
         return;
       }
       window._myRestResults = data;
-      resultsDiv.innerHTML = data.slice(0,10).map((p,i) => `
+      resultsDiv.innerHTML = data.slice(0,15).map((p,i) => `
         <div class="search-result-item" onclick="selectMyRest(${i})">
           <div class="search-result-name">${p.place_name}</div>
           <div style="font-size:11px;color:var(--gold);margin-bottom:2px">${p.category_name.split('>').slice(-2).join(' > ')}</div>
           <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
         </div>`).join('');
-    }, options);
+    }, {size:15});
   }
 
   // kakao maps 로드 확인
@@ -1629,25 +1619,19 @@ window.searchRepRest = function() {
 
   function doRepSearch() {
     const ps = new kakao.maps.services.Places();
-    const center = map ? map.getCenter() : new kakao.maps.LatLng(37.5665, 126.9780);
-    const options = {
-      size: 15,
-      location: center,
-      sort: kakao.maps.services.SortBy.DISTANCE
-    };
     ps.keywordSearch(keyword, function(data, status) {
       if (status !== kakao.maps.services.Status.OK || !data.length) {
         resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요</p>';
         return;
       }
       window._repSearchResults = data;
-      resultsDiv.innerHTML = data.slice(0,10).map((p,i) => `
+      resultsDiv.innerHTML = data.slice(0,15).map((p,i) => `
         <div class="search-result-item" onclick="selectRepRest(${i})">
           <div class="search-result-name">${p.place_name}</div>
           <div style="font-size:11px;color:var(--gold);margin-bottom:2px">${p.category_name.split('>').slice(-2).join(' > ')}</div>
           <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
         </div>`).join('');
-    }, options);
+    }, {size:15});
   }
 
   if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
