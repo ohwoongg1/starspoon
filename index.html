@@ -212,6 +212,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .toast{position:fixed;bottom:20px;right:20px;background:#1A1A18;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;box-shadow:var(--shadow-lg);max-width:320px}
 .toast.show{display:flex}
 
+/* 포인트 획득 토스트 */
+.point-toast{position:fixed;bottom:70px;right:20px;background:var(--gold);color:#fff;padding:12px 20px;border-radius:12px;font-size:14px;font-weight:700;display:none;align-items:center;gap:8px;z-index:1000;box-shadow:0 4px 16px rgba(245,158,11,0.4);transform:translateY(20px);opacity:0;transition:all .3s}
+.point-toast.show{display:flex;transform:translateY(0);opacity:1}
+
+/* 레벨업 모달 */
+.levelup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:2000;display:none;align-items:center;justify-content:center}
+.levelup-overlay.show{display:flex}
+.levelup-modal{background:var(--white);border-radius:20px;padding:32px 40px;text-align:center;position:relative;overflow:hidden;max-width:340px;width:90vw}
+.levelup-modal::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(245,158,11,0.05));pointer-events:none}
+
+/* 축포 캔버스 */
+#confettiCanvas{position:fixed;inset:0;pointer-events:none;z-index:1999;display:none}
+
 /* ── 지도 커스텀 오버레이 ── */
 .map-tip{background:var(--white);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;min-width:160px;max-width:200px;box-shadow:var(--shadow);cursor:pointer}
 .map-tip-name{font-weight:700;font-size:13px;color:var(--text);margin-bottom:2px}
@@ -359,6 +372,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 
 <!-- ── 토스트 ── -->
 <div class="toast" id="toast"><i class="ti ti-check"></i><span id="toastMsg"></span></div>
+
+<!-- 포인트 획득 토스트 -->
+<div class="point-toast" id="pointToast">
+  <span id="pointToastMsg"></span>
+</div>
+
+<!-- 레벨업 모달 -->
+<div class="levelup-overlay" id="levelupOverlay" onclick="closeLevelup()">
+  <div class="levelup-modal">
+    <div style="font-size:64px;margin-bottom:12px" id="levelupIcon">⭐</div>
+    <div style="font-size:22px;font-weight:800;color:var(--gold);margin-bottom:6px" id="levelupGrade">별스푼</div>
+    <div style="font-size:15px;font-weight:600;color:var(--text);margin-bottom:8px">레벨업!</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:20px" id="levelupDesc"></div>
+    <button onclick="closeLevelup()" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer">🎉 계속하기</button>
+  </div>
+</div>
+
+<!-- 축포 캔버스 -->
+<canvas id="confettiCanvas"></canvas>
 
 <!-- ── 맛집 등록 모달 ── -->
 <div class="overlay" id="reportOverlay" onclick="closeReportModal(event)">
@@ -533,15 +565,108 @@ function getGradeMultiplier(points) {
 async function addPoints(uid, points, reason) {
   if (!uid) return;
   const userRef = doc(db, 'users', uid);
+  const beforeSnap = await getDoc(userRef);
+  const beforePts = beforeSnap.data()?.points || 0;
+  
   await updateDoc(userRef, {
     points: increment(points),
-    [`pointHistory`]: [...((await getDoc(userRef)).data()?.pointHistory || []),
+    pointHistory: [...(beforeSnap.data()?.pointHistory || []),
       {points, reason, at: new Date().toISOString()}].slice(-50)
   });
+
+  const afterSnap = await getDoc(userRef);
+  const afterPts = afterSnap.data()?.points || 0;
+
   if (currentUser?.uid === uid) {
-    currentUserData = (await getDoc(userRef)).data();
+    currentUserData = afterSnap.data();
     renderAuthArea();
+
+    // 포인트 획득 토스트
+    showPointToast(points, reason);
+
+    // 레벨업 체크
+    const beforeGrade = getGrade(beforePts);
+    const afterGrade = getGrade(afterPts);
+    if (beforeGrade.name !== afterGrade.name) {
+      setTimeout(() => showLevelup(afterGrade, afterPts), 800);
+    }
   }
+}
+
+// 포인트 토스트
+function showPointToast(points, reason) {
+  const toast = document.getElementById('pointToast');
+  const msg = document.getElementById('pointToastMsg');
+  msg.textContent = `+${points}pt 획득! ${reason}`;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// 레벨업 모달
+function showLevelup(grade, pts) {
+  document.getElementById('levelupIcon').textContent = grade.icon;
+  document.getElementById('levelupGrade').textContent = grade.name + ' 달성!';
+  document.getElementById('levelupDesc').textContent = 
+    `총 ${pts}pt 달성으로 ${grade.name}가 됐어요! 🎊`;
+  document.getElementById('levelupOverlay').classList.add('show');
+  startConfetti();
+}
+
+window.closeLevelup = function() {
+  document.getElementById('levelupOverlay').classList.remove('show');
+  stopConfetti();
+};
+
+// 축포 애니메이션
+let confettiInterval = null;
+function startConfetti() {
+  const canvas = document.getElementById('confettiCanvas');
+  canvas.style.display = 'block';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const particles = [];
+  const colors = ['#F59E0B','#EF4444','#3B82F6','#10B981','#8B5CF6','#EC4899','#F97316'];
+  
+  for (let i = 0; i < 150; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: Math.random() * 10 + 5,
+      h: Math.random() * 6 + 3,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: Math.random() * 4 - 2,
+      vy: Math.random() * 4 + 2,
+      rot: Math.random() * 360,
+      rotV: Math.random() * 6 - 3
+    });
+  }
+
+  confettiInterval = setInterval(() => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.rot += p.rotV;
+      if (p.y > canvas.height) { p.y = -10; p.x = Math.random() * canvas.width; }
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+  }, 16);
+
+  setTimeout(stopConfetti, 4000);
+}
+
+function stopConfetti() {
+  if (confettiInterval) { clearInterval(confettiInterval); confettiInterval = null; }
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.style.display = 'none';
 }
 
 // ── 구글 로그인 ──
