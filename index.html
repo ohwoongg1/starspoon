@@ -939,13 +939,14 @@ window.selectCurator = async function(name, uid) {
     renderCuratorList();
     renderList();
     renderPins();
-    const items = filtered();
+    const items = filtered(); // 배너 카운트용
     const banner = document.getElementById('regionBanner');
     if (banner) {
       banner.innerHTML = `
         <span style="color:var(--gold);font-weight:700">📍 ${regionFilter} · ${name}</span>
         <span style="color:var(--text2)">${items.length}곳</span>`;
     }
+    document.getElementById('listCount').textContent = items.length + '곳';
     showToast(`📍 ${regionFilter} · ${name} 맛집 ${items.length}곳`);
   } else {
     // 일반 큐레이터 선택
@@ -1003,11 +1004,16 @@ async function loadRestsByRegion(region) {
       }
     });
 
-    // 큐레이터 하이라이트 해제
+    // 지역 검색 시 큐레이터 필터 임시 해제 (지역 전체 보여주기 위해)
+    const savedCurator = selCurator;
+    selCurator = '전체';
     document.querySelectorAll('.curator-item').forEach(el => el.classList.remove('on'));
 
     renderList();
     renderPins();
+
+    // 큐레이터 상태 복원 (이후 큐레이터 클릭 시 교차필터 위해)
+    selCurator = savedCurator;
 
     // 스타/일반 분류 카운트
     const starCount = DATA.filter(d => STAR_CURATORS.some(c => c.name === d.celeb)).length;
@@ -1083,15 +1089,9 @@ async function loadRests(celeb) {
 
 function filtered() {
   let items = DATA.filter(d => {
-    // 큐레이터 필터 - 지역 검색 중이 아닐때만 적용
-    if (!regionFilter && selCurator && selCurator !== '전체') {
-      const isStarCurator = STAR_CURATORS.some(c => c.name === selCurator);
-      if (isStarCurator) {
-        if (!d.celebs.includes(selCurator) && d.celeb !== selCurator) return false;
-      }
-    }
-    // 지역 검색 중 + 큐레이터 클릭 → 둘 다 필터
-    if (regionFilter && selCurator && selCurator !== '전체') {
+    // 큐레이터 필터: selCurator가 '전체'가 아닐 때만 적용
+    // (지역검색 중이든 아니든 동일하게 적용 — loadRestsByRegion에서 selCurator를 보존해두므로)
+    if (selCurator && selCurator !== '전체') {
       const isStarCurator = STAR_CURATORS.some(c => c.name === selCurator);
       if (isStarCurator) {
         if (!d.celebs.includes(selCurator) && d.celeb !== selCurator) return false;
