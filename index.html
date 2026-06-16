@@ -324,10 +324,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 
   <!-- 지도 패널 -->
   <div class="map-panel">
-    <div class="map-tabs">
-      <div class="mtab on" onclick="setMapTab('map',this)">🗺 지도</div>
-      <div class="mtab" onclick="setMapTab('detail',this)">📋 상세</div>
-    </div>
+
     <div class="map-wrap">
       <div id="kakao-map"></div>
     </div>
@@ -1294,12 +1291,21 @@ let ytTargetId = '';
 window.openYtModal = function(id, name) {
   if (!currentUser) { showToast('로그인 후 링크를 추가할 수 있어요!'); return; }
   ytTargetId = id;
-  const url = prompt(`"${name}"의 증거 링크를 입력해주세요\n(유튜브/인스타/뉴스/블로그)`);
+  const url = prompt(`"${name}"의 증거 링크를 입력해주세요\n(유튜브/인스타/뉴스/블로그 URL)\n\n예: https://www.youtube.com/watch?v=xxxxx`);
   if (!url) return;
-  if (!url.startsWith('http')) { showToast('올바른 링크를 입력해주세요!'); return; }
-  updateDoc(doc(db,'restaurants',id), {yt: url, ytBy: currentUser.uid}).then(async () => {
-    await addPoints(currentUser.uid, 5, '링크 추가');
-    showToast('링크 추가됐어요! +5pt 🎉');
+  if (!url.startsWith('http')) { showToast('올바른 링크를 입력해주세요! (http로 시작)'); return; }
+  updateDoc(doc(db,'restaurants',id), {
+    yt: url,
+    ytBy: currentUser.uid,
+    ytByName: currentUser.displayName || '익명',
+    ytAddedAt: new Date().toISOString()
+  }).then(async () => {
+    try {
+      await addPoints(currentUser.uid, 5, `링크 추가 (${name})`);
+      showToast('링크 추가됐어요! 🎉 +5pt 적립!');
+    } catch(e) {
+      showToast('링크 추가됐어요! 🎉');
+    }
     await loadRests(selCurator);
   }).catch(e => showToast('실패: ' + e.message));
 };
@@ -1541,8 +1547,14 @@ function renderMyPage() {
         <div style="background:var(--bg2);border-radius:8px;padding:10px">🔗 링크 추가<br><strong style="color:var(--gold)">+5pt</strong></div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px">💬 댓글 작성<br><strong style="color:var(--gold)">+3pt</strong></div>
         <div style="background:var(--bg2);border-radius:8px;padding:10px">⭐ 평점 주기<br><strong style="color:var(--gold)">+2pt</strong></div>
-        <div style="background:var(--bg2);border-radius:8px;padding:10px">👥 저장 50명<br><strong style="color:var(--gold)">+30pt</strong></div>
-        <div style="background:var(--bg2);border-radius:8px;padding:10px">💬 댓글 20개<br><strong style="color:var(--gold)">+20pt</strong></div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">❤️ 내 가게 저장<br><strong style="color:var(--gold)">등급별 1~10pt</strong></div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">💬 내 가게 댓글<br><strong style="color:var(--gold)">등급별 1~10pt</strong></div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">👁 조회 100회<br><strong style="color:var(--gold)">+1pt</strong></div>
+        <div style="background:var(--bg2);border-radius:8px;padding:10px">🏆 저장 50명 달성<br><strong style="color:var(--gold)">+30pt</strong></div>
+      </div>
+      <div style="background:var(--gold-bg);border:1px solid var(--gold);border-radius:8px;padding:10px;margin-top:8px;font-size:11px;color:var(--text2)">
+        💡 <strong>등급별 포인트 배수:</strong> 🥄스푼 ×1 · 🥈은스푼 ×3 · 🥇금스푼 ×5 · ⭐별스푼 ×10<br>
+        높은 등급 사용자가 내 가게에 반응하면 더 많은 포인트를 받아요!
       </div>
     </div>`;
 }
@@ -1559,10 +1571,7 @@ window.setPage = function(page, el) {
   if (page==='my') renderMyPage();
 };
 
-window.setMapTab = function(tab, el) {
-  document.querySelectorAll('.mtab').forEach(t => t.classList.remove('on'));
-  el.classList.add('on');
-};
+
 
 window.setCat = function(el, cat) {
   selCat = cat;
