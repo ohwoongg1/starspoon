@@ -934,12 +934,11 @@ window.selectCurator = async function(name, uid) {
   selCurator = name;
 
   if (regionFilter) {
-    // 지역 검색 중이면 지역+큐레이터 교차 필터
+    // 지역 검색 중이면 지역+큐레이터 교차 필터 (새로 로드 없이 필터만)
     document.getElementById('listTitle').textContent = `${regionFilter} · ${name} 맛집`;
     renderCuratorList();
     renderList();
     renderPins();
-    // 배너 업데이트
     const items = filtered();
     const banner = document.getElementById('regionBanner');
     if (banner) {
@@ -947,7 +946,9 @@ window.selectCurator = async function(name, uid) {
         <span style="color:var(--gold);font-weight:700">📍 ${regionFilter} · ${name}</span>
         <span style="color:var(--text2)">${items.length}곳</span>`;
     }
+    showToast(`📍 ${regionFilter} · ${name} 맛집 ${items.length}곳`);
   } else {
+    // 일반 큐레이터 선택
     document.getElementById('listTitle').textContent = name + ' 맛집';
     renderCuratorList();
     await loadRests(name);
@@ -1082,18 +1083,21 @@ async function loadRests(celeb) {
 
 function filtered() {
   let items = DATA.filter(d => {
-    // 큐레이터 필터 (전체가 아닐때)
-    if (selCurator && selCurator !== '전체') {
+    // 큐레이터 필터 - 지역 검색 중이 아닐때만 적용
+    if (!regionFilter && selCurator && selCurator !== '전체') {
       const isStarCurator = STAR_CURATORS.some(c => c.name === selCurator);
       if (isStarCurator) {
-        // 스타 큐레이터면 celeb 필터
+        if (!d.celebs.includes(selCurator) && d.celeb !== selCurator) return false;
+      }
+    }
+    // 지역 검색 중 + 큐레이터 클릭 → 둘 다 필터
+    if (regionFilter && selCurator && selCurator !== '전체') {
+      const isStarCurator = STAR_CURATORS.some(c => c.name === selCurator);
+      if (isStarCurator) {
         if (!d.celebs.includes(selCurator) && d.celeb !== selCurator) return false;
       }
     }
     if (selCat !== '전체' && d.cat !== selCat) return false;
-    if (regionFilter) {
-      if (!matchRegion(d, regionFilter)) return false;
-    }
     if (searchQ) {
       const q = searchQ;
       if (!d.name.includes(q) && !d.area.includes(q) && !d.comment.includes(q) && !d.celeb.includes(q)) return false;
@@ -1457,22 +1461,30 @@ window.searchMyRest = function() {
   if (!keyword) { showToast('식당 이름을 입력해주세요'); return; }
   const resultsDiv = document.getElementById('myRestResults');
   resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 중...</p>';
-  const ps = new kakao.maps.services.Places();
+  
+  function doPlaceSearch() {
+    const ps = new kakao.maps.services.Places();
+    ps.keywordSearch(keyword, function(data, status) {
+      if (status !== kakao.maps.services.Status.OK || !data.length) {
+        resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요. 다른 이름으로 검색해보세요</p>';
+        return;
+      }
+      window._myRestResults = data;
+      resultsDiv.innerHTML = data.slice(0,8).map((p,i) => `
+        <div class="search-result-item" onclick="selectMyRest(${i})">
+          <div class="search-result-name">${p.place_name}</div>
+          <div style="font-size:11px;color:var(--gold);margin-bottom:2px">${p.category_name.split('>').slice(-2).join(' > ')}</div>
+          <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
+        </div>`).join('');
+    }, {size:8});
+  }
 
-  // 키워드 검색 (카테고리 필터 없이 전체)
-  ps.keywordSearch(keyword, function(data, status) {
-    if (status !== kakao.maps.services.Status.OK || !data.length) {
-      resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요. 다른 이름으로 검색해보세요</p>';
-      return;
-    }
-    window._myRestResults = data;
-    resultsDiv.innerHTML = data.slice(0,8).map((p,i) => `
-      <div class="search-result-item" onclick="selectMyRest(${i})">
-        <div class="search-result-name">${p.place_name}</div>
-        <div style="font-size:11px;color:var(--gold);margin-bottom:2px">${p.category_name.split('>').pop().trim()}</div>
-        <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
-      </div>`).join('');
-  }, {size:8});
+  // kakao maps 로드 확인
+  if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
+    doPlaceSearch();
+  } else {
+    kakao.maps.load(doPlaceSearch);
+  }
 };
 
 window.selectMyRest = function(idx) {
@@ -1586,20 +1598,29 @@ window.searchRepRest = function() {
   if (!keyword) { showToast('식당 이름을 입력해주세요'); return; }
   const resultsDiv = document.getElementById('repRestResults');
   resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 중...</p>';
-  const ps = new kakao.maps.services.Places();
-  ps.keywordSearch(keyword, function(data, status) {
-    if (status !== kakao.maps.services.Status.OK || !data.length) {
-      resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요</p>';
-      return;
-    }
-    window._repSearchResults = data;
-    resultsDiv.innerHTML = data.slice(0,8).map((p,i) => `
-      <div class="search-result-item" onclick="selectRepRest(${i})">
-        <div class="search-result-name">${p.place_name}</div>
-        <div style="font-size:11px;color:var(--gold);margin-bottom:2px">${p.category_name.split('>').pop().trim()}</div>
-        <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
-      </div>`).join('');
-  }, {size:8});
+
+  function doRepSearch() {
+    const ps = new kakao.maps.services.Places();
+    ps.keywordSearch(keyword, function(data, status) {
+      if (status !== kakao.maps.services.Status.OK || !data.length) {
+        resultsDiv.innerHTML = '<p style="font-size:12px;color:var(--text3)">검색 결과가 없어요</p>';
+        return;
+      }
+      window._repSearchResults = data;
+      resultsDiv.innerHTML = data.slice(0,8).map((p,i) => `
+        <div class="search-result-item" onclick="selectRepRest(${i})">
+          <div class="search-result-name">${p.place_name}</div>
+          <div style="font-size:11px;color:var(--gold);margin-bottom:2px">${p.category_name.split('>').slice(-2).join(' > ')}</div>
+          <div class="search-result-addr">${p.road_address_name||p.address_name}</div>
+        </div>`).join('');
+    }, {size:8});
+  }
+
+  if (typeof kakao !== 'undefined' && kakao.maps && kakao.maps.services) {
+    doRepSearch();
+  } else {
+    kakao.maps.load(doRepSearch);
+  }
 };
 
 window.selectRepRest = function(idx) {
