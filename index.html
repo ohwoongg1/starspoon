@@ -221,6 +221,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 /* ── 빈 상태 ── */
 .empty{padding:48px 20px;text-align:center;color:var(--text3)}
 .empty i{font-size:36px;display:block;margin-bottom:10px;opacity:.35}
+.rank-tab{transition:all .15s}
+.rank-tab.on{background:var(--gold)!important;border-color:var(--gold)!important;color:#fff!important}
 .empty p{font-size:14px}
 
 /* ── 페이지 탭 (상단) ── */
@@ -332,14 +334,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 
 <!-- ── 순위 페이지 ── -->
 <div class="rank-page" id="rankPage">
-  <div class="rank-section">
-    <div class="rank-section-title">🏆 큐레이터 순위</div>
-    <div class="rank-grid" id="curatorRankGrid"></div>
+  <!-- 순위 탭 -->
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <button class="rank-tab on" onclick="setRankTab('rest',this)"
+      style="padding:8px 18px;border-radius:20px;border:1.5px solid var(--gold);background:var(--gold);color:#fff;font-size:13px;font-weight:600;cursor:pointer">
+      🍽️ 전국 맛집 순위
+    </button>
+    <button class="rank-tab" onclick="setRankTab('star',this)"
+      style="padding:8px 18px;border-radius:20px;border:1.5px solid var(--border2);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer">
+      ⭐ 스타 큐레이터 순위
+    </button>
+    <button class="rank-tab" onclick="setRankTab('user',this)"
+      style="padding:8px 18px;border-radius:20px;border:1.5px solid var(--border2);background:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer">
+      🥄 일반 큐레이터 순위
+    </button>
   </div>
-  <div class="rank-section">
-    <div class="rank-section-title">⭐ 전국 맛집 TOP 100</div>
-    <div class="rank-grid" id="restRankGrid"></div>
-  </div>
+  <div id="rankContainer"></div>
 </div>
 
 <!-- ── 내 스푼 페이지 ── -->
@@ -1196,41 +1206,171 @@ window.openYtModal = function(id, name) {
 };
 
 // ── 순위 페이지 ──
-async function renderRankPage() {
-  // 큐레이터 순위
-  const cGrid = document.getElementById('curatorRankGrid');
-  cGrid.innerHTML = STAR_CURATORS.slice(0,6).map((c, i) => {
-    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
-    return `<div class="rank-card">
-      <div class="rank-num ${rankClass}">${i+1}</div>
-      <div style="font-size:24px">${c.icon}</div>
-      <div class="rank-info">
-        <div class="rank-name">${c.name}</div>
-        <div class="rank-meta">스타 큐레이터</div>
-      </div>
-    </div>`;
-  }).join('');
+let rankTab = 'rest'; // 'rest' | 'star' | 'user'
 
-  // 전국 맛집 TOP
-  const rGrid = document.getElementById('restRankGrid');
-  rGrid.innerHTML = '<p style="color:var(--text3);font-size:13px">로딩 중...</p>';
-  try {
-    const snap = await getDocs(query(collection(db,'restaurants'), orderBy('avgRating','desc'), limit(20)));
-    const tops = [];
-    snap.forEach(d => tops.push({id:d.id, ...d.data()}));
-    rGrid.innerHTML = tops.map((d, i) => {
-      const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
-      return `<div class="rank-card">
-        <div class="rank-num ${rankClass}">${i+1}</div>
-        <div class="rank-info">
-          <div class="rank-name">${d.name}</div>
-          <div class="rank-meta">${d.celeb} · ${d.cat} · ${d.area}</div>
-        </div>
-        <div class="rank-score">★ ${d.avgRating?.toFixed(1)||'0.0'}</div>
-      </div>`;
-    }).join('') || '<p style="color:var(--text3);font-size:13px">데이터 없음</p>';
-  } catch(e) {
-    rGrid.innerHTML = '<p style="color:var(--text3);font-size:13px">로딩 실패</p>';
+window.setRankTab = function(tab, el) {
+  rankTab = tab;
+  document.querySelectorAll('.rank-tab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  renderRankPage();
+};
+
+async function renderRankPage() {
+  const container = document.getElementById('rankContainer');
+  container.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px">로딩 중...</p>';
+
+  if (rankTab === 'rest') {
+    // 전국 맛집 순위 (스타/일반인 구분 없이 통합)
+    try {
+      const snap = await getDocs(query(collection(db,'restaurants'), orderBy('avgRating','desc'), limit(100)));
+      const tops = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.avgRating > 0) tops.push({id:d.id, ...data});
+      });
+
+      if (!tops.length) {
+        container.innerHTML = '<div class="empty"><i class="ti ti-trophy"></i><p>아직 평점이 있는 맛집이 없어요<br>댓글과 평점을 남겨주세요!</p></div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px">
+          ${tops.map((d, i) => {
+            const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+            const isStarRest = STAR_CURATORS.some(c => c.name === d.celeb);
+            return `<div class="rank-card" onclick="selectCurator('${d.celeb}');setPage('main',document.querySelector('.pnav'))" style="cursor:pointer">
+              <div class="rank-num ${rankClass}">${i+1}</div>
+              <div class="rank-info">
+                <div class="rank-name">${d.name}</div>
+                <div class="rank-meta">
+                  ${isStarRest ? `⭐ ${d.celeb}` : `🥄 ${d.registeredByName||d.celeb}`} · ${d.cat} · ${d.area}
+                </div>
+                <div style="display:flex;gap:10px;font-size:12px;color:var(--text2);margin-top:4px">
+                  <span>★ ${d.avgRating?.toFixed(1)||'0.0'} (${d.ratingCount||0})</span>
+                  <span>❤️ ${d.saves||0}</span>
+                  <span>👁 ${d.visits||0}</span>
+                </div>
+              </div>
+              <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" onclick="event.stopPropagation()" style="font-size:12px;color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:4px 8px;text-decoration:none;flex-shrink:0">길찾기</a>
+            </div>`;
+          }).join('')}
+        </div>`;
+    } catch(e) {
+      // 인덱스 없으면 전체 로드
+      try {
+        const snap = await getDocs(query(collection(db,'restaurants'), limit(200)));
+        const tops = [];
+        snap.forEach(d => {
+          const data = d.data();
+          tops.push({id:d.id, ...data});
+        });
+        tops.sort((a,b) => (b.avgRating||0)-(a.avgRating||0));
+        container.innerHTML = `
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px">
+            ${tops.slice(0,100).map((d, i) => {
+              const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+              return `<div class="rank-card">
+                <div class="rank-num ${rankClass}">${i+1}</div>
+                <div class="rank-info">
+                  <div class="rank-name">${d.name}</div>
+                  <div class="rank-meta">${d.celeb} · ${d.cat} · ${d.area}</div>
+                  <div style="display:flex;gap:10px;font-size:12px;color:var(--text2);margin-top:4px">
+                    <span>★ ${d.avgRating?.toFixed(1)||'0.0'} (${d.ratingCount||0})</span>
+                    <span>❤️ ${d.saves||0}</span>
+                  </div>
+                </div>
+                <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" style="font-size:12px;color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:4px 8px;text-decoration:none;flex-shrink:0">길찾기</a>
+              </div>`;
+            }).join('')}
+          </div>`;
+      } catch(e2) {
+        container.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px">로딩 실패</p>';
+      }
+    }
+
+  } else if (rankTab === 'star') {
+    // 스타 큐레이터 순위
+    try {
+      // 각 스타별 가게 평점 합산
+      const starScores = await Promise.all(STAR_CURATORS.map(async (c) => {
+        try {
+          const snap = await getDocs(query(collection(db,'restaurants'), where('celeb','==',c.name), limit(100)));
+          let totalRating = 0, totalSaves = 0, totalComments = 0, count = 0;
+          snap.forEach(d => {
+            const data = d.data();
+            totalRating += (data.avgRating || 0) * (data.ratingCount || 0);
+            totalSaves += data.saves || 0;
+            count++;
+          });
+          const score = Math.round(totalRating * 10 + totalSaves * 5);
+          return {...c, score, count, totalSaves};
+        } catch(e) {
+          return {...c, score: 0, count: 0, totalSaves: 0};
+        }
+      }));
+      starScores.sort((a,b) => b.score - a.score);
+
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px">
+          ${starScores.map((c, i) => {
+            const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+            return `<div class="rank-card" onclick="selectCurator('${c.name}');setPage('main',document.querySelector('.pnav'))" style="cursor:pointer">
+              <div class="rank-num ${rankClass}">${i+1}</div>
+              <div style="font-size:28px;flex-shrink:0">${c.icon}</div>
+              <div class="rank-info">
+                <div class="rank-name">${c.name}</div>
+                <div class="rank-meta">스타 큐레이터 · 맛집 ${c.count}곳</div>
+                <div style="font-size:12px;color:var(--text2);margin-top:4px">
+                  ❤️ 저장 ${c.totalSaves}회
+                </div>
+              </div>
+              <div class="rank-score">${c.score.toLocaleString()}점</div>
+            </div>`;
+          }).join('')}
+        </div>`;
+    } catch(e) {
+      container.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px">로딩 실패</p>';
+    }
+
+  } else if (rankTab === 'user') {
+    // 일반인 큐레이터 순위
+    try {
+      const snap = await getDocs(query(collection(db,'users'), orderBy('points','desc'), limit(50)));
+      const users = [];
+      snap.forEach(d => {
+        const data = d.data();
+        if ((data.registeredRests||[]).length > 0) {
+          users.push({id:d.id, ...data});
+        }
+      });
+
+      if (!users.length) {
+        container.innerHTML = '<div class="empty"><i class="ti ti-users"></i><p>아직 일반 큐레이터가 없어요<br>맛집을 등록하면 순위에 올라와요!</p></div>';
+        return;
+      }
+
+      container.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px">
+          ${users.map((u, i) => {
+            const grade = getGrade(u.points||0);
+            const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+            return `<div class="rank-card">
+              <div class="rank-num ${rankClass}">${i+1}</div>
+              <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:18px">
+                ${u.photoURL ? `<img src="${u.photoURL}" style="width:100%;height:100%;object-fit:cover">` : grade.icon}
+              </div>
+              <div class="rank-info">
+                <div class="rank-name">${u.displayName||'익명'}</div>
+                <div class="rank-meta">${grade.icon} ${grade.name} · 등록 ${(u.registeredRests||[]).length}곳</div>
+              </div>
+              <div class="rank-score">${(u.points||0).toLocaleString()}pt</div>
+            </div>`;
+          }).join('')}
+        </div>`;
+    } catch(e) {
+      container.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px">로딩 실패</p>';
+    }
   }
 }
 
@@ -1339,7 +1479,40 @@ window.setSort = function(sort) {
 
 window.doSearch = function(q) {
   searchQ = q.trim();
-  renderList(); renderPins();
+  renderList();
+  renderPins();
+
+  if (!q.trim() || !map) return;
+
+  // 1단계: 현재 데이터에서 해당 지역 맛집 필터링
+  const regionItems = DATA.filter(d => d.area.includes(q.trim()) || d.address?.includes(q.trim()));
+
+  // 2단계: 지역 검색이면 지도 이동
+  const geocoder = new kakao.maps.services.Geocoder();
+
+  // 주소 검색 시도
+  geocoder.addressSearch(q.trim(), function(result, status) {
+    if (status === kakao.maps.services.Status.OK) {
+      const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+      map.setCenter(coords);
+      map.setLevel(7);
+      renderPins();
+      return;
+    }
+
+    // 주소 검색 실패 시 키워드 검색
+    const ps = new kakao.maps.services.Places();
+    ps.keywordSearch(q.trim(), function(result2, status2) {
+      if (status2 === kakao.maps.services.Status.OK && result2[0]) {
+        const coords = new kakao.maps.LatLng(result2[0].y, result2[0].x);
+        map.setCenter(coords);
+        // 구/동 단위면 레벨 7, 시 단위면 레벨 9
+        const level = q.trim().endsWith('구') || q.trim().endsWith('동') ? 7 : 9;
+        map.setLevel(level);
+        renderPins();
+      }
+    }, {category_group_code: 'AD5'}); // 행정구역 검색
+  });
 };
 
 function showToast(msg) {
