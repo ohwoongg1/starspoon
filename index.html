@@ -695,6 +695,12 @@ window.loginWithGoogle = async function() {
         createdAt: new Date().toISOString()
       });
       showToast('환영해요! 🎉 가입 보너스 20점 적립!');
+    } else {
+      // 기존 계정 - displayName 없으면 업데이트
+      const data = snap.data();
+      if (!data.displayName && user.displayName) {
+        await updateDoc(userRef, { displayName: user.displayName, photoURL: user.photoURL || '' });
+      }
     }
   } catch(e) { showToast('로그인 실패: ' + e.message); }
 };
@@ -885,11 +891,12 @@ async function renderCuratorList() {
         const grade = getGrade(u.points || 0);
         const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
         const restCount = (u.registeredRests||[]).length;
-        return `<div class="curator-item${selCurator===u.displayName?' on':''}" onclick="selectCuratorByUser('${u.displayName}','${u.id}')">
+        const name = u.displayName || u.registeredByName || u.email?.split('@')[0] || '익명';
+        return `<div class="curator-item${selCurator===name?' on':''}" onclick="selectCuratorByUser('${name}','${u.id}')">
           <div class="rank-num ${rankClass}" style="font-size:10px">${i+1}</div>
           <div class="curator-avatar">${u.photoURL ? `<img src="${u.photoURL}">` : grade.icon}</div>
           <div class="curator-info">
-            <div class="curator-name">${u.displayName}</div>
+            <div class="curator-name">${name}</div>
             <div class="curator-sub">${grade.icon} ${grade.name} · 맛집 ${restCount}곳</div>
           </div>
         </div>`;
