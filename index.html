@@ -236,6 +236,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .empty i{font-size:36px;display:block;margin-bottom:10px;opacity:.35}
 .rank-tab{transition:all .15s}
 .rank-tab.on{background:var(--gold)!important;border-color:var(--gold)!important;color:#fff!important}
+.form-input::placeholder{color:var(--text3) !important;opacity:1}
+input::placeholder{color:var(--text3) !important;opacity:1}
 .empty p{font-size:14px}
 
 /* ── 페이지 탭 (상단) ── */
@@ -937,6 +939,40 @@ window.selectCurator = async function(name, uid) {
 };
 
 // ── 데이터 로드 ──
+// 지역별 전체 맛집 로드
+async function loadRestsByRegion(region) {
+  try {
+    document.getElementById('listCount').textContent = '로딩 중...';
+    document.getElementById('listTitle').textContent = region + ' 맛집';
+    // 전체 맛집 로드 후 지역 필터
+    const snap = await getDocs(query(collection(db, 'restaurants'), limit(300)));
+    DATA = [];
+    snap.forEach(d => {
+      const r = d.data();
+      const addr = (r.area || '') + (r.address || '');
+      const regionKey = region.replace('특별시','').replace('광역시','').replace('특별자치시','');
+      if (addr.includes(regionKey)) {
+        DATA.push({
+          id: d.id, name: r.name||'', celeb: r.celeb||'',
+          celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+          area: r.area||'', comment: r.comment||'', yt: r.video_url||r.yt||'',
+          lat: r.lat||37.5665, lng: r.lng||126.9780,
+          visits: r.visits||0, saves: r.saves||0,
+          avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+          registeredBy: r.registeredBy||null,
+          address: r.address||''
+        });
+      }
+    });
+    renderList();
+    renderPins();
+    showToast(`📍 ${region} 맛집 ${DATA.length}곳`);
+  } catch(e) {
+    console.log('지역 로드 오류:', e);
+    showToast('지역 검색 실패');
+  }
+}
+
 async function loadRests(celeb) {
   try {
     document.getElementById('listCount').textContent = '로딩 중...';
@@ -1919,12 +1955,12 @@ window.doSearch = function(q) {
     return;
   }
 
-  // 지역 키워드면 지역 필터 + 지도 이동
+  // 지역 키워드면 지역 필터 + 전체 DB 로드 + 지도 이동
   if (isRegionQuery(q.trim())) {
     regionFilter = q.trim();
-    renderList();
-    renderPins();
     moveToRegion(q.trim());
+    // 전체 DB에서 해당 지역 맛집 로드
+    await loadRestsByRegion(q.trim());
     return;
   }
 
@@ -1991,14 +2027,15 @@ function moveToRegion(q) {
 }
 
 // 검색 초기화
-window.clearSearch = function() {
+window.clearSearch = async function() {
   searchQ = '';
   regionFilter = '';
   document.getElementById('mainSearch').value = '';
   const clearBtn = document.getElementById('clearSearchBtn');
   if (clearBtn) clearBtn.style.display = 'none';
-  renderList();
-  renderPins();
+  document.getElementById('listTitle').textContent = selCurator + ' 맛집';
+  // 현재 선택된 큐레이터 맛집으로 복귀
+  await loadRests(selCurator);
   if (map) {
     map.setCenter(new kakao.maps.LatLng(37.5550, 126.9700));
     map.setLevel(8);
@@ -2097,7 +2134,7 @@ if (lastSeen !== new Date().toDateString()) {
             <button onclick="searchNaverForMyRest()" style="flex:1;padding:7px;background:#03C75A;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">📰 네이버</button>
           </div>
         </div>
-        <input type="text" class="form-input" id="myRestLink" placeholder="링크 붙여넣기 (선택사항)">
+        <input type="text" class="form-input" id="myRestLink" placeholder="링크 붙여넣기 (선택사항)" style="color:var(--text);background:var(--white)">
       </div>
 
       <p class="notice">※ 맛집 등록 시 <strong style="color:var(--gold)">+10pt</strong> · 링크 추가 시 <strong style="color:var(--gold)">+5pt</strong> 추가 적립!</p>
