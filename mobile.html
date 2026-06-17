@@ -657,10 +657,8 @@ document.addEventListener('touchend', () => {
 
 window.openKakaoMap = function() {
   if (!currentRest) return;
-  // 검색 결과로 유사 가게 목록 표시 (PC처럼)
-  const query = currentRest.address
-    ? currentRest.name + ' ' + currentRest.address.split(' ').slice(0,3).join(' ')
-    : currentRest.name + ' ' + currentRest.area;
+  // 가게명만으로 검색 (카카오맵은 짧은 쿼리가 더 정확)
+  const query = currentRest.name;
   window.open(`https://map.kakao.com/link/search/${encodeURIComponent(query)}`, '_blank');
 };
 window.openNaverMap = function() {
