@@ -793,6 +793,7 @@ window.shareKakao = function() {
   if (!Kakao.isInitialized()) Kakao.init('25b433faf5d746c938cbcc7658f650b0');
   const rating = r.avgRating ? `⭐ ${r.avgRating.toFixed(1)}점` : '';
   const desc = [r.cat, r.area, rating].filter(Boolean).join(' · ');
+  const shareUrl = `https://www.starspoon.co.kr/mobile.html?name=${encodeURIComponent(r.name)}&celeb=${encodeURIComponent(r.celeb)}`;
   Kakao.Share.sendDefault({
     objectType: 'feed',
     content: {
@@ -800,15 +801,15 @@ window.shareKakao = function() {
       description: desc + (r.address ? '\n📍 ' + r.address : ''),
       imageUrl: r.img || 'https://www.starspoon.co.kr/icon-512.png',
       link: {
-        mobileWebUrl: `https://www.starspoon.co.kr/mobile.html?id=${r.id}`,
-        webUrl: `https://www.starspoon.co.kr/mobile.html?id=${r.id}`,
+        mobileWebUrl: shareUrl,
+        webUrl: shareUrl,
       },
     },
     buttons: [{
       title: '스타스푼에서 보기',
       link: {
-        mobileWebUrl: `https://www.starspoon.co.kr/mobile.html?id=${r.id}`,
-        webUrl: `https://www.starspoon.co.kr/mobile.html?id=${r.id}`,
+        mobileWebUrl: shareUrl,
+        webUrl: shareUrl,
       },
     }],
   });
@@ -1147,30 +1148,49 @@ window.showToast = showToast;
 // ── 초기화 ──
 handleKakaoCallback();
 
-// 딥링크 처리: ?id=xxx 가 있으면 지도 초기화와 별도로 즉시 데이터 로드
-const _deepId = new URLSearchParams(location.search).get('id');
-if (_deepId) {
-  // 지도는 서울 중심으로 바로 초기화 (위치권한 팝업 없이)
+// 딥링크 처리: ?name=xxx&celeb=xxx 로 오면 해당 맛집 찾아서 상세 열기
+const _params = new URLSearchParams(location.search);
+const _deepName = _params.get('name');
+const _deepCeleb = _params.get('celeb');
+
+if (_deepName) {
+  // 지도 바로 초기화 (위치권한 팝업 없이)
   kakao.maps.load(() => {
     const container = document.getElementById('kakao-map');
     map = new kakao.maps.Map(container, {
       center: new kakao.maps.LatLng(37.5665, 126.9780),
       level: 8
     });
-    // Firebase에서 해당 맛집 단건 조회 후 바로 상세 열기
-    getDoc(doc(db, 'restaurants', _deepId)).then(snap => {
-      if (!snap.exists()) { showToast('맛집 정보를 찾을 수 없어요'); return; }
-      const d = snap.data();
-      const r = {id: _deepId, name:d.name||'', celeb:d.celeb||'',
-        celebs:d.celebs||[d.celeb||''], cat:d.category||d.cat||'한식',
-        area:d.area||'', address:d.address||'', comment:d.comment||'',
-        yt:d.yt||d.video_url||'', lat:d.lat||37.5665, lng:d.lng||126.9780,
-        saves:d.saves||0, avgRating:d.avgRating||0,
-        ratingCount:d.ratingCount||0, visits:d.visits||0};
+    // Firebase에서 name으로 검색
+    getDocs(query(
+      collection(db, 'restaurants'),
+      where('name', '==', _deepName),
+      limit(10)
+    )).then(snap => {
+      if (snap.empty) { showToast('맛집 정보를 찾을 수 없어요'); getMyLocation(); return; }
+      // celeb도 일치하는 것 우선, 없으면 첫 번째
+      let found = null;
+      snap.forEach(d => {
+        const data = d.data();
+        if (!found) found = {id: d.id, ...data};
+        if (_deepCeleb && data.celeb === _deepCeleb) found = {id: d.id, ...data};
+      });
+      const d = found;
+      const r = {
+        id: d.id, name: d.name||'', celeb: d.celeb||'',
+        celebs: d.celebs||[d.celeb||''], cat: d.category||d.cat||'한식',
+        area: d.area||'', address: d.address||'', comment: d.comment||'',
+        yt: d.yt||d.video_url||'', lat: d.lat||37.5665, lng: d.lng||126.9780,
+        saves: d.saves||0, avgRating: d.avgRating||0,
+        ratingCount: d.ratingCount||0, visits: d.visits||0
+      };
       ALL_DATA = [r];
       DATA = [r];
       renderList();
-      openDetail(_deepId);
+      // 지도 해당 위치로 이동 후 상세 열기
+      map.setCenter(new kakao.maps.LatLng(r.lat, r.lng));
+      map.setLevel(4);
+      openDetail(r.id);
       // 백그라운드에서 나머지 데이터 로드
       loadNearbyRests(r.lat, r.lng);
     }).catch(e => {
@@ -1188,10 +1208,10 @@ loadCurators();
 // 온보딩 팝업 - 독립 실행 (딥링크/로그인콜백과 무관하게)
 (function() {
   const params = new URLSearchParams(location.search);
-  const deepId = params.get('id');
+  const deepName = params.get('name');
   const code = params.get('code');
   // 딥링크나 카카오 로그인 콜백이면 스킵
-  if (deepId || code) return;
+  if (deepName || code) return;
   const today = new Date().toDateString();
   const noShow = localStorage.getItem('onboard_no_show');
   if (noShow === today) return;
