@@ -804,7 +804,7 @@ async function loadCurators() {
   try {
     const snap = await getDocs(collection(db, 'curators'));
     STAR_CURATORS = [];
-    snap.forEach(d => { if (d.data().type === 'star') STAR_CURATORS.push({id:d.id, ...d.data()}); });
+    snap.forEach(d => { const data = d.data(); if (data.name) STAR_CURATORS.push({id:d.id, ...data}); });
     STAR_CURATORS.sort((a,b) => (a.order||99) - (b.order||99));
     if (!STAR_CURATORS.length) {
       STAR_CURATORS = [
@@ -4171,7 +4171,7 @@ async function loadCurators() {
   try {
     const snap = await getDocs(collection(db, 'curators'));
     STAR_CURATORS = [];
-    snap.forEach(d => { if (d.data().type === 'star') STAR_CURATORS.push({id:d.id, ...d.data()}); });
+    snap.forEach(d => { const data = d.data(); if (data.name) STAR_CURATORS.push({id:d.id, ...data}); });
     STAR_CURATORS.sort((a,b) => (a.order||99) - (b.order||99));
     if (!STAR_CURATORS.length) {
       STAR_CURATORS = [
