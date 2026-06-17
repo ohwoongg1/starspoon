@@ -1255,8 +1255,7 @@ function renderList() {
         ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
         ${d.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><a class="detail-text detail-phone" href="tel:${d.phone}" onclick="event.stopPropagation()">${d.phone}</a></div>` : ''}
         <div class="detail-actions">
-          <a class="detail-btn detail-kakao" href="${d.place_url || `https://map.kakao.com/link/search/${encodeURIComponent(d.name)}`}" target="_blank" onclick="event.stopPropagation()">🗺️ 카카오맵에서 보기</a>
-          <a class="detail-btn detail-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(d.name)}" target="_blank" onclick="event.stopPropagation()">🟢 네이버지도</a>
+          <a class="detail-btn detail-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(d.name + ' ' + d.area)}" target="_blank" onclick="event.stopPropagation()">🟢 네이버지도에서 보기</a>
         </div>
       </div>
     </div>`;
