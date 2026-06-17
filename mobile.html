@@ -124,11 +124,18 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
   box-shadow:0 -4px 20px rgba(0,0,0,0.2);
   transform:translateY(100%);
   transition:transform .3s cubic-bezier(.4,0,.2,1);
-  max-height:75vh;display:flex;flex-direction:column;overflow:hidden;
+  height:75vh;display:flex;flex-direction:column;overflow:hidden;
 }
 #detail-panel.open{transform:translateY(0)}
-#detail-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:10px auto 0;flex-shrink:0}
-#detail-body{flex:1;overflow-y:auto;padding:16px}
+#detail-handle{
+  width:40px;height:4px;background:var(--border2);
+  border-radius:2px;margin:10px auto 6px;flex-shrink:0;cursor:grab;
+}
+#detail-body{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:16px;padding-bottom:40px;
+}
+#detail-body::-webkit-scrollbar{display:none}
 .detail-name{font-size:20px;font-weight:800;color:var(--text);margin-bottom:4px}
 .detail-celeb{font-size:13px;color:var(--gold-dark);font-weight:600;margin-bottom:2px}
 .detail-cat{font-size:12px;color:var(--text3);margin-bottom:12px}
@@ -597,8 +604,56 @@ window.openDetail = function(id) {
 };
 
 window.closeDetail = function() {
-  document.getElementById('detail-panel').classList.remove('open');
+  const panel = document.getElementById('detail-panel');
+  panel.classList.remove('open');
+  panel.style.height = '75vh';
 };
+
+// 상세 패널 드래그
+const detailPanel = document.getElementById('detail-panel');
+const detailHandle = document.getElementById('detail-handle');
+const detailBody = document.getElementById('detail-body');
+let detailDragging = false, detailStartY = 0, detailStartH = 0, detailVelocity = 0, detailLastY = 0;
+
+detailPanel.addEventListener('touchstart', e => {
+  const isBody = detailBody.contains(e.target);
+  const atTop = detailBody.scrollTop === 0;
+  if (isBody && !atTop) return; // 스크롤 중이면 드래그 안 함
+  detailDragging = true;
+  detailStartY = e.touches[0].clientY;
+  detailLastY = detailStartY;
+  detailStartH = detailPanel.getBoundingClientRect().height;
+  detailVelocity = 0;
+  detailPanel.style.transition = 'none';
+}, {passive:true});
+
+document.addEventListener('touchmove', e => {
+  if (!detailDragging) return;
+  const y = e.touches[0].clientY;
+  detailVelocity = detailLastY - y;
+  detailLastY = y;
+  const dy = detailStartY - y;
+  const newH = Math.max(120, Math.min(detailStartH + dy, window.innerHeight * 0.92));
+  detailPanel.style.height = newH + 'px';
+}, {passive:true});
+
+document.addEventListener('touchend', () => {
+  if (!detailDragging) return;
+  detailDragging = false;
+  detailPanel.style.transition = 'height .25s cubic-bezier(.4,0,.2,1)';
+  const h = detailPanel.getBoundingClientRect().height;
+  if (detailVelocity < -8 || h < 200) {
+    // 빠르게 내리거나 충분히 내리면 닫기
+    closeDetail();
+  } else if (detailVelocity > 8) {
+    // 빠르게 올리면 최대
+    detailPanel.style.height = (window.innerHeight * 0.92) + 'px';
+  } else if (h < window.innerHeight * 0.4) {
+    detailPanel.style.height = '75vh';
+  } else {
+    detailPanel.style.height = (window.innerHeight * 0.92) + 'px';
+  }
+});
 
 window.openKakaoMap = function() {
   if (!currentRest) return;
