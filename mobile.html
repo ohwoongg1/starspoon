@@ -747,6 +747,13 @@ function applyFilter() {
 }
 
 // 리스트 렌더링
+function distLabel(dist) {
+  if (!dist || dist >= 999) return '';
+  const m = Math.round(dist * 111320); // 위경도 차이 → 미터 근사치
+  if (m < 1000) return m + 'm';
+  return (m/1000).toFixed(1) + 'km';
+}
+
 function renderList() {
   const list = document.getElementById('sheet-list');
   if (!DATA.length) {
@@ -755,13 +762,17 @@ function renderList() {
   }
   list.innerHTML = DATA.map((r,i) => {
     const rankClass = i===0?'r1':i===1?'r2':i===2?'r3':'';
+    const dist = distLabel(r.dist);
     return `<div class="rest-item" onclick="openDetail('${r.id}')">
       <div class="rest-rank ${rankClass}">${i+1}</div>
       <div class="rest-info">
         <div class="rest-name">${r.name}</div>
         <div class="rest-sub">${r.celeb} · ${r.cat} · ${r.area}</div>
       </div>
-      <div class="rest-rating">${r.avgRating ? '★ '+r.avgRating.toFixed(1) : ''}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+        ${r.avgRating ? `<span style="font-size:12px;color:var(--gold);font-weight:600">★ ${r.avgRating.toFixed(1)}</span>` : ''}
+        ${dist ? `<span style="font-size:12px;color:var(--text3);font-weight:500">${dist}</span>` : ''}
+      </div>
     </div>`;
   }).join('');
 }
