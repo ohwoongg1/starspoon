@@ -114,6 +114,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .link-btn{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:3px 8px;border-radius:5px;text-decoration:none;font-weight:500;border:1px solid}
 .link-yt{color:#CC0000;background:rgba(204,0,0,0.05);border-color:rgba(204,0,0,0.2)}
 .link-add{color:var(--text3);background:var(--bg2);border-color:var(--border2);cursor:pointer}
+.card-detail{display:none;margin-top:10px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
+.card-detail.open{display:block}
+.detail-row{display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;font-size:12px;color:var(--text2)}
+.detail-icon{flex-shrink:0;font-size:13px}
+.detail-text{line-height:1.4;word-break:keep-all}
+.detail-phone{color:var(--gold);text-decoration:none;font-weight:600}
+.detail-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.detail-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;text-decoration:none;border:none;cursor:pointer}
+.detail-kakao{background:#FEE500;color:#3A1D1D}
+.detail-naver{background:#03C75A;color:#fff}
 
 /* ── 오른쪽: 지도+상세 ── */
 .map-panel{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column}
@@ -942,6 +952,7 @@ window.selectCuratorByUser = async function(name, uid) {
         lat: r.lat||37.5665, lng: r.lng||126.9780,
         visits: r.visits||0, saves: r.saves||0,
         avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+        phone: r.phone||'', address: r.address||'', place_url: r.place_url||'',
       });
     });
     renderList();
@@ -1240,6 +1251,14 @@ function renderList() {
           : `<button class="link-btn link-add" onclick="event.stopPropagation();openYtModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><i class="ti ti-plus"></i> 링크 추가</button>`
         }
       </div>
+      <div class="card-detail" id="detail-${d.id}">
+        ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
+        ${d.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><a class="detail-text detail-phone" href="tel:${d.phone}" onclick="event.stopPropagation()">${d.phone}</a></div>` : ''}
+        <div class="detail-actions">
+          <a class="detail-btn detail-kakao" href="${d.place_url || `https://map.kakao.com/link/search/${encodeURIComponent(d.name)}`}" target="_blank" onclick="event.stopPropagation()">🗺️ 카카오맵에서 보기</a>
+          <a class="detail-btn detail-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(d.name)}" target="_blank" onclick="event.stopPropagation()">🟢 네이버지도</a>
+        </div>
+      </div>
     </div>`;
   }).join('');
 }
@@ -1344,8 +1363,26 @@ function renderPins() {
 }
 
 window.focusCard = function(id) {
+  // 이전에 열려있던 상세 박스 닫기
+  const prevOpen = document.querySelector('.card-detail.open');
+  if (prevOpen) {
+    const prevId = prevOpen.id.replace('detail-', '');
+    if (prevId !== id) {
+      prevOpen.classList.remove('open');
+      document.getElementById('card-' + prevId)?.classList.remove('on');
+    }
+  }
+  const card = document.getElementById('card-' + id);
+  const detail = document.getElementById('detail-' + id);
+  const isAlreadyOpen = detail?.classList.contains('open');
+  if (isAlreadyOpen) {
+    detail.classList.remove('open');
+    card?.classList.remove('on');
+    return;
+  }
   document.querySelectorAll('.rest-card').forEach(c => c.classList.remove('on'));
-  document.getElementById('card-' + id)?.classList.add('on');
+  card?.classList.add('on');
+  detail?.classList.add('open');
   const d = DATA.find(x => x.id === id);
   if (d && map) {
     map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
