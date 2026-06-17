@@ -284,16 +284,24 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
   /* 리스트 패널 → 하단 시트 */
   .list-panel{
-    position:absolute;z-index:50;left:0;right:0;bottom:52px;
+    position:fixed;z-index:50;left:0;right:0;bottom:52px;
     background:var(--white);
     border-radius:20px 20px 0 0;
     box-shadow:0 -4px 20px rgba(0,0,0,0.15);
     display:flex;flex-direction:column;
-    height:auto;
-    max-height:72vh;
-    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    height:36vh;
+    max-height:36vh;
+    transition:max-height .3s cubic-bezier(.4,0,.2,1), height .3s;
     width:100%;
     overflow:hidden;
+  }
+  /* 검색 중일 때 바텀시트 풀스크린 */
+  .list-panel.search-mode{
+    height:calc(100vh - 160px);
+    max-height:calc(100vh - 160px);
+    top:160px;
+    bottom:52px;
+    border-radius:0;
   }
   /* 핸들 바 */
   .list-panel::before{
@@ -325,10 +333,10 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 .m-my-btn{display:none}
 
 @media(max-width:768px){
-  /* 지도 위 검색바 */
+  /* 지도 위 검색바 - fixed로 항상 상단 고정 */
   .m-top-bar{
     display:flex;align-items:center;gap:8px;
-    position:absolute;top:12px;left:12px;right:12px;z-index:10;
+    position:fixed;top:8px;left:12px;right:12px;z-index:200;
   }
   .m-search-box{
     flex:1;display:flex;align-items:center;gap:8px;
@@ -350,10 +358,10 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     cursor:pointer;font-size:20px;flex-shrink:0;
   }
 
-  /* 큐레이터 가로 스크롤 strip */
+  /* 큐레이터 가로 스크롤 strip - fixed */
   .m-curator-strip{
     display:flex;align-items:center;gap:8px;
-    position:absolute;top:72px;left:0;right:0;z-index:10;
+    position:fixed;top:68px;left:0;right:0;z-index:200;
     padding:0 12px;overflow-x:auto;scrollbar-width:none;
     -webkit-overflow-scrolling:touch;
   }
@@ -370,10 +378,10 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   .m-cpill.on{background:var(--gold);color:#fff;border-color:var(--gold)}
   .m-cpill-icon{font-size:15px}
 
-  /* 지도 위 카테고리 - 큐레이터 아래 */
+  /* 지도 위 카테고리 - fixed */
   .m-cat-strip{
     display:flex;align-items:center;gap:6px;
-    position:absolute;top:118px;left:0;right:0;z-index:10;
+    position:fixed;top:114px;left:0;right:0;z-index:200;
     padding:0 12px;overflow-x:auto;scrollbar-width:none;
   }
   .m-cat-strip::-webkit-scrollbar{display:none}
@@ -2579,6 +2587,12 @@ window.doSearch = async function(q) {
   const clearBtn = document.getElementById('clearSearchBtn');
   if (clearBtn) clearBtn.style.display = q.trim() ? 'block' : 'none';
 
+  // 모바일 바텀시트 search-mode 토글
+  const sheet = document.querySelector('.list-panel');
+  if (sheet && window.innerWidth <= 768) {
+    sheet.classList.toggle('search-mode', !!q.trim());
+  }
+
   if (!q.trim()) {
     // 초기화
     regionFilter = '';
@@ -2674,10 +2688,18 @@ window.clearSearch = async function() {
   searchQ = '';
   regionFilter = '';
   document.getElementById('mainSearch').value = '';
+  const mSearch = document.getElementById('mobileSearch');
+  if (mSearch) mSearch.value = '';
+  const mClear = document.getElementById('mClearBtn');
+  if (mClear) mClear.style.display = 'none';
   const clearBtn = document.getElementById('clearSearchBtn');
   if (clearBtn) clearBtn.style.display = 'none';
+  // 모바일 search-mode 해제
+  const sheet = document.querySelector('.list-panel');
+  if (sheet) sheet.classList.remove('search-mode');
   // 성시경으로 초기화
   selCurator = '성시경';
+  renderMobileCuratorStrip();
   document.getElementById('listTitle').textContent = '성시경 맛집';
   renderCuratorList();
   await loadRests('성시경');
