@@ -1197,7 +1197,7 @@ function renderList() {
     const isSaved = savedList.includes(d.id);
     const stars = d.avgRating ? '★'.repeat(Math.round(d.avgRating)) + '☆'.repeat(5-Math.round(d.avgRating)) : '';
     const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
-    return `<div class="rest-card" id="card-${d.id}" onclick="focusCard('${d.id}')">
+    return `<div class="rest-card" id="card-${d.id}" onclick="focusCard('${d.id}')" onmouseenter="hoverCard('${d.id}')" onmouseleave="unhoverCard('${d.id}')">
       <div class="rest-card-top">
         <div class="rest-rank rank-num ${rankClass}">${i+1}</div>
         <div class="rest-info">
@@ -1349,53 +1349,38 @@ window.focusCard = function(id) {
   if (d && map) {
     map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
     map.setLevel(5);
-
-    // 클릭한 마커만 바운스 애니메이션 (커졌다 작아지기)
-    const idx = filtered().findIndex(x => x.id === id);
-    const marker = markers[idx];
-    if (marker) {
-      const svgBig = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="60" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><circle cx="18" cy="18" r="15" fill="none" stroke="white" stroke-width="2.5"/><text x="18" y="24" text-anchor="middle" font-size="15">⭐</text></svg>`;
-      const svgNormal = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><text x="18" y="24" text-anchor="middle" font-size="14">⭐</text></svg>`;
-
-      // 1단계: 크게
-      marker.setImage(new kakao.maps.MarkerImage(
-        'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgBig),
-        new kakao.maps.Size(52, 60),
-        {offset: new kakao.maps.Point(26, 60)}
-      ));
-      marker.setZIndex(10);
-
-      // 2단계: 0.3초 후 원래대로
-      setTimeout(() => {
-        marker.setImage(new kakao.maps.MarkerImage(
-          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgNormal),
-          new kakao.maps.Size(36, 42),
-          {offset: new kakao.maps.Point(18, 42)}
-        ));
-      }, 300);
-
-      // 3단계: 0.6초 후 다시 크게
-      setTimeout(() => {
-        marker.setImage(new kakao.maps.MarkerImage(
-          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgBig),
-          new kakao.maps.Size(52, 60),
-          {offset: new kakao.maps.Point(26, 60)}
-        ));
-      }, 600);
-
-      // 4단계: 0.9초 후 원래 크기로 고정
-      setTimeout(() => {
-        marker.setImage(new kakao.maps.MarkerImage(
-          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgNormal),
-          new kakao.maps.Size(36, 42),
-          {offset: new kakao.maps.Point(18, 42)}
-        ));
-        marker.setZIndex(5);
-      }, 900);
-    }
   }
-  // 조회수 증가
   updateDoc(doc(db, 'restaurants', id), {visits: increment(1)}).catch(()=>{});
+};
+
+// 카드 호버 → 해당 핀 크게
+const svgBig = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="60" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><circle cx="18" cy="18" r="15" fill="none" stroke="white" stroke-width="2.5"/><text x="18" y="24" text-anchor="middle" font-size="15">⭐</text></svg>`;
+const svgNormal = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><text x="18" y="24" text-anchor="middle" font-size="14">⭐</text></svg>`;
+
+window.hoverCard = function(id) {
+  const idx = filtered().findIndex(x => x.id === id);
+  const marker = markers[idx];
+  if (marker) {
+    marker.setImage(new kakao.maps.MarkerImage(
+      'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgBig),
+      new kakao.maps.Size(52, 60),
+      {offset: new kakao.maps.Point(26, 60)}
+    ));
+    marker.setZIndex(10);
+  }
+};
+
+window.unhoverCard = function(id) {
+  const idx = filtered().findIndex(x => x.id === id);
+  const marker = markers[idx];
+  if (marker) {
+    marker.setImage(new kakao.maps.MarkerImage(
+      'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgNormal),
+      new kakao.maps.Size(36, 42),
+      {offset: new kakao.maps.Point(18, 42)}
+    ));
+    marker.setZIndex(1);
+  }
 };
 
 // ── 댓글 ──
