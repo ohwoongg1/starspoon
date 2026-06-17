@@ -1293,20 +1293,38 @@ function matchRegion(r, region) {
   const norm = normalizeRegion(region);
   const area = r.area || '';
   const addr = r.address || '';
-  const combined = area + ' ' + addr;
+  // area + address 전체를 합쳐서 검색
+  const combined = (area + ' ' + addr).replace(/,/g, ' ');
 
-  // 직접 매칭
-  if (combined.includes(norm) || combined.includes(region) ||
-      area.startsWith(norm) || addr.includes(norm)) return true;
+  // 직접 포함 여부
+  if (combined.includes(norm) || combined.includes(region)) return true;
 
-  // "서울" 검색 시 → area가 서울 구 이름만 있어도 매칭
+  // "서울" 검색 시 → 서울 구 이름이 area나 address 어디든 있으면 매칭
   if (norm === '서울') {
-    if (SEOUL_GU.some(gu => area.includes(gu) || addr.includes(gu))) return true;
+    if (SEOUL_GU.some(gu => combined.includes(gu))) return true;
+    // "서울특별시", "서울시" 포함 여부
+    if (combined.includes('서울')) return true;
   }
 
-  // 구 이름으로 검색 시 (예: "용산구") → area에 "용산구"만 있어도 매칭
-  if (norm.endsWith('구') || norm.endsWith('동') || norm.endsWith('로')) {
-    if (area.includes(norm) || addr.includes(norm)) return true;
+  // 광역시/도 검색 시
+  const regionMap = {
+    '부산': ['부산','해운대','수영','사하','동래','남구','북구','강서','금정','기장'],
+    '대구': ['대구','수성','달서','달성','중구','동구','서구','남구','북구'],
+    '인천': ['인천','미추홀','연수','남동','부평','계양','서구','강화','옹진'],
+    '광주': ['광주','동구','서구','남구','북구','광산'],
+    '대전': ['대전','동구','중구','서구','유성','대덕'],
+    '울산': ['울산','중구','남구','동구','북구','울주'],
+    '경기': ['경기','수원','성남','고양','용인','부천','안산','화성','남양주','안양','평택','시흥','파주','의정부','김포','광주','광명','하남','군포','오산','이천','안성','의왕','양평','동두천','과천','연천','가평','양주','포천','여주'],
+    '강원': ['강원','춘천','원주','강릉','동해','태백','속초','삼척','홍천','횡성','영월','평창','정선','철원','화천','양구','인제','고성','양양'],
+    '전라': ['전라','전북','전남','광양','순천','여수','목포','나주','전주','군산','익산','정읍','남원','김제'],
+    '경상': ['경상','경북','경남','포항','경주','김천','안동','구미','영주','영천','상주','문경','경산','군위','의성','청송','영양','영덕','청도','고령','성주','칠곡','예천','봉화','울진','울릉','창원','진주','통영','사천','김해','밀양','거제','양산','의령','함안','창녕','고성','남해','하동','산청','함양','거창','합천'],
+    '제주': ['제주','서귀포'],
+    '충청': ['충청','충북','충남','청주','충주','제천','보은','옥천','영동','괴산','음성','진천','증평','천안','공주','보령','아산','서산','논산','계룡','당진','금산','부여','서천','청양','홍성','예산','태안'],
+  };
+  for (const [key, keywords] of Object.entries(regionMap)) {
+    if (norm === key || region === key) {
+      if (keywords.some(kw => combined.includes(kw))) return true;
+    }
   }
 
   return false;
