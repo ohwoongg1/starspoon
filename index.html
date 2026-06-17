@@ -1368,19 +1368,10 @@ async function loadRests(celeb) {
     });
     renderList();
     renderPins();
-    // 맛집 위치로 지도 자동 이동
-    if (DATA.length > 0 && map) {
-      const lats = DATA.map(d => d.lat).filter(v => v && Math.abs(v - 37.5665) > 0.001);
-      const lngs = DATA.map(d => d.lng).filter(v => v && Math.abs(v - 126.9780) > 0.001);
-      if (lats.length > 0) {
-        const centerLat = lats.reduce((a,b) => a+b, 0) / lats.length;
-        const centerLng = lngs.reduce((a,b) => a+b, 0) / lngs.length;
-        map.setCenter(new kakao.maps.LatLng(centerLat, centerLng));
-        map.setLevel(8);
-      } else {
-        map.setCenter(new kakao.maps.LatLng(DATA[0].lat, DATA[0].lng));
-        map.setLevel(8);
-      }
+    // 지도 위치는 서울 중심 고정 (자동 이동 제거)
+    if (map) {
+      map.setCenter(new kakao.maps.LatLng(37.5550, 126.9700));
+      map.setLevel(8);
     }
   } catch(e) {
     console.log('로드 오류:', e);
