@@ -1166,12 +1166,33 @@ window.selectCurator = async function(name, uid) {
 function renderMobileCuratorStrip() {
   const strip = document.getElementById('mCuratorStrip');
   if (!strip || !STAR_CURATORS.length) return;
-  strip.innerHTML = STAR_CURATORS.map(c =>
+  const allPill = `<div class="m-cpill${selCurator==='전체'||!selCurator?' on':''}" onclick="mSelectAll()">
+    <span class="m-cpill-icon">🍽️</span>전체
+  </div>`;
+  const curatorPills = STAR_CURATORS.map(c =>
     `<div class="m-cpill${selCurator===c.name?' on':''}" onclick="selectCurator('${c.name}')">
       <span class="m-cpill-icon">${c.icon}</span>${c.name}
     </div>`
   ).join('');
+  strip.innerHTML = allPill + curatorPills;
 }
+
+// 모바일 전체 선택
+window.mSelectAll = async function() {
+  selCurator = '전체';
+  renderMobileCuratorStrip();
+  renderCuratorList();
+  if (regionFilter) {
+    // 지역 필터 중이면 해당 지역 전체 맛집 유지
+    document.getElementById('listTitle').textContent = regionFilter + ' 전체 맛집';
+    renderList();
+    renderPins();
+  } else {
+    // 전체 초기 상태로
+    document.getElementById('listTitle').textContent = '전체 맛집';
+    await loadRests('전체');
+  }
+};
 
 // ── 모바일 카테고리 선택 ──
 window.mSetCat = function(el, cat) {
@@ -1300,16 +1321,13 @@ async function loadRestsByRegion(region) {
       }
     });
 
-    // 지역 검색 시 큐레이터 필터 임시 해제 (지역 전체 보여주기 위해)
-    const savedCurator = selCurator;
+    // 지역 검색 시 큐레이터 필터 전체로 설정
     selCurator = '전체';
     document.querySelectorAll('.curator-item').forEach(el => el.classList.remove('on'));
+    renderMobileCuratorStrip(); // 모바일 pill도 전체로
 
     renderList();
     renderPins();
-
-    // 큐레이터 상태 복원 (이후 큐레이터 클릭 시 교차필터 위해)
-    selCurator = savedCurator;
 
     // 스타/일반 분류 카운트
     const starCount = DATA.filter(d => STAR_CURATORS.some(c => c.name === d.celeb)).length;
