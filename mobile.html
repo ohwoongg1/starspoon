@@ -690,7 +690,11 @@ window.openDetail = function(id) {
       <button class="action-btn ${isSaved?'saved':''}" onclick="toggleSave('${id}')"><i class="ti ti-heart"></i>${isSaved?'저장됨':'저장'}</button>
       <button class="action-btn" onclick="openNaverMap()"><i class="ti ti-map-2" style="color:#03C75A"></i>네이버 길찾기</button>
     </div>
-    ${r.avgRating ? `<div style="font-size:13px;color:var(--text3);text-align:center">★ ${r.avgRating.toFixed(1)} (${r.ratingCount}개 평점)</div>` : ''}
+    <button onclick="shareKakao()" style="width:100%;margin-top:10px;padding:12px;background:#FEE500;border:none;border-radius:12px;font-size:14px;font-weight:700;color:#3A1D1D;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
+      카카오톡으로 공유하기
+    </button>
+    ${r.avgRating ? `<div style="font-size:13px;color:var(--text3);text-align:center;margin-top:8px">★ ${r.avgRating.toFixed(1)} (${r.ratingCount}개 평점)</div>` : ''}
   `;
   document.getElementById('detail-panel').classList.add('open');
   // 지도 해당 위치로
@@ -752,6 +756,33 @@ document.addEventListener('touchend', () => {
     detailPanel.style.height = (window.innerHeight * 0.55) + 'px';
   }
 });
+
+window.shareKakao = function() {
+  if (!currentRest) return;
+  const r = currentRest;
+  if (!Kakao.isInitialized()) Kakao.init('25b433faf5d746c938cbcc7658f650b0');
+  const rating = r.avgRating ? `⭐ ${r.avgRating.toFixed(1)}점` : '';
+  const desc = [r.cat, r.area, rating].filter(Boolean).join(' · ');
+  Kakao.Share.sendDefault({
+    objectType: 'feed',
+    content: {
+      title: `🥄 [${r.celeb}] ${r.name}`,
+      description: desc + (r.address ? '\n📍 ' + r.address : ''),
+      imageUrl: r.img || 'https://www.starspoon.co.kr/icon-512.png',
+      link: {
+        mobileWebUrl: 'https://www.starspoon.co.kr/mobile.html',
+        webUrl: 'https://www.starspoon.co.kr',
+      },
+    },
+    buttons: [{
+      title: '스타스푼에서 보기',
+      link: {
+        mobileWebUrl: 'https://www.starspoon.co.kr/mobile.html',
+        webUrl: 'https://www.starspoon.co.kr',
+      },
+    }],
+  });
+};
 
 window.openKakaoMap = function() {
   if (!currentRest) return;
