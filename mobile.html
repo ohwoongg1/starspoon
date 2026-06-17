@@ -879,8 +879,6 @@ async function handleKakaoCallback() {
     window.Kakao.Auth.setAccessToken(tokenData.access_token);
     const userRes = await window.Kakao.API.request({url: '/v2/user/me'});
     const kakaoUid = 'kakao_' + userRes.id;
-    console.log('카카오 응답:', JSON.stringify(userRes));
-    showToast('응답: ' + JSON.stringify(userRes).slice(0,100));
     const displayName = userRes.kakao_account?.profile?.nickname 
       || userRes.properties?.nickname || '카카오사용자';
     const photoURL = userRes.kakao_account?.profile?.profile_image_url 
@@ -901,8 +899,9 @@ async function handleKakaoCallback() {
     currentUser = {uid: kakaoUid, displayName, photoURL};
     savedList = snap.data()?.saved || [];
     const area = document.getElementById('auth-area');
-    area.innerHTML = `<div id="user-avatar-btn" onclick="toggleUserMenu()">
-      ${photoURL ? `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : '🥄'}
+    const initial = displayName.charAt(0) || '🥄';
+    area.innerHTML = `<div id="user-avatar-btn" onclick="toggleUserMenu()" style="background:var(--gold);color:#fff;font-size:14px;font-weight:700">
+      ${photoURL ? `<img src="${photoURL}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : initial}
     </div>`;
     closeLoginModal();
   } catch(e) { showToast('카카오 로그인 오류: ' + e.message); }
