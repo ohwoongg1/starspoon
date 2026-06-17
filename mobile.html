@@ -598,6 +598,13 @@ async function loadNearbyRests(lat, lng) {
       r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
     });
     applyFilter();
+    // 온보딩 초기화 + 딥링크 처리
+    initOnboard();
+    const params = new URLSearchParams(location.search);
+    const deepId = params.get('id');
+    if (deepId) {
+      setTimeout(() => openDetail(deepId), 300);
+    }
   } catch(e) {
     console.log(e);
     document.getElementById('sheet-title').textContent = '로드 실패';
@@ -770,15 +777,15 @@ window.shareKakao = function() {
       description: desc + (r.address ? '\n📍 ' + r.address : ''),
       imageUrl: r.img || 'https://www.starspoon.co.kr/icon-512.png',
       link: {
-        mobileWebUrl: 'https://www.starspoon.co.kr/mobile.html',
-        webUrl: 'https://www.starspoon.co.kr',
+        mobileWebUrl: `https://www.starspoon.co.kr/mobile.html?id=${r.id}`,
+        webUrl: `https://www.starspoon.co.kr/mobile.html?id=${r.id}`,
       },
     },
     buttons: [{
       title: '스타스푼에서 보기',
       link: {
-        mobileWebUrl: 'https://www.starspoon.co.kr/mobile.html',
-        webUrl: 'https://www.starspoon.co.kr',
+        mobileWebUrl: `https://www.starspoon.co.kr/mobile.html?id=${r.id}`,
+        webUrl: `https://www.starspoon.co.kr/mobile.html?id=${r.id}`,
       },
     }],
   });
@@ -968,13 +975,6 @@ sheetList.addEventListener('touchstart', e => {
 }, {passive:true});
 
 // ── 온보딩 ──
-(function(){
-  const today = new Date().toDateString();
-  const noShow = localStorage.getItem('onboard_no_show');
-  if(noShow === today) {
-    document.getElementById('onboard-modal').classList.add('hidden');
-  }
-})();
 window.closeOnboard = function(){
   document.getElementById('onboard-modal').classList.add('hidden');
 };
@@ -986,6 +986,21 @@ window.setOnboardNoShow = function(){
     localStorage.removeItem('onboard_no_show');
   }
 };
+function initOnboard() {
+  const today = new Date().toDateString();
+  const noShow = localStorage.getItem('onboard_no_show');
+  const modal = document.getElementById('onboard-modal');
+  if (!modal) return;
+  if(noShow === today) {
+    modal.classList.add('hidden');
+  }
+  // URL에 ?id=xxx 있으면 온보딩 건너뛰고 바로 상세 열기
+  const params = new URLSearchParams(location.search);
+  const deepId = params.get('id');
+  if (deepId) {
+    modal.classList.add('hidden');
+  }
+}
 
 // ── 로그인 ──
 window.openLoginModal = function() {
