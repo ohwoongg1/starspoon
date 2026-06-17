@@ -1340,10 +1340,9 @@ async function loadRestsByRegion(region) {
       }
     });
 
-    // 지역 검색 시 큐레이터 필터 전체로 설정
+    // 지역 검색 시 일단 전체 표시 (mspDoSearch에서 큐레이터 후처리)
     selCurator = '전체';
     document.querySelectorAll('.curator-item').forEach(el => el.classList.remove('on'));
-    renderMobileCuratorStrip(); // 모바일 pill도 전체로
 
     renderList();
     renderPins();
@@ -2852,12 +2851,20 @@ window.mspDoSearch = async function() {
   if (display) { display.textContent = displayText; display.style.color = 'var(--text)'; }
 
   if (mspSelRegion) {
-    // 지역 검색
-    document.getElementById('mainSearch').value = mspSelRegion;
-    await doSearch(mspSelRegion);
-    // 지역 로드 후 큐레이터 필터 추가
+    // 1단계: 지역 맛집 로드 (selCurator는 나중에 설정)
+    regionFilter = normalizeRegion(mspSelRegion);
+    await loadRestsByRegion(mspSelRegion);
+    // 2단계: 큐레이터 필터 직접 적용 (selectCurator 거치지 않고)
     if (mspSelCurator) {
-      await selectCurator(mspSelCurator);
+      selCurator = mspSelCurator;
+      document.getElementById('listTitle').textContent = `${mspSelRegion} · ${mspSelCurator} 맛집`;
+      renderMobileCuratorStrip();
+      renderCuratorList();
+      const items = filtered();
+      document.getElementById('listCount').textContent = items.length + '곳';
+      renderList();
+      renderPins();
+      showToast(`📍 ${mspSelRegion} · ${mspSelCurator} 맛집 ${items.length}곳`);
     }
   } else if (mspSelCurator) {
     // 큐레이터만 선택
@@ -2871,9 +2878,6 @@ window.mspDoSearch = async function() {
     renderMobileCuratorStrip();
     await loadRests('전체');
   }
-
-  renderList();
-  renderPins();
 };
 
 window.clearMRecent = function() {
