@@ -124,7 +124,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
   box-shadow:0 -4px 20px rgba(0,0,0,0.2);
   transform:translateY(100%);
   transition:transform .3s cubic-bezier(.4,0,.2,1);
-  height:auto;max-height:60vh;min-height:200px;
+  height:55vh;
   display:flex;flex-direction:column;overflow:hidden;
 }
 #detail-panel.open{transform:translateY(0)}
@@ -607,7 +607,7 @@ window.openDetail = function(id) {
 window.closeDetail = function() {
   const panel = document.getElementById('detail-panel');
   panel.classList.remove('open');
-  panel.style.height = '75vh';
+  panel.style.height = '55vh';
 };
 
 // 상세 패널 드래그
@@ -634,7 +634,7 @@ document.addEventListener('touchmove', e => {
   detailVelocity = detailLastY - y;
   detailLastY = y;
   const dy = detailStartY - y;
-  const newH = Math.max(120, Math.min(detailStartH + dy, window.innerHeight * 0.60));
+  const newH = Math.max(120, Math.min(detailStartH + dy, window.innerHeight * 0.55));
   detailPanel.style.height = newH + 'px';
 }, {passive:true});
 
@@ -648,11 +648,11 @@ document.addEventListener('touchend', () => {
     closeDetail();
   } else if (detailVelocity > 8) {
     // 빠르게 올리면 최대
-    detailPanel.style.height = (window.innerHeight * 0.60) + 'px';
+    detailPanel.style.height = (window.innerHeight * 0.55) + 'px';
   } else if (h < window.innerHeight * 0.4) {
-    detailPanel.style.height = '60vh';
+    detailPanel.style.height = '55vh';
   } else {
-    detailPanel.style.height = (window.innerHeight * 0.60) + 'px';
+    detailPanel.style.height = (window.innerHeight * 0.55) + 'px';
   }
 });
 
