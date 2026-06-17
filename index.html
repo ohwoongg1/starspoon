@@ -37,6 +37,31 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .header-right{margin-left:auto;display:flex;align-items:center;gap:8px}
 .header-reg-btns{display:flex;gap:6px;align-items:center}
 .mobile-fab{display:none;position:fixed;bottom:20px;right:16px;z-index:300;flex-direction:column;gap:8px;align-items:flex-end}
+/* 모바일 전체화면 검색 패널 */
+.m-search-panel{display:none;position:fixed;inset:0;z-index:500;background:var(--white);flex-direction:column}
+.m-search-panel.open{display:flex}
+.m-search-panel-top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)}
+.m-search-back{background:none;border:none;padding:6px;cursor:pointer;color:var(--text);font-size:22px;flex-shrink:0;line-height:1}
+.m-search-input-wrap{flex:1;display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:10px;padding:9px 12px}
+.m-search-input-wrap input{flex:1;border:none;outline:none;background:none;font-size:15px;color:var(--text)}
+.m-search-input-wrap input::placeholder{color:var(--text3)}
+.m-search-panel-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.m-search-quick{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--border);overflow-x:auto;scrollbar-width:none;flex-shrink:0}
+.m-search-quick::-webkit-scrollbar{display:none}
+.m-search-qpill{display:flex;align-items:center;gap:5px;background:var(--bg2);border-radius:16px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--text2);white-space:nowrap;flex-shrink:0;border:none;cursor:pointer}
+.m-recent-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 8px}
+.m-recent-title{font-size:13px;font-weight:700;color:var(--text)}
+.m-recent-clear{background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;padding:0}
+.m-recent-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.m-recent-item:active{background:var(--bg2)}
+.m-recent-icon{width:32px;height:32px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px}
+.m-recent-text{flex:1;font-size:14px;color:var(--text)}
+.m-recent-del{background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;line-height:1}
+.m-result-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+.m-result-item:active{background:var(--bg2)}
+.m-result-icon{width:36px;height:36px;border-radius:8px;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.m-result-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px}
+.m-result-sub{font-size:12px;color:var(--text3)}
 .fab-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:24px;border:none;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);white-space:nowrap}
 .fab-my{background:var(--white);color:var(--gold);border:2px solid var(--gold)}
 .fab-star{background:var(--gold);color:#fff}
@@ -494,17 +519,14 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   <!-- 지도 패널 -->
   <div class="map-panel">
 
-    <!-- 모바일 지도 위 검색바 -->
+    <!-- 모바일 지도 위 검색바 (탭하면 전체화면 패널 열림) -->
     <div class="m-top-bar">
-      <div class="m-search-box">
+      <div class="m-search-box" onclick="openMobileSearch()" style="cursor:pointer">
         <i class="ti ti-search" style="color:var(--text3);font-size:16px;flex-shrink:0"></i>
-        <input type="text" id="mobileSearch" placeholder="맛집, 음식, 지역 검색"
-          oninput="doSearch(this.value);document.getElementById('mainSearch').value=this.value"
-          onkeydown="if(event.key==='Escape')clearSearch()">
-        <button id="mClearBtn" onclick="clearSearch();this.style.display='none'" style="display:none;background:none;border:none;padding:0;cursor:pointer;color:var(--text3);font-size:16px;line-height:1">✕</button>
+        <span id="mSearchDisplay" style="flex:1;font-size:14px;color:var(--text3)">맛집, 음식, 지역 검색</span>
       </div>
-      <div class="m-my-btn" onclick="document.getElementById('authArea').click ? document.getElementById('authArea').querySelector('button')?.click() : null" style="background:var(--white)">
-        <span style="font-size:18px">🥄</span>
+      <div class="m-my-btn" id="mMyBtn" style="background:var(--white)">
+        <i class="ti ti-spoon" style="font-size:20px;color:var(--gold)"></i>
       </div>
     </div>
 
@@ -1214,27 +1236,15 @@ window.mSetCat = function(el, cat) {
   renderList(); renderPins();
 };
 
-// 모바일 검색 입력 동기화
+// 모바일 검색 패널 초기화
 document.addEventListener('DOMContentLoaded', () => {
-  const mSearch = document.getElementById('mobileSearch');
-  const mClear = document.getElementById('mClearBtn');
-  if (mSearch) {
-    mSearch.addEventListener('input', e => {
-      const v = e.target.value;
-      document.getElementById('mainSearch').value = v;
-      if (mClear) mClear.style.display = v ? 'block' : 'none';
-      doSearch(v);
-    });
-  }
-
   // 내 스푼 버튼 연결
-  const myBtn = document.querySelector('.m-my-btn');
+  const myBtn = document.getElementById('mMyBtn');
   if (myBtn) {
     myBtn.onclick = () => {
       const navEl = document.querySelector('.pnav:nth-child(3)');
       if (navEl) setPage('my', navEl);
     };
-    myBtn.innerHTML = '<i class="ti ti-spoon" style="font-size:20px;color:var(--gold)"></i>';
   }
 
   // 바텀시트 드래그 처리
@@ -2684,6 +2694,109 @@ function moveToRegion(q) {
 }
 
 // 검색 초기화
+// ── 모바일 전체화면 검색 패널 ──
+let mRecentSearches = JSON.parse(localStorage.getItem('starspoon_recent') || '[]');
+
+function saveMRecentSearch(q) {
+  mRecentSearches = [q, ...mRecentSearches.filter(r => r !== q)].slice(0, 8);
+  localStorage.setItem('starspoon_recent', JSON.stringify(mRecentSearches));
+}
+
+function renderMSearchBody(q) {
+  const body = document.getElementById('mSearchBody');
+  if (!body) return;
+  if (!q) {
+    // 최근 검색 표시
+    if (!mRecentSearches.length) {
+      body.innerHTML = `<div style="padding:32px 16px;text-align:center;color:var(--text3);font-size:14px">최근 검색어가 없어요</div>`;
+      return;
+    }
+    body.innerHTML = `
+      <div class="m-recent-header">
+        <span class="m-recent-title">최근 검색</span>
+        <button class="m-recent-clear" onclick="clearMRecent()">전체 삭제</button>
+      </div>
+      ${mRecentSearches.map((r,i) => `
+        <div class="m-recent-item" onclick="onMobileSearchSubmit('${r.replace(/'/g,"\\'")}')">
+          <div class="m-recent-icon">🔍</div>
+          <span class="m-recent-text">${r}</span>
+          <button class="m-recent-del" onclick="event.stopPropagation();deleteMRecent(${i})">×</button>
+        </div>`).join('')}`;
+  } else {
+    // 실시간 검색 결과 (큐레이터 + 맛집 이름 매칭)
+    const ql = q.toLowerCase();
+    const curatorMatches = STAR_CURATORS.filter(c => c.name.includes(q));
+    const restMatches = DATA.filter(d =>
+      d.name.includes(q) || d.area.includes(q) || d.cat.includes(q)
+    ).slice(0, 15);
+
+    let html = '';
+    if (curatorMatches.length) {
+      html += curatorMatches.map(c => `
+        <div class="m-result-item" onclick="onMobileSearchSubmit('${c.name}')">
+          <div class="m-result-icon">${c.icon}</div>
+          <div><div class="m-result-name">${c.name}</div><div class="m-result-sub">큐레이터 · 스타</div></div>
+        </div>`).join('');
+    }
+    if (restMatches.length) {
+      html += restMatches.map(d => `
+        <div class="m-result-item" onclick="onMobileSearchSubmit('${d.name.replace(/'/g,"\\'")}')">
+          <div class="m-result-icon">⭐</div>
+          <div><div class="m-result-name">${d.name}</div><div class="m-result-sub">${d.celeb} · ${d.area}</div></div>
+        </div>`).join('');
+    }
+    if (!html) {
+      html = `<div style="padding:32px 16px;text-align:center;color:var(--text3);font-size:14px">"${q}" 검색 결과가 없어요<br><small style="color:var(--text3)">Enter로 전체 검색해보세요</small></div>`;
+    }
+    body.innerHTML = html;
+  }
+}
+
+window.openMobileSearch = function() {
+  if (window.innerWidth > 768) return;
+  document.getElementById('mSearchPanel').classList.add('open');
+  setTimeout(() => document.getElementById('mobileSearch')?.focus(), 100);
+  renderMSearchBody('');
+};
+
+window.closeMobileSearch = function() {
+  document.getElementById('mSearchPanel').classList.remove('open');
+  document.getElementById('mobileSearch').value = '';
+  document.getElementById('mClearBtn').style.display = 'none';
+};
+
+window.onMobileSearchInput = function(v) {
+  document.getElementById('mClearBtn').style.display = v ? 'block' : 'none';
+  renderMSearchBody(v);
+};
+
+window.onMobileSearchSubmit = async function(q) {
+  if (!q.trim()) return;
+  // 검색바 표시 업데이트
+  const display = document.getElementById('mSearchDisplay');
+  if (display) { display.textContent = q; display.style.color = 'var(--text)'; }
+  // 최근검색 저장
+  saveMRecentSearch(q);
+  // 패널 닫기
+  closeMobileSearch();
+  // PC 검색창 동기화
+  document.getElementById('mainSearch').value = q;
+  // 검색 실행
+  await doSearch(q);
+};
+
+window.clearMRecent = function() {
+  mRecentSearches = [];
+  localStorage.setItem('starspoon_recent', '[]');
+  renderMSearchBody('');
+};
+
+window.deleteMRecent = function(i) {
+  mRecentSearches.splice(i, 1);
+  localStorage.setItem('starspoon_recent', JSON.stringify(mRecentSearches));
+  renderMSearchBody('');
+};
+
 window.clearSearch = async function() {
   searchQ = '';
   regionFilter = '';
@@ -2694,6 +2807,9 @@ window.clearSearch = async function() {
   if (mClear) mClear.style.display = 'none';
   const clearBtn = document.getElementById('clearSearchBtn');
   if (clearBtn) clearBtn.style.display = 'none';
+  // 검색바 표시 초기화
+  const display = document.getElementById('mSearchDisplay');
+  if (display) { display.textContent = '맛집, 음식, 지역 검색'; display.style.color = 'var(--text3)'; }
   // 모바일 search-mode 해제
   const sheet = document.querySelector('.list-panel');
   if (sheet) sheet.classList.remove('search-mode');
@@ -2919,6 +3035,35 @@ if (lastSeen !== new Date().toDateString()) {
         </label>
       </p>
     </div>
+  </div>
+</div>
+
+<!-- 모바일 전체화면 검색 패널 -->
+<div class="m-search-panel" id="mSearchPanel">
+  <div class="m-search-panel-top">
+    <button class="m-search-back" onclick="closeMobileSearch()">‹</button>
+    <div class="m-search-input-wrap">
+      <i class="ti ti-search" style="color:var(--text3);font-size:15px;flex-shrink:0"></i>
+      <input type="text" id="mobileSearch" placeholder="장소·맛집·큐레이터 검색"
+        oninput="onMobileSearchInput(this.value)"
+        onkeydown="if(event.key==='Escape')closeMobileSearch();if(event.key==='Enter')onMobileSearchSubmit(this.value)"
+        autocomplete="off" autocorrect="off" spellcheck="false">
+      <button id="mClearBtn" onclick="document.getElementById('mobileSearch').value='';onMobileSearchInput('');document.getElementById('mobileSearch').focus()" style="display:none;background:none;border:none;padding:0;cursor:pointer;color:var(--text3);font-size:18px;line-height:1">✕</button>
+    </div>
+  </div>
+  <!-- 빠른 검색 pills -->
+  <div class="m-search-quick">
+    <button class="m-search-qpill" onclick="onMobileSearchSubmit('서울')">🗺️ 서울</button>
+    <button class="m-search-qpill" onclick="onMobileSearchSubmit('부산')">🗺️ 부산</button>
+    <button class="m-search-qpill" onclick="onMobileSearchSubmit('성시경')">🎵 성시경</button>
+    <button class="m-search-qpill" onclick="onMobileSearchSubmit('풍자')">😄 풍자</button>
+    <button class="m-search-qpill" onclick="onMobileSearchSubmit('이영자')">👩 이영자</button>
+    <button class="m-search-qpill" onclick="onMobileSearchSubmit('백종원')">👨‍🍳 백종원</button>
+    <button class="m-search-qpill" onclick="onMobileSearchSubmit('히밥')">🍱 히밥</button>
+  </div>
+  <!-- 패널 본문: 최근검색 or 검색결과 -->
+  <div class="m-search-panel-body" id="mSearchBody">
+    <!-- JS로 렌더링 -->
   </div>
 </div>
 
