@@ -2,6 +2,11 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<script>
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent) && window.innerWidth <= 768) {
+    window.location.replace('/mobile.html');
+  }
+</script>
 <meta name="google-site-verification" content="XGoCpZb8cXF7IvyeIMGRJJJXuccKIIS26WrqtbAdujo" />
 <meta name="naver-site-verification" content="6f4b79f996ee96a01d32863c2fd978e0a215db4b" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
