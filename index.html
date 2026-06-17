@@ -508,37 +508,6 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
   <!-- 지도 패널 -->
   <div class="map-panel">
-
-    <!-- 모바일 지도 위 검색바 (탭하면 전체화면 패널 열림) -->
-    <div class="m-top-bar">
-      <div class="m-search-box" onclick="openMobileSearch()" style="cursor:pointer">
-        <i class="ti ti-search" style="color:var(--text3);font-size:16px;flex-shrink:0"></i>
-        <span id="mSearchDisplay" style="flex:1;font-size:14px;color:var(--text3)">맛집, 음식, 지역 검색</span>
-      </div>
-      <div class="m-my-btn" id="mMyBtn" style="background:var(--white)">
-        <i class="ti ti-spoon" style="font-size:20px;color:var(--gold)"></i>
-      </div>
-    </div>
-
-    <!-- 모바일 큐레이터 pill strip -->
-    <div class="m-curator-strip" id="mCuratorStrip"></div>
-
-    <!-- 모바일 카테고리 pill strip -->
-    <div class="m-cat-strip" id="mCatStrip">
-      <button class="m-cat-pill on" onclick="mSetCat(this,'전체')">전체</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'한식')">🍚 한식</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'국밥·탕')">🍲 국밥</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'고기')">🥩 고기</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'냉면')">🍜 냉면</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'중식')">🥡 중식</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'일식')">🍣 일식</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'분식')">🍢 분식</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'해산물')">🦞 해산물</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'양식')">🍝 양식</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'제과·빵')">🥐 빵</button>
-      <button class="m-cat-pill" onclick="mSetCat(this,'카페·디저트')">☕ 카페</button>
-    </div>
-
     <div class="map-wrap">
       <div id="kakao-map"></div>
     </div>
@@ -754,7 +723,6 @@ async function loadStarCurators() {
     ];
   }
   renderCuratorList();
-  renderMobileCuratorStrip();
 }
 
 // ── 등급 시스템 ──
@@ -1159,7 +1127,6 @@ window.selectCuratorByUser = async function(name, uid) {
 
 window.selectCurator = async function(name, uid) {
   selCurator = name;
-  renderMobileCuratorStrip(); // 모바일 pill 상태 업데이트
 
   if (regionFilter) {
     document.getElementById('listTitle').textContent = `${regionFilter} · ${name} 맛집`;
@@ -1181,98 +1148,6 @@ window.selectCurator = async function(name, uid) {
     await loadRests(name);
   }
 };
-
-// ── 모바일 큐레이터 pill strip 렌더링 ──
-function renderMobileCuratorStrip() {
-  const strip = document.getElementById('mCuratorStrip');
-  if (strip && STAR_CURATORS.length) {
-    const allPill = `<div class="m-cpill${selCurator==='전체'||!selCurator?' on':''}" onclick="mSelectAll()">
-      <span class="m-cpill-icon">🍽️</span>전체
-    </div>`;
-    const curatorPills = STAR_CURATORS.map(c =>
-      `<div class="m-cpill${selCurator===c.name?' on':''}" onclick="selectCurator('${c.name}')">
-        <span class="m-cpill-icon">${c.icon}</span>${c.name}
-      </div>`
-    ).join('');
-    strip.innerHTML = allPill + curatorPills;
-  }
-  // 검색바에 현재 큐레이터 표시
-  const display = document.getElementById('mSearchDisplay');
-  if (display && window.innerWidth <= 768) {
-    const curatorIcon = STAR_CURATORS.find(c => c.name === selCurator)?.icon || '🍽️';
-    const label = selCurator && selCurator !== '전체'
-      ? `${curatorIcon} ${selCurator}${regionFilter ? ' · ' + regionFilter : ''}`
-      : (regionFilter ? '📍 ' + regionFilter : '맛집, 음식, 지역 검색');
-    display.textContent = label;
-    display.style.color = (selCurator && selCurator !== '전체') || regionFilter ? 'var(--text)' : 'var(--text3)';
-  }
-}
-
-// 모바일 전체 선택
-window.mSelectAll = async function() {
-  selCurator = '전체';
-  renderMobileCuratorStrip();
-  renderCuratorList();
-  if (regionFilter) {
-    // 지역 필터 중이면 해당 지역 전체 맛집 유지
-    document.getElementById('listTitle').textContent = regionFilter + ' 전체 맛집';
-    renderList();
-    renderPins();
-  } else {
-    // 전체 초기 상태로
-    document.getElementById('listTitle').textContent = '전체 맛집';
-    await loadRests('전체');
-  }
-};
-
-// ── 모바일 카테고리 선택 ──
-window.mSetCat = function(el, cat) {
-  selCat = cat;
-  document.querySelectorAll('.m-cat-pill').forEach(b => b.classList.remove('on'));
-  el.classList.add('on');
-  // PC 카테고리 바도 동기화
-  document.querySelectorAll('.cat').forEach(b => {
-    b.classList.toggle('on', b.textContent.includes(cat) || (cat==='전체' && b.textContent==='전체'));
-  });
-  renderList(); renderPins();
-};
-
-// 모바일 검색 패널 초기화
-document.addEventListener('DOMContentLoaded', () => {
-  // 내 스푼 버튼 연결
-  const myBtn = document.getElementById('mMyBtn');
-  if (myBtn) {
-    myBtn.onclick = () => {
-      const navEl = document.querySelector('.pnav:nth-child(3)');
-      if (navEl) setPage('my', navEl);
-    };
-  }
-
-  // 바텀시트 드래그 처리
-  const sheet = document.querySelector('.list-panel');
-  if (!sheet) return;
-  let startY = 0, startH = 0, dragging = false;
-  const handle = document.createElement('div');
-  handle.style.cssText = 'height:20px;cursor:grab;flex-shrink:0;display:flex;align-items:center;justify-content:center';
-  handle.innerHTML = '<div style="width:40px;height:4px;background:var(--border2);border-radius:2px"></div>';
-  sheet.insertBefore(handle, sheet.firstChild);
-
-  handle.addEventListener('touchstart', e => {
-    if (window.innerWidth > 768) return;
-    startY = e.touches[0].clientY;
-    startH = sheet.getBoundingClientRect().height;
-    dragging = true;
-  }, {passive:true});
-
-  document.addEventListener('touchmove', e => {
-    if (!dragging || window.innerWidth > 768) return;
-    const dy = startY - e.touches[0].clientY;
-    const newH = Math.min(Math.max(startH + dy, 80), window.innerHeight * 0.85);
-    sheet.style.maxHeight = newH + 'px';
-  }, {passive:true});
-
-  document.addEventListener('touchend', () => { dragging = false; });
-});
 
 // ── 데이터 로드 ──
 // 지역 키워드 정규화 (서울시→서울, 서울특별시→서울)
@@ -1739,44 +1614,6 @@ window.unhoverCard = function(id) {
   }
 };
 
-// ── 모바일 지도 보기 ──
-window.showMapForCard = function(id) {
-  const isMobile = window.innerWidth <= 768;
-  const d = DATA.find(x => x.id === id);
-  if (!d) return;
-  if (isMobile) {
-    // 모바일: 지도 패널 잠깐 표시
-    const mapPanel = document.querySelector('.map-panel');
-    mapPanel.style.display = 'block';
-    mapPanel.style.position = 'fixed';
-    mapPanel.style.inset = '0';
-    mapPanel.style.zIndex = '400';
-    // 닫기 버튼 추가
-    if (!document.getElementById('mapCloseBtn')) {
-      const btn = document.createElement('button');
-      btn.id = 'mapCloseBtn';
-      btn.innerHTML = '<i class="ti ti-x" style="font-size:16px"></i>';
-      btn.style.cssText = 'position:absolute;top:12px;left:12px;z-index:401;background:#fff;border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2);cursor:pointer';
-      btn.onclick = () => {
-        mapPanel.style.display = '';
-        mapPanel.style.position = '';
-        mapPanel.style.inset = '';
-        mapPanel.style.zIndex = '';
-      };
-      mapPanel.style.position = 'fixed';
-      mapPanel.appendChild(btn);
-    }
-    if (map) {
-      kakao.maps.event.trigger(map, 'resize');
-      map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
-      map.setLevel(4);
-    }
-  } else {
-    if (map) {
-      map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
-      map.setLevel(4);
-    }
-  }
 };
 
 // ── 댓글 ──
@@ -2643,12 +2480,6 @@ window.doSearch = async function(q) {
   const clearBtn = document.getElementById('clearSearchBtn');
   if (clearBtn) clearBtn.style.display = q.trim() ? 'block' : 'none';
 
-  // 모바일 바텀시트 search-mode 토글
-  const sheet = document.querySelector('.list-panel');
-  if (sheet && window.innerWidth <= 768) {
-    sheet.classList.toggle('search-mode', !!q.trim());
-  }
-
   if (!q.trim()) {
     // 초기화
     regionFilter = '';
@@ -2671,8 +2502,7 @@ window.doSearch = async function(q) {
   const matchedCurator = STAR_CURATORS.find(c => c.name === q.trim() || c.name.includes(q.trim()));
   if (matchedCurator) {
     selCurator = matchedCurator.name;
-    renderMobileCuratorStrip();
-    if (regionFilter) {
+      if (regionFilter) {
       // 지역 검색 중이면 교차필터만 (DATA 유지)
       document.getElementById('listTitle').textContent = `${regionFilter} · ${matchedCurator.name} 맛집`;
       renderCuratorList();
@@ -2752,194 +2582,6 @@ function moveToRegion(q) {
 }
 
 // 검색 초기화
-// ── 모바일 전체화면 검색 패널 ──
-let mRecentSearches = JSON.parse(localStorage.getItem('starspoon_recent') || '[]');
-let mspSelCurator = ''; // 패널 내 선택한 큐레이터
-let mspSelCat = '전체'; // 패널 내 선택한 카테고리
-let mspSelRegion = ''; // 패널 내 선택한 지역
-
-function saveMRecentSearch(q) {
-  mRecentSearches = [q, ...mRecentSearches.filter(r => r !== q)].slice(0, 8);
-  localStorage.setItem('starspoon_recent', JSON.stringify(mRecentSearches));
-}
-
-function renderMspRecentList() {
-  const el = document.getElementById('mspRecentList');
-  if (!el) return;
-  if (!mRecentSearches.length) {
-    el.innerHTML = '<div style="padding:8px 0;font-size:13px;color:var(--text3)">최근 검색어가 없어요</div>';
-    return;
-  }
-  el.innerHTML = mRecentSearches.map((r,i) => `
-    <div class="msp-recent-item" onclick="mspApplyRecent('${r.replace(/'/g,"\'")}')" >
-      <i class="ti ti-clock" style="font-size:16px;color:var(--text3);flex-shrink:0"></i>
-      <span style="flex:1;font-size:14px;color:var(--text)">${r}</span>
-      <button onclick="event.stopPropagation();deleteMRecent(${i})" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;line-height:1">×</button>
-    </div>`).join('');
-}
-
-function renderMspCuratorGrid() {
-  const el = document.getElementById('mspCuratorGrid');
-  if (!el || !STAR_CURATORS.length) return;
-  el.innerHTML = `<button class="msp-curator-btn${mspSelCurator===''?' on':''}" onclick="mspSetCurator(this,'')">🍽️ 전체</button>` +
-    STAR_CURATORS.map(c =>
-      `<button class="msp-curator-btn${mspSelCurator===c.name?' on':''}" onclick="mspSetCurator(this,'${c.name}')">${c.icon} ${c.name}</button>`
-    ).join('');
-}
-
-function updateMspSelectedInfo() {
-  const el = document.getElementById('mspSelectedInfo');
-  if (!el) return;
-  const curator = mspSelCurator || '전체 큐레이터';
-  const cat = mspSelCat || '전체';
-  const region = mspSelRegion ? (' · ' + mspSelRegion) : '';
-  el.textContent = curator + ' · ' + cat + region;
-}
-
-window.mspSetCurator = function(el, name) {
-  mspSelCurator = name;
-  document.querySelectorAll('.msp-curator-btn').forEach(b => b.classList.remove('on'));
-  el.classList.add('on');
-  updateMspSelectedInfo();
-};
-
-window.mspSetCat = function(el, cat) {
-  mspSelCat = cat;
-  document.querySelectorAll('.msp-cat-btn').forEach(b => b.classList.remove('on'));
-  el.classList.add('on');
-  updateMspSelectedInfo();
-};
-
-window.mspSetRegion = function(el, region) {
-  if (mspSelRegion === region) {
-    mspSelRegion = '';
-    el.classList.remove('on');
-  } else {
-    mspSelRegion = region;
-    document.querySelectorAll('.msp-region-btn').forEach(b => b.classList.remove('on'));
-    el.classList.add('on');
-  }
-  updateMspSelectedInfo();
-};
-
-window.mspApplyRecent = function(q) {
-  // 최근검색 항목 탭하면 검색창에 넣고 바로 검색
-  document.getElementById('mobileSearch').value = q;
-  onMobileSearchInput(q);
-};
-
-window.openMobileSearch = function() {
-  if (window.innerWidth > 768) return;
-  // 현재 상태 패널에 반영
-  mspSelCurator = selCurator === '전체' ? '' : selCurator;
-  mspSelCat = selCat || '전체';
-  mspSelRegion = regionFilter || '';
-  document.getElementById('mSearchPanel').classList.add('open');
-  renderMspCuratorGrid();
-  renderMspRecentList();
-  updateMspSelectedInfo();
-  // 지역 버튼 상태 반영
-  document.querySelectorAll('.msp-region-btn').forEach(b => {
-    b.classList.toggle('on', b.textContent === mspSelRegion);
-  });
-  // 카테고리 버튼 상태 반영
-  document.querySelectorAll('.msp-cat-btn').forEach(b => {
-    b.classList.toggle('on', b.textContent.replace(/[🍚🍲🥩🍜🥡🍣🍢🦞🍝🥐☕ ]/g,'').trim() === mspSelCat || (mspSelCat==='전체' && b.textContent==='전체'));
-  });
-  setTimeout(() => document.getElementById('mobileSearch')?.focus(), 150);
-};
-
-window.closeMobileSearch = function() {
-  document.getElementById('mSearchPanel').classList.remove('open');
-  document.getElementById('mobileSearch').value = '';
-  if (document.getElementById('mClearBtn')) document.getElementById('mClearBtn').style.display = 'none';
-};
-
-window.onMobileSearchInput = function(v) {
-  const clearBtn = document.getElementById('mClearBtn');
-  if (clearBtn) clearBtn.style.display = v ? 'block' : 'none';
-  // 텍스트 입력 시 큐레이터/지역 선택 해제하고 텍스트 검색 모드
-  if (v) {
-    updateMspSelectedInfo();
-  }
-};
-
-window.mspDoSearch = async function() {
-  const textQ = document.getElementById('mobileSearch')?.value?.trim() || '';
-  saveMRecentSearch(textQ || (mspSelCurator || '') + (mspSelRegion ? ' ' + mspSelRegion : '') || '검색');
-
-  // 검색 표시 업데이트
-  const display = document.getElementById('mSearchDisplay');
-
-  closeMobileSearch();
-
-  if (textQ) {
-    // 텍스트 직접 입력한 경우
-    if (display) { display.textContent = textQ; display.style.color = 'var(--text)'; }
-    document.getElementById('mainSearch').value = textQ;
-    await doSearch(textQ);
-    return;
-  }
-
-  // 큐레이터 + 카테고리 + 지역 조합 검색
-  selCat = mspSelCat || '전체';
-  // 카테고리 바 동기화
-  document.querySelectorAll('.cat').forEach(b => {
-    b.classList.toggle('on', b.textContent.trim() === selCat || (selCat==='전체' && b.textContent.trim()==='전체'));
-  });
-  document.querySelectorAll('.m-cat-pill').forEach(b => {
-    b.classList.toggle('on', b.textContent.trim().includes(selCat) || (selCat==='전체' && b.textContent.trim()==='전체'));
-  });
-
-  const label = [];
-  if (mspSelRegion) label.push(mspSelRegion);
-  if (mspSelCurator) label.push(mspSelCurator);
-  if (mspSelCat && mspSelCat !== '전체') label.push(mspSelCat);
-  const displayText = label.join(' · ') || '전체 맛집';
-  if (display) { display.textContent = displayText; display.style.color = 'var(--text)'; }
-
-  if (mspSelRegion) {
-    // 1단계: 지역 맛집 로드 (selCurator는 나중에 설정)
-    regionFilter = normalizeRegion(mspSelRegion);
-    await loadRestsByRegion(mspSelRegion);
-    // 2단계: 큐레이터 필터 직접 적용 (selectCurator 거치지 않고)
-    if (mspSelCurator) {
-      selCurator = mspSelCurator;
-      document.getElementById('listTitle').textContent = `${mspSelRegion} · ${mspSelCurator} 맛집`;
-      renderMobileCuratorStrip();
-      renderCuratorList();
-      const items = filtered();
-      document.getElementById('listCount').textContent = items.length + '곳';
-      renderList();
-      renderPins();
-      showToast(`📍 ${mspSelRegion} · ${mspSelCurator} 맛집 ${items.length}곳`);
-    }
-  } else if (mspSelCurator) {
-    // 큐레이터만 선택
-    selCurator = mspSelCurator;
-    renderMobileCuratorStrip();
-    renderCuratorList();
-    await loadRests(mspSelCurator);
-  } else {
-    // 전체
-    selCurator = '전체';
-    renderMobileCuratorStrip();
-    await loadRests('전체');
-  }
-};
-
-window.clearMRecent = function() {
-  mRecentSearches = [];
-  localStorage.setItem('starspoon_recent', '[]');
-  renderMspRecentList();
-};
-
-window.deleteMRecent = function(i) {
-  mRecentSearches.splice(i, 1);
-  localStorage.setItem('starspoon_recent', JSON.stringify(mRecentSearches));
-  renderMspRecentList();
-};
-
 window.clearSearch = async function() {
   searchQ = '';
   regionFilter = '';
@@ -2958,7 +2600,6 @@ window.clearSearch = async function() {
   if (sheet) sheet.classList.remove('search-mode');
   // 성시경으로 초기화
   selCurator = '성시경';
-  renderMobileCuratorStrip();
   document.getElementById('listTitle').textContent = '성시경 맛집';
   renderCuratorList();
   await loadRests('성시경');
@@ -3179,84 +2820,6 @@ if (lastSeen !== new Date().toDateString()) {
       </p>
     </div>
   </div>
-</div>
-
-<!-- 모바일 전체화면 검색 패널 -->
-<div class="m-search-panel" id="mSearchPanel">
-
-  <div class="m-search-panel-top">
-    <button class="m-search-back" onclick="closeMobileSearch()">‹</button>
-    <div class="m-search-input-wrap">
-      <i class="ti ti-search" style="color:var(--text3);font-size:15px;flex-shrink:0"></i>
-      <input type="text" id="mobileSearch" placeholder="맛집, 음식, 큐레이터, 지역 검색"
-        oninput="onMobileSearchInput(this.value)"
-        onkeydown="if(event.key==='Escape')closeMobileSearch()"
-        autocomplete="off" autocorrect="off" spellcheck="false">
-      <button id="mClearBtn" onclick="document.getElementById('mobileSearch').value='';onMobileSearchInput('');document.getElementById('mobileSearch').focus()" style="display:none;background:none;border:none;padding:0;cursor:pointer;color:var(--text3);font-size:18px;line-height:1">✕</button>
-    </div>
-  </div>
-
-  <div class="m-search-panel-body" id="mSearchBody">
-    <div class="msp-section">
-      <div class="msp-section-title">🌟 큐레이터</div>
-      <div class="msp-curator-grid" id="mspCuratorGrid"></div>
-    </div>
-    <div class="msp-section">
-      <div class="msp-section-title">🍽️ 음식 카테고리</div>
-      <div class="msp-cat-grid" id="mspCatGrid">
-        <button class="msp-cat-btn on" onclick="mspSetCat(this,'전체')">전체</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'한식')">🍚 한식</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'국밥·탕')">🍲 국밥·탕</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'고기')">🥩 고기</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'냉면')">🍜 냉면</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'중식')">🥡 중식</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'일식')">🍣 일식</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'분식')">🍢 분식</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'해산물')">🦞 해산물</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'양식')">🍝 양식</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'제과·빵')">🥐 제과·빵</button>
-        <button class="msp-cat-btn" onclick="mspSetCat(this,'카페·디저트')">☕ 카페</button>
-      </div>
-    </div>
-    <div class="msp-section">
-      <div class="msp-section-title">📍 지역</div>
-      <div class="msp-region-grid">
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'서울')">서울</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'부산')">부산</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'대구')">대구</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'인천')">인천</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'광주')">광주</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'대전')">대전</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'울산')">울산</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'경기')">경기</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'강원')">강원</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'전라')">전라</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'경상')">경상</button>
-        <button class="msp-region-btn" onclick="mspSetRegion(this,'제주')">제주</button>
-      </div>
-    </div>
-    <div class="msp-section" id="mspRecentSection">
-      <div class="msp-section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>🕐 최근 검색</span>
-        <button onclick="clearMRecent()" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;padding:0">전체 삭제</button>
-      </div>
-      <div id="mspRecentList"></div>
-    </div>
-  </div>
-
-  <div class="msp-footer">
-    <div class="msp-selected-info" id="mspSelectedInfo">성시경 · 전체 카테고리</div>
-    <button class="msp-search-btn" onclick="mspDoSearch()">
-      <i class="ti ti-search"></i> 검색하기
-    </button>
-  </div>
-
-</div>
-
-<!-- 모바일 플로팅 버튼 -->
-<div class="mobile-fab">
-  <button class="fab-btn fab-my" onclick="openMyRestModal()"><i class="ti ti-plus"></i> 내 맛집 등록</button>
-  <button class="fab-btn fab-star" onclick="openReportModal()"><i class="ti ti-star"></i> 스타 맛집 등록</button>
 </div>
 
 </body>
