@@ -684,6 +684,7 @@ function renderList() {
 
 // 핀 렌더링
 function renderPins() {
+  if (!map) return; // 지도 미초기화시 스킵
   markers.forEach(m => m.setMap(null));
   markers = []; markerMap = {};
   DATA.forEach(r => {
@@ -1144,12 +1145,44 @@ function showToast(msg) {
 window.showToast = showToast;
 
 // ── 초기화 ──
-// 카카오 로그인 콜백 확인
 handleKakaoCallback();
 
-kakao.maps.load(() => {
-  getMyLocation();
-});
+// 딥링크 처리: ?id=xxx 가 있으면 지도 초기화와 별도로 즉시 데이터 로드
+const _deepId = new URLSearchParams(location.search).get('id');
+if (_deepId) {
+  // 지도는 서울 중심으로 바로 초기화 (위치권한 팝업 없이)
+  kakao.maps.load(() => {
+    const container = document.getElementById('kakao-map');
+    map = new kakao.maps.Map(container, {
+      center: new kakao.maps.LatLng(37.5665, 126.9780),
+      level: 8
+    });
+    // Firebase에서 해당 맛집 단건 조회 후 바로 상세 열기
+    getDoc(doc(db, 'restaurants', _deepId)).then(snap => {
+      if (!snap.exists()) { showToast('맛집 정보를 찾을 수 없어요'); return; }
+      const d = snap.data();
+      const r = {id: _deepId, name:d.name||'', celeb:d.celeb||'',
+        celebs:d.celebs||[d.celeb||''], cat:d.category||d.cat||'한식',
+        area:d.area||'', address:d.address||'', comment:d.comment||'',
+        yt:d.yt||d.video_url||'', lat:d.lat||37.5665, lng:d.lng||126.9780,
+        saves:d.saves||0, avgRating:d.avgRating||0,
+        ratingCount:d.ratingCount||0, visits:d.visits||0};
+      ALL_DATA = [r];
+      DATA = [r];
+      renderList();
+      openDetail(_deepId);
+      // 백그라운드에서 나머지 데이터 로드
+      loadNearbyRests(r.lat, r.lng);
+    }).catch(e => {
+      console.log('딥링크 로드 실패:', e);
+      getMyLocation();
+    });
+  });
+} else {
+  kakao.maps.load(() => {
+    getMyLocation();
+  });
+}
 loadCurators();
 
 // 온보딩 팝업 - 독립 실행 (딥링크/로그인콜백과 무관하게)
