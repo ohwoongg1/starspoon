@@ -511,12 +511,18 @@ function applyFilter() {
     const q = searchText;
     items = items.filter(r => r.name.includes(q)||r.celeb.includes(q)||r.area.includes(q)||r.comment.includes(q));
   }
-  // 평점순 정렬
-  items.sort((a,b) => (b.avgRating||0)-(a.avgRating||0));
+  // 정렬: 큐레이터/지역/검색 없으면 거리순, 있으면 평점순
+  if (!selCurator && !selRegion && !searchText) {
+    // 거리순 (현재 위치 기반)
+    items.sort((a,b) => (a.dist||999)-(b.dist||999));
+  } else {
+    // 평점순
+    items.sort((a,b) => (b.avgRating||0)-(a.avgRating||0));
+  }
   DATA = items;
   renderList();
   renderPins();
-  const label = selCurator ? selCurator + ' 맛집' : selRegion ? selRegion + ' 맛집' : searchText ? `"${searchText}" 검색결과` : '전체 맛집';
+  const label = selCurator ? selCurator + ' 맛집' : selRegion ? selRegion + ' 맛집' : searchText ? `"${searchText}" 검색결과` : '내 주변 맛집';
   document.getElementById('sheet-title').textContent = label;
   document.getElementById('sheet-count').textContent = items.length + '곳';
 }
