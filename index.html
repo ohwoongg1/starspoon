@@ -1299,11 +1299,21 @@ function matchRegion(r, region) {
   // 직접 포함 여부
   if (combined.includes(norm) || combined.includes(region)) return true;
 
-  // "서울" 검색 시 → 서울 구 이름이 area나 address 어디든 있으면 매칭
+  // "서울" 검색 시
   if (norm === '서울') {
-    if (SEOUL_GU.some(gu => combined.includes(gu))) return true;
-    // "서울특별시", "서울시" 포함 여부
     if (combined.includes('서울')) return true;
+    if (SEOUL_GU.some(gu => combined.includes(gu))) return true;
+    // area가 서울 동네명으로만 저장된 경우
+    const SEOUL_AREA = ['건대','신림','홍대','강남','신촌','이태원','종로','인사동','명동','잠실','여의도',
+      '마포','은평','노원','도봉','강동','송파','서초','관악','동작','영등포','구로','금천','양천',
+      '강서','은평','서대문','동대문','중랑','성북','강북','성동','광진','용산','중구','종로구',
+      '혜화','대학로','압구정','청담','논현','삼성','역삼','선릉','사당','낙성대','신대방',
+      '봉천','신봉','독산','가산','디지털단지','목동','화곡','발산','마곡','개화','공항','김포공항',
+      '뚝섬','성수','왕십리','답십리','장한평','군자','중곡','구의','자양','건국대',
+      '상봉','망우','신내','면목','묵동','중화','상계','하계','공릉','태릉','월계','방학','창동',
+      '쌍문','수유','우이','북한산','구기','평창','세검정','부암','홍은','홍제','불광','녹번',
+      '응암','역촌','새절','증산','수색','디지털미디어시티'];
+    if (SEOUL_AREA.some(a => area.includes(a))) return true;
   }
 
   // 광역시/도 검색 시
@@ -1337,7 +1347,7 @@ async function loadRestsByRegion(region) {
     document.getElementById('listTitle').textContent = region + ' 전체 맛집';
 
     // 전체 맛집 로드
-    const snap = await getDocs(query(collection(db, 'restaurants'), limit(500)));
+    const snap = await getDocs(query(collection(db, 'restaurants'), limit(1500)));
     DATA = [];
     snap.forEach(d => {
       const r = d.data();
