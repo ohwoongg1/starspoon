@@ -601,15 +601,14 @@ async function loadNearbyRests(lat, lng) {
       r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
     });
     applyFilter();
-    // 온보딩 초기화 + 딥링크 처리
-    initOnboard();
+    // 딥링크 처리
     const params = new URLSearchParams(location.search);
     const deepId = params.get('id');
     if (deepId) {
       // ALL_DATA에서 먼저 찾고, 없으면 Firebase에서 직접 조회
       const found = ALL_DATA.find(x => x.id === deepId);
       if (found) {
-        setTimeout(() => openDetail(deepId), 300);
+        setTimeout(() => openDetail(deepId), 100);
       } else {
         // Firebase에서 직접 단건 조회
         getDoc(doc(db, 'restaurants', deepId)).then(snap => {
@@ -925,8 +924,8 @@ window.doSearch = function() {
 const sheet = document.getElementById('bottom-sheet');
 const sheetList = document.getElementById('sheet-list');
 const SNAP_SMALL = 100;   // 최소 (핸들만)
-const SNAP_MID = 240;     // 기본
-const SNAP_LARGE = () => Math.floor(window.innerHeight * 0.75); // 최대
+const SNAP_MID = 320;     // 기본
+const SNAP_LARGE = () => Math.floor(window.innerHeight * 0.85); // 최대
 
 let isDragging = false;
 let dragStartY = 0;
@@ -1010,18 +1009,7 @@ window.setOnboardNoShow = function(){
   }
 };
 function initOnboard() {
-  const today = new Date().toDateString();
-  const noShow = localStorage.getItem('onboard_no_show');
-  const modal = document.getElementById('onboard-modal');
-  if (!modal) return;
-  // URL에 ?id=xxx 딥링크면 온보딩 스킵
-  const params = new URLSearchParams(location.search);
-  const deepId = params.get('id');
-  if (deepId) return;
-  // 오늘 다시보지않기 체크했으면 스킵
-  if (noShow === today) return;
-  // 조건 통과시 팝업 표시
-  modal.classList.remove('hidden');
+  // 딥링크 처리 전용 (팝업은 초기화 맨 끝에서 별도 실행)
 }
 
 // ── 로그인 ──
@@ -1163,6 +1151,20 @@ kakao.maps.load(() => {
   getMyLocation();
 });
 loadCurators();
+
+// 온보딩 팝업 - 독립 실행 (딥링크/로그인콜백과 무관하게)
+(function() {
+  const params = new URLSearchParams(location.search);
+  const deepId = params.get('id');
+  const code = params.get('code');
+  // 딥링크나 카카오 로그인 콜백이면 스킵
+  if (deepId || code) return;
+  const today = new Date().toDateString();
+  const noShow = localStorage.getItem('onboard_no_show');
+  if (noShow === today) return;
+  const modal = document.getElementById('onboard-modal');
+  if (modal) modal.classList.remove('hidden');
+})();
 </script>
 </body>
 </html>
