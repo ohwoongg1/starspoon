@@ -384,12 +384,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   }
 
   /* 큐레이터 가로 스크롤 strip - fixed */
-  .m-curator-strip{
-    display:flex;align-items:center;gap:8px;
-    position:fixed;top:68px;left:0;right:0;z-index:200;
-    padding:0 12px;overflow-x:auto;scrollbar-width:none;
-    -webkit-overflow-scrolling:touch;
-  }
+  .m-curator-strip{display:none!important}
   .m-curator-strip::-webkit-scrollbar{display:none}
   .m-cpill{
     display:flex;align-items:center;gap:6px;
@@ -403,12 +398,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   .m-cpill.on{background:var(--gold);color:#fff;border-color:var(--gold)}
   .m-cpill-icon{font-size:15px}
 
-  /* 지도 위 카테고리 - fixed */
-  .m-cat-strip{
-    display:flex;align-items:center;gap:6px;
-    position:fixed;top:114px;left:0;right:0;z-index:200;
-    padding:0 12px;overflow-x:auto;scrollbar-width:none;
-  }
+  .m-cat-strip{display:none!important}
   .m-cat-strip::-webkit-scrollbar{display:none}
   .m-cat-pill{
     background:var(--white);border-radius:16px;
@@ -1195,16 +1185,27 @@ window.selectCurator = async function(name, uid) {
 // ── 모바일 큐레이터 pill strip 렌더링 ──
 function renderMobileCuratorStrip() {
   const strip = document.getElementById('mCuratorStrip');
-  if (!strip || !STAR_CURATORS.length) return;
-  const allPill = `<div class="m-cpill${selCurator==='전체'||!selCurator?' on':''}" onclick="mSelectAll()">
-    <span class="m-cpill-icon">🍽️</span>전체
-  </div>`;
-  const curatorPills = STAR_CURATORS.map(c =>
-    `<div class="m-cpill${selCurator===c.name?' on':''}" onclick="selectCurator('${c.name}')">
-      <span class="m-cpill-icon">${c.icon}</span>${c.name}
-    </div>`
-  ).join('');
-  strip.innerHTML = allPill + curatorPills;
+  if (strip && STAR_CURATORS.length) {
+    const allPill = `<div class="m-cpill${selCurator==='전체'||!selCurator?' on':''}" onclick="mSelectAll()">
+      <span class="m-cpill-icon">🍽️</span>전체
+    </div>`;
+    const curatorPills = STAR_CURATORS.map(c =>
+      `<div class="m-cpill${selCurator===c.name?' on':''}" onclick="selectCurator('${c.name}')">
+        <span class="m-cpill-icon">${c.icon}</span>${c.name}
+      </div>`
+    ).join('');
+    strip.innerHTML = allPill + curatorPills;
+  }
+  // 검색바에 현재 큐레이터 표시
+  const display = document.getElementById('mSearchDisplay');
+  if (display && window.innerWidth <= 768) {
+    const curatorIcon = STAR_CURATORS.find(c => c.name === selCurator)?.icon || '🍽️';
+    const label = selCurator && selCurator !== '전체'
+      ? `${curatorIcon} ${selCurator}${regionFilter ? ' · ' + regionFilter : ''}`
+      : (regionFilter ? '📍 ' + regionFilter : '맛집, 음식, 지역 검색');
+    display.textContent = label;
+    display.style.color = (selCurator && selCurator !== '전체') || regionFilter ? 'var(--text)' : 'var(--text3)';
+  }
 }
 
 // 모바일 전체 선택
@@ -1530,7 +1531,7 @@ function renderList() {
         ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
         ${d.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><a class="detail-text detail-phone" href="tel:${d.phone}" onclick="event.stopPropagation()">${d.phone}</a></div>` : ''}
         <div class="detail-actions">
-          <a class="detail-btn detail-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(d.name + ' ' + d.area)}" onclick="event.stopPropagation();if(window.innerWidth<=768){event.preventDefault();location.href=this.href;}">🟢 네이버지도에서 보기</a>
+          <a class="detail-btn detail-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(d.name + ' ' + d.area)}" target="_blank" onclick="event.stopPropagation()">🟢 네이버지도에서 보기</a>
         </div>
       </div>
     </div>`;
@@ -1630,6 +1631,16 @@ function renderPins() {
       </div>`;
       const iw = new kakao.maps.InfoWindow({content: infoContent, removable: true});
       iw.open(map, marker);
+      // 모바일: 팝업이 검색바에 가리지 않도록 지도 중심을 살짝 위로
+      if (window.innerWidth <= 768) {
+        setTimeout(() => {
+          const proj = map.getProjection();
+          const point = proj.pointFromCoords(pos);
+          point.y -= 80; // 검색바+pill 높이만큼 위로
+          const newCenter = proj.coordsFromPoint(point);
+          map.panTo(newCenter);
+        }, 50);
+      }
     });
     markerMap[d.id] = marker;
     markers.push(marker); overlays.push(overlay);
@@ -1709,8 +1720,8 @@ window.showMapForCard = function(id) {
     if (!document.getElementById('mapCloseBtn')) {
       const btn = document.createElement('button');
       btn.id = 'mapCloseBtn';
-      btn.textContent = '✕ 닫기';
-      btn.style.cssText = 'position:absolute;top:12px;left:12px;z-index:401;background:#fff;border:none;border-radius:20px;padding:8px 16px;font-size:14px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,0.2);cursor:pointer';
+      btn.innerHTML = '<i class="ti ti-x" style="font-size:16px"></i>';
+      btn.style.cssText = 'position:absolute;top:12px;left:12px;z-index:401;background:#fff;border:none;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.2);cursor:pointer';
       btn.onclick = () => {
         mapPanel.style.display = '';
         mapPanel.style.position = '';
