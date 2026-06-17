@@ -1346,11 +1346,17 @@ async function loadRestsByRegion(region) {
     document.getElementById('listCount').textContent = '로딩 중...';
     document.getElementById('listTitle').textContent = region + ' 전체 맛집';
 
-    // 전체 맛집 로드
     const snap = await getDocs(query(collection(db, 'restaurants'), limit(1500)));
     DATA = [];
+    let dbgTotal = 0, dbgMatch = 0;
     snap.forEach(d => {
       const r = d.data();
+      if (r.celeb === '풍자') {
+        dbgTotal++;
+        const m = matchRegion(r, region);
+        if (m) dbgMatch++;
+        else console.log('[풍자 미매칭]', r.name, '|area=', r.area, '|addr=', r.address);
+      }
       if (matchRegion(r, region)) {
         DATA.push({
           id: d.id, name: r.name||'',
@@ -1367,6 +1373,8 @@ async function loadRestsByRegion(region) {
         });
       }
     });
+
+    console.log('[지역검색]', region, '| 총 로드:', snap.size, '| 매칭:', DATA.length);
 
     // 지역 검색 시 일단 전체 표시 (mspDoSearch에서 큐레이터 후처리)
     selCurator = '전체';
@@ -2663,9 +2671,21 @@ window.doSearch = async function(q) {
   const matchedCurator = STAR_CURATORS.find(c => c.name === q.trim() || c.name.includes(q.trim()));
   if (matchedCurator) {
     selCurator = matchedCurator.name;
-    document.getElementById('listTitle').textContent = matchedCurator.name + ' 맛집';
-    renderCuratorList();
-    await loadRests(matchedCurator.name);
+    renderMobileCuratorStrip();
+    if (regionFilter) {
+      // 지역 검색 중이면 교차필터만 (DATA 유지)
+      document.getElementById('listTitle').textContent = `${regionFilter} · ${matchedCurator.name} 맛집`;
+      renderCuratorList();
+      const items = filtered();
+      document.getElementById('listCount').textContent = items.length + '곳';
+      renderList();
+      renderPins();
+      showToast(`📍 ${regionFilter} · ${matchedCurator.name} 맛집 ${items.length}곳`);
+    } else {
+      document.getElementById('listTitle').textContent = matchedCurator.name + ' 맛집';
+      renderCuratorList();
+      await loadRests(matchedCurator.name);
+    }
     return;
   }
 
