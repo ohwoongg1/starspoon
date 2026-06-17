@@ -404,7 +404,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
 </div>
 
 <!-- 온보딩 팝업 -->
-<div id="onboard-modal">
+<div id="onboard-modal" class="hidden">
   <div class="onboard-box">
     <button class="onboard-close" onclick="closeOnboard()">✕</button>
     <div class="onboard-title">🥄 스타스푼에 오신걸 환영해요!</div>
@@ -603,7 +603,20 @@ async function loadNearbyRests(lat, lng) {
     const params = new URLSearchParams(location.search);
     const deepId = params.get('id');
     if (deepId) {
-      setTimeout(() => openDetail(deepId), 300);
+      // ALL_DATA에서 먼저 찾고, 없으면 Firebase에서 직접 조회
+      const found = ALL_DATA.find(x => x.id === deepId);
+      if (found) {
+        setTimeout(() => openDetail(deepId), 300);
+      } else {
+        // Firebase에서 직접 단건 조회
+        getDoc(doc(db, 'restaurants', deepId)).then(snap => {
+          if (snap.exists()) {
+            const d = snap.data();
+            ALL_DATA.push({id: deepId, ...d});
+            setTimeout(() => openDetail(deepId), 100);
+          }
+        });
+      }
     }
   } catch(e) {
     console.log(e);
@@ -727,7 +740,7 @@ let detailDragging = false, detailStartY = 0, detailStartH = 0, detailVelocity =
 detailPanel.addEventListener('touchstart', e => {
   const isBody = detailBody.contains(e.target);
   const atTop = detailBody.scrollTop === 0;
-  if (isBody && !atTop) return; // 스크롤 중이면 드래그 안 함
+  if (isBody && !atTop) return;
   detailDragging = true;
   detailStartY = e.touches[0].clientY;
   detailLastY = detailStartY;
@@ -742,7 +755,7 @@ document.addEventListener('touchmove', e => {
   detailVelocity = detailLastY - y;
   detailLastY = y;
   const dy = detailStartY - y;
-  const newH = Math.max(120, Math.min(detailStartH + dy, window.innerHeight * 0.55));
+  const newH = Math.max(120, Math.min(detailStartH + dy, window.innerHeight * 0.88));
   detailPanel.style.height = newH + 'px';
 }, {passive:true});
 
@@ -751,16 +764,15 @@ document.addEventListener('touchend', () => {
   detailDragging = false;
   detailPanel.style.transition = 'height .25s cubic-bezier(.4,0,.2,1)';
   const h = detailPanel.getBoundingClientRect().height;
-  if (detailVelocity < -8 || h < 200) {
-    // 빠르게 내리거나 충분히 내리면 닫기
+  const vh = window.innerHeight;
+  if (detailVelocity < -8 || h < 160) {
     closeDetail();
-  } else if (detailVelocity > 8) {
-    // 빠르게 올리면 최대
-    detailPanel.style.height = (window.innerHeight * 0.55) + 'px';
-  } else if (h < window.innerHeight * 0.4) {
-    detailPanel.style.height = '55vh';
+  } else if (detailVelocity > 8 || h > vh * 0.65) {
+    // 빠르게 위로 or 65% 넘으면 → 최대
+    detailPanel.style.height = (vh * 0.88) + 'px';
   } else {
-    detailPanel.style.height = (window.innerHeight * 0.55) + 'px';
+    // 기본 55%
+    detailPanel.style.height = '55vh';
   }
 });
 
@@ -991,15 +1003,14 @@ function initOnboard() {
   const noShow = localStorage.getItem('onboard_no_show');
   const modal = document.getElementById('onboard-modal');
   if (!modal) return;
-  if(noShow === today) {
-    modal.classList.add('hidden');
-  }
-  // URL에 ?id=xxx 있으면 온보딩 건너뛰고 바로 상세 열기
+  // URL에 ?id=xxx 딥링크면 온보딩 스킵
   const params = new URLSearchParams(location.search);
   const deepId = params.get('id');
-  if (deepId) {
-    modal.classList.add('hidden');
-  }
+  if (deepId) return;
+  // 오늘 다시보지않기 체크했으면 스킵
+  if (noShow === today) return;
+  // 조건 통과시 팝업 표시
+  modal.classList.remove('hidden');
 }
 
 // ── 로그인 ──
