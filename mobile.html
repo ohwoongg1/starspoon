@@ -1069,9 +1069,14 @@ window.openDetail = async function(id) {
 
 window.openKakaoMap = function() {
   if (!currentRest) return;
-  const addr = currentRest.address || currentRest.area || '';
-  const query = addr ? currentRest.name + ' ' + addr : currentRest.name;
-  window.open(`https://map.kakao.com/link/search/${encodeURIComponent(query)}`, '_blank');
+  if (currentRest.lat && currentRest.lng) {
+    // 좌표가 있으면 카카오맵 좌표로 직접 이동
+    window.open(`https://map.kakao.com/link/map/${encodeURIComponent(currentRest.name)},${currentRest.lat},${currentRest.lng}`, '_blank');
+  } else {
+    const addr = currentRest.address || currentRest.area || '';
+    const query = addr ? currentRest.name + ' ' + addr : currentRest.name;
+    window.open(`https://map.kakao.com/link/search/${encodeURIComponent(query)}`, '_blank');
+  }
 };
 window.openNaverMap = function() {
   if (!currentRest) return;
@@ -1833,6 +1838,14 @@ function renderAuthArea() {
   }
 }
 window.loginWithGoogle = () => signInWithRedirect(auth, googleProvider);
+
+window.openLoginModal = function() {
+  document.getElementById('loginModal').style.display = 'flex';
+};
+window.closeLoginModal = function() {
+  document.getElementById('loginModal').style.display = 'none';
+};
+
 window.toggleUserMenu = async () => {
   if (currentUser) {
     await signOut(auth);
@@ -2119,9 +2132,14 @@ window.openDetail = async function(id) {
 
 window.openKakaoMap = function() {
   if (!currentRest) return;
-  const addr = currentRest.address || currentRest.area || '';
-  const query = addr ? currentRest.name + ' ' + addr : currentRest.name;
-  window.open(`https://map.kakao.com/link/search/${encodeURIComponent(query)}`, '_blank');
+  if (currentRest.lat && currentRest.lng) {
+    // 좌표가 있으면 카카오맵 좌표로 직접 이동
+    window.open(`https://map.kakao.com/link/map/${encodeURIComponent(currentRest.name)},${currentRest.lat},${currentRest.lng}`, '_blank');
+  } else {
+    const addr = currentRest.address || currentRest.area || '';
+    const query = addr ? currentRest.name + ' ' + addr : currentRest.name;
+    window.open(`https://map.kakao.com/link/search/${encodeURIComponent(query)}`, '_blank');
+  }
 };
 window.openNaverMap = function() {
   if (!currentRest) return;
