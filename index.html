@@ -262,36 +262,133 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 .pnav:hover{color:var(--text)}
 .pnav.on{color:var(--gold);border-bottom-color:var(--gold)}
 
-/* ── 모바일 ── */
+/* ── 모바일 카카오맵 스타일 ── */
 @media(max-width:768px){
-  /* 큐레이터 패널 모바일에서도 표시 - 가로 스크롤 */
-  .curator-panel{width:100%;border-right:none;border-bottom:1px solid var(--border);flex-shrink:0}
-  .curator-list{display:flex;flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:8px;padding:8px 12px;scrollbar-width:none}
-  .curator-list::-webkit-scrollbar{display:none}
-  .curator-item{flex-direction:column;align-items:center;min-width:64px;max-width:64px;padding:8px 4px;text-align:center;gap:4px;border-bottom:none;border-radius:10px}
-  .curator-item.on{background:var(--gold-bg);border:1.5px solid var(--gold)}
-  .curator-avatar{width:44px;height:44px;font-size:20px}
-  .curator-name{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60px}
-  .curator-sub{display:none}
-  .curator-panel-header{padding:8px 12px 4px}
-  .curator-panel-title{font-size:13px}
-  .curator-tabs{gap:4px}
-  .ctab{font-size:11px;padding:3px 8px}
-  /* 레이아웃 */
-  .layout{flex-direction:column;height:calc(100vh - 88px)}
-  .list-panel{width:100%;flex:1;overflow-y:auto}
-  .map-panel{display:none}
-  /* 헤더 */
-  .header{padding:0 10px;gap:6px}
-  .logo-text{font-size:14px}
-  /* 검색창 모바일에서 크게 */
-  .header-search{flex:1;max-width:none}
-  .header-search input{font-size:14px}
-  /* 내맛집/스타맛집 버튼 헤더에서 숨기기 */
+  /* 전체 레이아웃: 지도가 전체화면 */
+  .layout{flex-direction:column;height:calc(100vh - 44px);position:relative}
+  .map-panel{display:flex!important;position:absolute;inset:0;z-index:1;width:100%!important;height:100%!important}
+  .map-wrap{flex:1;width:100%;height:100%}
+  #kakao-map{width:100%;height:100%}
+
+  /* 헤더 숨기기 - 지도 위에 검색바로 대체 */
+  .header{display:none}
   .header-reg-btns{display:none}
-  /* 모바일 하단 플로팅 버튼 */
+
+  /* 카테고리 바 숨기기 (지도 위 큐레이터로 대체) */
+  .cat-bar{display:none}
+
+  /* 페이지 네비 → 하단 탭바로 */
+  .page-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;border-top:1px solid var(--border);border-bottom:none;padding:0;height:52px;display:flex;background:var(--white)}
+  .pnav{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:10px;padding:6px 0;border-bottom:none!important;border-top:3px solid transparent}
+  .pnav.on{color:var(--gold);border-top-color:var(--gold)!important;border-bottom:none!important}
+
+  /* 리스트 패널 → 하단 시트 */
+  .list-panel{
+    position:absolute;z-index:50;left:0;right:0;bottom:52px;
+    background:var(--white);
+    border-radius:20px 20px 0 0;
+    box-shadow:0 -4px 20px rgba(0,0,0,0.15);
+    display:flex;flex-direction:column;
+    height:auto;
+    max-height:72vh;
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    width:100%;
+    overflow:hidden;
+  }
+  /* 핸들 바 */
+  .list-panel::before{
+    content:'';display:block;width:40px;height:4px;
+    background:var(--border2);border-radius:2px;
+    margin:10px auto 0;flex-shrink:0;
+  }
+  .list-header{padding:8px 16px 10px;flex-shrink:0}
+  .list-body{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+
+  /* 큐레이터 패널 숨기기 (지도 위 pills로 대체) */
+  .curator-panel{display:none!important}
+
+  /* 모바일 플로팅 버튼 */
   .mobile-fab{display:flex}
-  .cat-bar{padding:0 10px}
+
+  /* rank/my 페이지 */
+  .rank-page{padding:16px;padding-bottom:60px}
+  .my-page{padding:16px;padding-bottom:60px}
+
+  /* 카드 */
+  .rest-card{padding:12px 14px}
+  .btn-sm{font-size:11px;padding:4px 8px}
+}
+
+/* 모바일 지도 위 UI (항상 정의, 모바일에서만 display) */
+.m-top-bar{display:none}
+.m-curator-strip{display:none}
+.m-my-btn{display:none}
+
+@media(max-width:768px){
+  /* 지도 위 검색바 */
+  .m-top-bar{
+    display:flex;align-items:center;gap:8px;
+    position:absolute;top:12px;left:12px;right:12px;z-index:10;
+  }
+  .m-search-box{
+    flex:1;display:flex;align-items:center;gap:8px;
+    background:var(--white);border-radius:12px;
+    padding:10px 14px;
+    box-shadow:0 2px 12px rgba(0,0,0,0.18);
+    border:1px solid var(--border);
+  }
+  .m-search-box input{
+    flex:1;border:none;outline:none;background:none;
+    font-size:14px;color:var(--text);
+  }
+  .m-search-box input::placeholder{color:var(--text3);font-size:13px}
+  .m-my-btn{
+    display:flex;align-items:center;justify-content:center;
+    width:44px;height:44px;border-radius:12px;
+    background:var(--white);border:1px solid var(--border);
+    box-shadow:0 2px 12px rgba(0,0,0,0.18);
+    cursor:pointer;font-size:20px;flex-shrink:0;
+  }
+
+  /* 큐레이터 가로 스크롤 strip */
+  .m-curator-strip{
+    display:flex;align-items:center;gap:8px;
+    position:absolute;top:72px;left:0;right:0;z-index:10;
+    padding:0 12px;overflow-x:auto;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;
+  }
+  .m-curator-strip::-webkit-scrollbar{display:none}
+  .m-cpill{
+    display:flex;align-items:center;gap:6px;
+    background:var(--white);border-radius:20px;
+    padding:7px 14px;font-size:12px;font-weight:600;
+    color:var(--text2);white-space:nowrap;flex-shrink:0;
+    border:1.5px solid var(--border);
+    box-shadow:0 2px 8px rgba(0,0,0,0.12);cursor:pointer;
+    transition:all .15s;
+  }
+  .m-cpill.on{background:var(--gold);color:#fff;border-color:var(--gold)}
+  .m-cpill-icon{font-size:15px}
+
+  /* 지도 위 카테고리 - 큐레이터 아래 */
+  .m-cat-strip{
+    display:flex;align-items:center;gap:6px;
+    position:absolute;top:118px;left:0;right:0;z-index:10;
+    padding:0 12px;overflow-x:auto;scrollbar-width:none;
+  }
+  .m-cat-strip::-webkit-scrollbar{display:none}
+  .m-cat-pill{
+    background:var(--white);border-radius:16px;
+    padding:5px 12px;font-size:11px;font-weight:500;
+    color:var(--text2);white-space:nowrap;flex-shrink:0;
+    border:1.5px solid var(--border);
+    box-shadow:0 1px 6px rgba(0,0,0,0.1);cursor:pointer;
+  }
+  .m-cat-pill.on{background:var(--gold);color:#fff;border-color:var(--gold)}
+
+  /* FAB 등록 버튼 */
+  .mobile-fab{bottom:62px;right:12px}
+  .fab-btn{font-size:12px;padding:9px 14px}
 }
 </style>
 </head>
@@ -341,9 +438,18 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
 <!-- ── 페이지 네비 ── -->
 <div class="page-nav">
-  <div class="pnav on" onclick="setPage('main',this)">🗺 스타 맛집</div>
-  <div class="pnav" onclick="setPage('rank',this)">🏆 순위</div>
-  <div class="pnav" onclick="setPage('my',this)">🥄 내 스푼</div>
+  <div class="pnav on" onclick="setPage('main',this)">
+    <i class="ti ti-map" style="font-size:18px"></i>
+    <span>맛집지도</span>
+  </div>
+  <div class="pnav" onclick="setPage('rank',this)">
+    <i class="ti ti-trophy" style="font-size:18px"></i>
+    <span>순위</span>
+  </div>
+  <div class="pnav" onclick="setPage('my',this)">
+    <i class="ti ti-spoon" style="font-size:18px"></i>
+    <span>내 스푼</span>
+  </div>
 </div>
 
 <!-- ── 메인 레이아웃 ── -->
@@ -379,6 +485,39 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
   <!-- 지도 패널 -->
   <div class="map-panel">
+
+    <!-- 모바일 지도 위 검색바 -->
+    <div class="m-top-bar">
+      <div class="m-search-box">
+        <i class="ti ti-search" style="color:var(--text3);font-size:16px;flex-shrink:0"></i>
+        <input type="text" id="mobileSearch" placeholder="맛집, 음식, 지역 검색"
+          oninput="doSearch(this.value);document.getElementById('mainSearch').value=this.value"
+          onkeydown="if(event.key==='Escape')clearSearch()">
+        <button id="mClearBtn" onclick="clearSearch();this.style.display='none'" style="display:none;background:none;border:none;padding:0;cursor:pointer;color:var(--text3);font-size:16px;line-height:1">✕</button>
+      </div>
+      <div class="m-my-btn" onclick="document.getElementById('authArea').click ? document.getElementById('authArea').querySelector('button')?.click() : null" style="background:var(--white)">
+        <span style="font-size:18px">🥄</span>
+      </div>
+    </div>
+
+    <!-- 모바일 큐레이터 pill strip -->
+    <div class="m-curator-strip" id="mCuratorStrip"></div>
+
+    <!-- 모바일 카테고리 pill strip -->
+    <div class="m-cat-strip" id="mCatStrip">
+      <button class="m-cat-pill on" onclick="mSetCat(this,'전체')">전체</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'한식')">🍚 한식</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'국밥·탕')">🍲 국밥</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'고기')">🥩 고기</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'냉면')">🍜 냉면</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'중식')">🥡 중식</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'일식')">🍣 일식</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'분식')">🍢 분식</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'해산물')">🦞 해산물</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'양식')">🍝 양식</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'제과·빵')">🥐 빵</button>
+      <button class="m-cat-pill" onclick="mSetCat(this,'카페·디저트')">☕ 카페</button>
+    </div>
 
     <div class="map-wrap">
       <div id="kakao-map"></div>
@@ -595,6 +734,7 @@ async function loadStarCurators() {
     ];
   }
   renderCuratorList();
+  renderMobileCuratorStrip();
 }
 
 // ── 등급 시스템 ──
@@ -999,14 +1139,14 @@ window.selectCuratorByUser = async function(name, uid) {
 
 window.selectCurator = async function(name, uid) {
   selCurator = name;
+  renderMobileCuratorStrip(); // 모바일 pill 상태 업데이트
 
   if (regionFilter) {
-    // 지역 검색 중이면 지역+큐레이터 교차 필터 (새로 로드 없이 필터만)
     document.getElementById('listTitle').textContent = `${regionFilter} · ${name} 맛집`;
     renderCuratorList();
     renderList();
     renderPins();
-    const items = filtered(); // 배너 카운트용
+    const items = filtered();
     const banner = document.getElementById('regionBanner');
     if (banner) {
       banner.innerHTML = `
@@ -1016,12 +1156,83 @@ window.selectCurator = async function(name, uid) {
     document.getElementById('listCount').textContent = items.length + '곳';
     showToast(`📍 ${regionFilter} · ${name} 맛집 ${items.length}곳`);
   } else {
-    // 일반 큐레이터 선택
     document.getElementById('listTitle').textContent = name + ' 맛집';
     renderCuratorList();
     await loadRests(name);
   }
 };
+
+// ── 모바일 큐레이터 pill strip 렌더링 ──
+function renderMobileCuratorStrip() {
+  const strip = document.getElementById('mCuratorStrip');
+  if (!strip || !STAR_CURATORS.length) return;
+  strip.innerHTML = STAR_CURATORS.map(c =>
+    `<div class="m-cpill${selCurator===c.name?' on':''}" onclick="selectCurator('${c.name}')">
+      <span class="m-cpill-icon">${c.icon}</span>${c.name}
+    </div>`
+  ).join('');
+}
+
+// ── 모바일 카테고리 선택 ──
+window.mSetCat = function(el, cat) {
+  selCat = cat;
+  document.querySelectorAll('.m-cat-pill').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  // PC 카테고리 바도 동기화
+  document.querySelectorAll('.cat').forEach(b => {
+    b.classList.toggle('on', b.textContent.includes(cat) || (cat==='전체' && b.textContent==='전체'));
+  });
+  renderList(); renderPins();
+};
+
+// 모바일 검색 입력 동기화
+document.addEventListener('DOMContentLoaded', () => {
+  const mSearch = document.getElementById('mobileSearch');
+  const mClear = document.getElementById('mClearBtn');
+  if (mSearch) {
+    mSearch.addEventListener('input', e => {
+      const v = e.target.value;
+      document.getElementById('mainSearch').value = v;
+      if (mClear) mClear.style.display = v ? 'block' : 'none';
+      doSearch(v);
+    });
+  }
+
+  // 내 스푼 버튼 연결
+  const myBtn = document.querySelector('.m-my-btn');
+  if (myBtn) {
+    myBtn.onclick = () => {
+      const navEl = document.querySelector('.pnav:nth-child(3)');
+      if (navEl) setPage('my', navEl);
+    };
+    myBtn.innerHTML = '<i class="ti ti-spoon" style="font-size:20px;color:var(--gold)"></i>';
+  }
+
+  // 바텀시트 드래그 처리
+  const sheet = document.querySelector('.list-panel');
+  if (!sheet) return;
+  let startY = 0, startH = 0, dragging = false;
+  const handle = document.createElement('div');
+  handle.style.cssText = 'height:20px;cursor:grab;flex-shrink:0;display:flex;align-items:center;justify-content:center';
+  handle.innerHTML = '<div style="width:40px;height:4px;background:var(--border2);border-radius:2px"></div>';
+  sheet.insertBefore(handle, sheet.firstChild);
+
+  handle.addEventListener('touchstart', e => {
+    if (window.innerWidth > 768) return;
+    startY = e.touches[0].clientY;
+    startH = sheet.getBoundingClientRect().height;
+    dragging = true;
+  }, {passive:true});
+
+  document.addEventListener('touchmove', e => {
+    if (!dragging || window.innerWidth > 768) return;
+    const dy = startY - e.touches[0].clientY;
+    const newH = Math.min(Math.max(startH + dy, 80), window.innerHeight * 0.85);
+    sheet.style.maxHeight = newH + 'px';
+  }, {passive:true});
+
+  document.addEventListener('touchend', () => { dragging = false; });
+});
 
 // ── 데이터 로드 ──
 // 지역 키워드 정규화 (서울시→서울, 서울특별시→서울)
