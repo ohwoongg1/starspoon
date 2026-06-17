@@ -698,35 +698,81 @@ window.doSearch = function() {
   }
 };
 
-// ── 바텀시트 드래그 ──
-let sheetDragging = false, sheetStartY = 0, sheetStartH = 0;
+// ── 바텀시트 드래그 (카카오맵 스타일) ──
 const sheet = document.getElementById('bottom-sheet');
-const handle = document.getElementById('sheet-handle');
+const sheetList = document.getElementById('sheet-list');
+const SNAP_SMALL = 100;   // 최소 (핸들만)
+const SNAP_MID = 240;     // 기본
+const SNAP_LARGE = () => Math.floor(window.innerHeight * 0.75); // 최대
 
-handle.addEventListener('touchstart', e => {
-  sheetDragging = true;
-  sheetStartY = e.touches[0].clientY;
-  sheetStartH = sheet.getBoundingClientRect().height;
+let isDragging = false;
+let dragStartY = 0;
+let dragStartH = 0;
+let lastTouchY = 0;
+let touchVelocity = 0;
+
+function snapSheet(h) {
+  sheet.style.transition = 'height .25s cubic-bezier(.4,0,.2,1)';
+  const large = SNAP_LARGE();
+  if (h < (SNAP_SMALL + SNAP_MID) / 2) sheet.style.height = SNAP_SMALL + 'px';
+  else if (h < (SNAP_MID + large) / 2) sheet.style.height = SNAP_MID + 'px';
+  else sheet.style.height = large + 'px';
+}
+
+// 핸들 드래그
+sheet.addEventListener('touchstart', e => {
+  const target = e.target;
+  // 리스트 영역 터치이고 시트가 최대 크기면 → 스크롤 허용
+  const isListArea = sheetList.contains(target);
+  const isLarge = sheet.getBoundingClientRect().height >= SNAP_LARGE() - 10;
+  if (isListArea && isLarge && sheetList.scrollTop > 0) return;
+
+  isDragging = true;
+  dragStartY = e.touches[0].clientY;
+  dragStartH = sheet.getBoundingClientRect().height;
+  lastTouchY = dragStartY;
+  touchVelocity = 0;
   sheet.style.transition = 'none';
 }, {passive:true});
 
 document.addEventListener('touchmove', e => {
-  if (!sheetDragging) return;
-  const dy = sheetStartY - e.touches[0].clientY;
-  const newH = Math.max(80, Math.min(sheetStartH + dy, window.innerHeight * 0.85));
+  if (!isDragging) return;
+  const y = e.touches[0].clientY;
+  touchVelocity = lastTouchY - y;
+  lastTouchY = y;
+  const dy = dragStartY - y;
+  const newH = Math.max(SNAP_SMALL, Math.min(dragStartH + dy, SNAP_LARGE()));
   sheet.style.height = newH + 'px';
 }, {passive:true});
 
 document.addEventListener('touchend', () => {
-  if (!sheetDragging) return;
-  sheetDragging = false;
-  sheet.style.transition = 'height .3s cubic-bezier(.4,0,.2,1)';
+  if (!isDragging) return;
+  isDragging = false;
   const h = sheet.getBoundingClientRect().height;
-  // 스냅: 작으면 220, 크면 60%
-  if (h < 150) sheet.style.height = '80px';
-  else if (h < window.innerHeight * 0.4) sheet.style.height = '220px';
-  else sheet.style.height = (window.innerHeight * 0.65) + 'px';
+  // 빠르게 위로 스와이프하면 최대
+  if (touchVelocity > 8) {
+    sheet.style.transition = 'height .25s cubic-bezier(.4,0,.2,1)';
+    sheet.style.height = SNAP_LARGE() + 'px';
+  // 빠르게 아래로 스와이프하면 최소
+  } else if (touchVelocity < -8) {
+    sheet.style.transition = 'height .25s cubic-bezier(.4,0,.2,1)';
+    sheet.style.height = SNAP_SMALL + 'px';
+  } else {
+    snapSheet(h);
+  }
 });
+
+// 리스트 최상단에서 아래로 당기면 시트 축소
+sheetList.addEventListener('touchstart', e => {
+  if (sheetList.scrollTop === 0) {
+    isDragging = true;
+    dragStartY = e.touches[0].clientY;
+    dragStartH = sheet.getBoundingClientRect().height;
+    lastTouchY = dragStartY;
+    touchVelocity = 0;
+    sheet.style.transition = 'none';
+  }
+}, {passive:true});
 
 // ── 로그인 ──
 window.openLoginModal = function() {
