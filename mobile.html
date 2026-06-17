@@ -615,7 +615,14 @@ async function loadNearbyRests(lat, lng) {
         getDoc(doc(db, 'restaurants', deepId)).then(snap => {
           if (snap.exists()) {
             const d = snap.data();
-            ALL_DATA.push({id: deepId, ...d});
+            const r = {id: deepId, name:d.name||'', celeb:d.celeb||'',
+              celebs:d.celebs||[d.celeb||''], cat:d.category||d.cat||'한식',
+              area:d.area||'', address:d.address||'', comment:d.comment||'',
+              yt:d.yt||d.video_url||'', lat:d.lat||37.5665, lng:d.lng||126.9780,
+              saves:d.saves||0, avgRating:d.avgRating||0,
+              ratingCount:d.ratingCount||0, visits:d.visits||0};
+            ALL_DATA.push(r);
+            DATA.push(r); // DATA에도 추가해야 openDetail에서 찾을 수 있음
             setTimeout(() => openDetail(deepId), 100);
           }
         });
@@ -696,7 +703,8 @@ function renderPins() {
 
 // ── 맛집 상세 ──
 window.openDetail = function(id) {
-  const r = DATA.find(x => x.id === id);
+  let r = DATA.find(x => x.id === id);
+  if (!r) r = ALL_DATA.find(x => x.id === id); // 딥링크로 접속 시 ALL_DATA에서도 찾기
   if (!r) return;
   currentRest = r;
   const isSaved = savedList.includes(id);
