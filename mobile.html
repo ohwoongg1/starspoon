@@ -162,7 +162,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
   background:#fff;cursor:pointer;font-size:12px;font-weight:600;color:var(--text2);
 }
 .action-btn i{font-size:22px}
-.action-btn.primary{background:var(--gold);border-color:var(--gold);color:#fff}
+.action-btn.primary{background:#03C75A;border-color:#03C75A;color:#fff}
 .action-btn.red{background:#FEE2E2;border-color:#FECACA;color:#991B1B}
 .naver-btn{
   width:100%;padding:13px;border-radius:12px;
@@ -176,6 +176,61 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
   background:var(--bg2);border:none;border-radius:50%;
   width:30px;height:30px;display:flex;align-items:center;justify-content:center;
   font-size:16px;cursor:pointer;color:var(--text2);
+}
+/* 저장 버튼 - ✕ 옆 */
+#detail-save-btn{
+  position:absolute;top:14px;right:54px;
+  background:var(--bg2);border:none;border-radius:50%;
+  width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;color:var(--text2);
+}
+#detail-save-btn.saved{background:var(--gold-bg);color:var(--gold)}
+/* 댓글 모달 */
+#comment-modal{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(0,0,0,0.5);
+  display:none;align-items:flex-end;justify-content:center;
+}
+#comment-modal.open{display:flex}
+#comment-box{
+  background:#fff;border-radius:20px 20px 0 0;
+  width:100%;max-height:80vh;
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#comment-box-header{
+  padding:14px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+}
+#comment-box-title{font-size:15px;font-weight:700;color:var(--text)}
+#comment-box-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text3)}
+#comment-list-wrap{flex:1;overflow-y:auto;padding:12px 16px}
+#comment-list-wrap::-webkit-scrollbar{display:none}
+.m-comment-item{background:var(--bg);border-radius:10px;padding:12px;margin-bottom:8px}
+.m-comment-user{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.m-comment-avatar{width:24px;height:24px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:700;flex-shrink:0;overflow:hidden}
+.m-comment-avatar img{width:100%;height:100%;object-fit:cover}
+.m-comment-name{font-size:13px;font-weight:600;color:var(--text)}
+.m-comment-date{font-size:11px;color:var(--text3);margin-left:auto}
+.m-comment-stars{font-size:12px;color:var(--gold);margin-bottom:3px}
+.m-comment-text{font-size:13px;color:var(--text2);line-height:1.5}
+#comment-form-wrap{
+  padding:12px 16px;border-top:2px solid var(--border);flex-shrink:0;
+  padding-bottom:max(12px,env(safe-area-inset-bottom));
+}
+.m-star-row{display:flex;gap:6px;margin-bottom:8px}
+.m-star{font-size:26px;cursor:pointer;color:var(--border2);transition:color .1s}
+.m-star.on{color:var(--gold)}
+#comment-textarea{
+  width:100%;border:1.5px solid var(--border2);border-radius:10px;
+  padding:10px 12px;font-size:14px;font-family:inherit;
+  resize:none;height:72px;outline:none;
+}
+#comment-textarea:focus{border-color:var(--gold)}
+#comment-submit-row{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+#comment-submit-btn{
+  background:var(--gold);color:#fff;border:none;
+  border-radius:10px;padding:10px 20px;
+  font-size:14px;font-weight:700;cursor:pointer;
 }
 
 /* ── 검색 전체화면 ── */
@@ -366,8 +421,37 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
 <!-- 맛집 상세 -->
 <div id="detail-panel">
   <button class="detail-close" onclick="closeDetail()">✕</button>
+  <button id="detail-save-btn" onclick="toggleSaveDetail()">🤍</button>
   <div id="detail-handle"></div>
   <div id="detail-body"></div>
+</div>
+
+<!-- 댓글 모달 -->
+<div id="comment-modal" onclick="closeCommentModal(event)">
+  <div id="comment-box">
+    <div id="comment-box-header">
+      <span id="comment-box-title">💬 댓글·평점</span>
+      <button id="comment-box-close" onclick="closeCommentModal()">✕</button>
+    </div>
+    <div id="comment-list-wrap">
+      <div id="m-comment-list"></div>
+    </div>
+    <div id="comment-form-wrap">
+      <div class="m-star-row" id="m-star-row">
+        <span class="m-star" onclick="mSetRating(1)">★</span>
+        <span class="m-star" onclick="mSetRating(2)">★</span>
+        <span class="m-star" onclick="mSetRating(3)">★</span>
+        <span class="m-star" onclick="mSetRating(4)">★</span>
+        <span class="m-star" onclick="mSetRating(5)">★</span>
+        <span style="font-size:13px;color:var(--text3);margin-left:4px" id="m-rating-text">평점 선택</span>
+      </div>
+      <textarea id="comment-textarea" placeholder="이 맛집에 대한 솔직한 후기를 남겨주세요..."></textarea>
+      <div id="comment-submit-row">
+        <span style="font-size:12px;color:var(--text3)">댓글 작성 +3pt</span>
+        <button id="comment-submit-btn" onclick="mSubmitComment()">등록</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- 검색 패널 -->
@@ -716,18 +800,23 @@ window.openDetail = function(id) {
     ${r.comment ? `<div class="detail-comment">"${r.comment}"</div>` : ''}
     ${r.address ? `<div class="detail-addr"><span>📍</span><span>${r.address}</span></div>` : ''}
     <div class="action-grid">
-      <button class="action-btn primary" onclick="openKakaoMap()"><i class="ti ti-map"></i>카카오 길찾기</button>
+      <button class="action-btn primary" onclick="openNaverMap()"><i class="ti ti-map-2"></i>네이버 길찾기</button>
       <button class="action-btn red" onclick="openYoutube()"><i class="ti ti-brand-youtube"></i>영상</button>
-      <button class="action-btn ${isSaved?'saved':''}" onclick="toggleSave('${id}')"><i class="ti ti-heart"></i>${isSaved?'저장됨':'저장'}</button>
-      <button class="action-btn" onclick="openNaverMap()"><i class="ti ti-map-2" style="color:#03C75A"></i>네이버 길찾기</button>
+      <button class="action-btn" onclick="openCommentModal('${id}','${r.name}')"><i class="ti ti-message-circle" style="color:var(--gold)"></i>댓글·평점</button>
+      <button class="action-btn" onclick="shareKakao()" style="background:#FEE500;border-color:#FEE500;color:#3A1D1D">
+        <svg width="20" height="20" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
+        카카오 공유
+      </button>
     </div>
-    <button onclick="shareKakao()" style="width:100%;margin-top:10px;padding:12px;background:#FEE500;border:none;border-radius:12px;font-size:14px;font-weight:700;color:#3A1D1D;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
-      카카오톡으로 공유하기
-    </button>
     ${r.avgRating ? `<div style="font-size:13px;color:var(--text3);text-align:center;margin-top:8px">★ ${r.avgRating.toFixed(1)} (${r.ratingCount}개 평점)</div>` : ''}
   `;
   document.getElementById('detail-panel').classList.add('open');
+  // 저장 버튼 상태 업데이트
+  const saveBtn = document.getElementById('detail-save-btn');
+  if (saveBtn) {
+    saveBtn.textContent = savedList.includes(id) ? '❤️' : '🤍';
+    saveBtn.className = savedList.includes(id) ? 'saved' : '';
+  }
   // 지도 해당 위치로
   if (map) {
     map.setCenter(new kakao.maps.LatLng(r.lat, r.lng));
@@ -848,6 +937,120 @@ window.toggleSave = async function(id) {
   else savedList.push(id);
   await updateDoc(doc(db,'restaurants',id), {saves: increment(idx>=0?-1:1)});
   openDetail(id);
+};
+
+// ✕ 옆 저장 버튼
+window.toggleSaveDetail = async function() {
+  if (!currentRest) return;
+  await toggleSave(currentRest.id);
+};
+
+// ── 댓글 모달 ──
+let mCurrentRestId = null;
+let mCurrentRating = 0;
+
+window.openCommentModal = async function(id, name) {
+  if (!currentUser) { showToast('로그인 후 댓글을 남길 수 있어요!'); return; }
+  mCurrentRestId = id;
+  mCurrentRating = 0;
+  document.getElementById('comment-box-title').textContent = '💬 ' + name;
+  document.getElementById('comment-textarea').value = '';
+  document.querySelectorAll('.m-star').forEach(s => s.classList.remove('on'));
+  document.getElementById('m-rating-text').textContent = '평점 선택';
+  document.getElementById('comment-modal').classList.add('open');
+  await mLoadComments(id);
+};
+
+window.closeCommentModal = function(e) {
+  if (!e || e.target === document.getElementById('comment-modal'))
+    document.getElementById('comment-modal').classList.remove('open');
+};
+
+async function mLoadComments(id) {
+  const list = document.getElementById('m-comment-list');
+  list.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:16px">로딩 중...</p>';
+  try {
+    const { collection: col, query: q, orderBy, getDocs: gd } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+    const snap = await getDocs(query(collection(db,'restaurants',id,'comments'), orderBy('createdAt','desc')));
+    if (snap.empty) {
+      list.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:16px">첫 번째 댓글을 남겨보세요! 🎉</p>';
+      return;
+    }
+    list.innerHTML = '';
+    snap.forEach(c => {
+      const d = c.data();
+      const div = document.createElement('div');
+      div.className = 'm-comment-item';
+      div.innerHTML = `
+        <div class="m-comment-user">
+          <div class="m-comment-avatar">${d.photoURL ? `<img src="${d.photoURL}">` : (d.displayName?.[0]||'?')}</div>
+          <span class="m-comment-name">${d.displayName||'익명'}</span>
+          <span class="m-comment-date">${d.createdAt?.toDate?.()?.toLocaleDateString('ko-KR')||''}</span>
+        </div>
+        ${d.rating ? `<div class="m-comment-stars">${'★'.repeat(d.rating)}${'☆'.repeat(5-d.rating)} ${d.rating}점</div>` : ''}
+        <div class="m-comment-text">${d.text}</div>`;
+      list.appendChild(div);
+    });
+    // 내 기존 댓글 있으면 폼에 채우기
+    const mySnap = snap.docs.find(d => d.data().uid === currentUser?.uid);
+    if (mySnap) {
+      const my = mySnap.data();
+      document.getElementById('comment-textarea').value = my.text || '';
+      mCurrentRating = my.rating || 0;
+      mSetRating(mCurrentRating);
+      document.getElementById('comment-submit-btn').textContent = '수정';
+    }
+  } catch(e) {
+    list.innerHTML = '<p style="text-align:center;color:var(--text3);font-size:13px;padding:16px">불러오기 실패</p>';
+  }
+}
+
+window.mSetRating = function(r) {
+  mCurrentRating = r;
+  document.querySelectorAll('.m-star').forEach((s,i) => s.classList.toggle('on', i < r));
+  document.getElementById('m-rating-text').textContent = r + '점';
+};
+
+window.mSubmitComment = async function() {
+  const text = document.getElementById('comment-textarea').value.trim();
+  if (!text) { showToast('댓글을 입력해주세요'); return; }
+  if (!mCurrentRating) { showToast('평점을 선택해주세요'); return; }
+  if (!currentUser) { showToast('로그인이 필요해요'); return; }
+
+  try {
+    const { collection: col, query: q, where, getDocs: gd, addDoc, updateDoc: ud, serverTimestamp } =
+      await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+
+    const existSnap = await getDocs(query(
+      collection(db,'restaurants',mCurrentRestId,'comments'),
+      where('uid','==',currentUser.uid)
+    ));
+
+    if (!existSnap.empty) {
+      await updateDoc(existSnap.docs[0].ref, {text, rating: mCurrentRating, updatedAt: serverTimestamp()});
+      showToast('댓글 수정됐어요! ✏️');
+    } else {
+      await addDoc(collection(db,'restaurants',mCurrentRestId,'comments'), {
+        text, rating: mCurrentRating,
+        displayName: currentUser.displayName || '익명',
+        photoURL: currentUser.photoURL || '',
+        uid: currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+      // 평균 평점 업데이트
+      const allSnap = await getDocs(collection(db,'restaurants',mCurrentRestId,'comments'));
+      let total = 0, cnt = 0;
+      allSnap.forEach(c => { if(c.data().rating){total+=c.data().rating;cnt++;} });
+      await updateDoc(doc(db,'restaurants',mCurrentRestId), {
+        avgRating: cnt > 0 ? Math.round((total/cnt)*10)/10 : 0,
+        ratingCount: cnt
+      });
+      showToast('댓글 등록됐어요! 🎉 +3pt');
+    }
+    await mLoadComments(mCurrentRestId);
+  } catch(e) {
+    showToast('등록 실패: ' + e.message);
+  }
 };
 
 // ── 큐레이터 선택 ──
