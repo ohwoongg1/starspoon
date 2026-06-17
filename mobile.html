@@ -657,9 +657,17 @@ document.addEventListener('touchend', () => {
 
 window.openKakaoMap = function() {
   if (!currentRest) return;
-  // 가게명만으로 검색 (카카오맵은 짧은 쿼리가 더 정확)
-  const query = currentRest.name;
-  window.open(`https://map.kakao.com/link/search/${encodeURIComponent(query)}`, '_blank');
+  const name = encodeURIComponent(currentRest.name);
+  const lat = currentRest.lat;
+  const lng = currentRest.lng;
+  // 카카오맵 앱 설치된 경우 앱으로, 아니면 웹으로
+  const appUrl = `kakaomap://look?p=${lat},${lng}`;
+  const webUrl = `https://map.kakao.com/link/map/${encodeURIComponent(currentRest.name)},${lat},${lng}`;
+  // 앱 시도 후 실패하면 웹으로 폴백
+  const appLink = document.createElement('a');
+  appLink.href = appUrl;
+  appLink.click();
+  setTimeout(() => window.open(webUrl, '_blank'), 1500);
 };
 window.openNaverMap = function() {
   if (!currentRest) return;
