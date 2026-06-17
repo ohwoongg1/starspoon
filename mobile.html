@@ -730,13 +730,13 @@ function applyFilter() {
     const q = searchText;
     items = items.filter(r => r.name.includes(q)||r.celeb.includes(q)||r.area.includes(q)||r.comment.includes(q));
   }
-  // 정렬: 큐레이터/지역/검색 없으면 거리순, 있으면 평점순
-  if (!selCurator && !selRegion && !searchText) {
-    // 거리순 (현재 위치 기반)
-    items.sort((a,b) => (a.dist||999)-(b.dist||999));
-  } else {
-    // 평점순
+  // 정렬: 항상 거리순 (지역/텍스트 검색일 때만 평점순)
+  if (searchText && !selCurator) {
+    // 텍스트 검색은 평점순
     items.sort((a,b) => (b.avgRating||0)-(a.avgRating||0));
+  } else {
+    // 전체/큐레이터/지역 선택 모두 거리순
+    items.sort((a,b) => (a.dist||999)-(b.dist||999));
   }
   DATA = items;
   renderList();
