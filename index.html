@@ -593,7 +593,7 @@ html,body{height:100%;overflow:hidden;font-family:-apple-system,'Pretendard',san
   <div class="home-search">
     <div class="home-search-box">
       <i class="ti ti-search" style="color:var(--text3);font-size:18px;flex-shrink:0"></i>
-      <input type="text" id="textSearch" placeholder="맛집 이름으로 검색">
+      <input type="text" id="textSearch" placeholder="지역 / 큐레이터 / 식당이름 검색">
     </div>
   </div>
 
@@ -802,9 +802,10 @@ window.toggleUserMenu = async () => {
 // ── 큐레이터 로드 ──
 async function loadCurators() {
   try {
-    const snap = await getDocs(query(collection(db, 'curators'), orderBy('order')));
+    const snap = await getDocs(collection(db, 'curators'));
     STAR_CURATORS = [];
     snap.forEach(d => { if (d.data().type === 'star') STAR_CURATORS.push({id:d.id, ...d.data()}); });
+    STAR_CURATORS.sort((a,b) => (a.order||99) - (b.order||99));
     if (!STAR_CURATORS.length) {
       STAR_CURATORS = [
         {name:'성시경',icon:'🎵'},{name:'풍자',icon:'😄'},{name:'이영자',icon:'👩'},{name:'백종원',icon:'👨‍🍳'},
@@ -947,7 +948,30 @@ async function loadAll(textQ) {
     if (textQ && !r.name?.includes(textQ) && !r.area?.includes(textQ) && !r.celeb?.includes(textQ) && !r.comment?.includes(textQ)) return;
     DATA.push({id:d.id, ...r, name:r.name||'', celeb:r.celeb||'', celebs:r.celebs||[r.celeb||''], cat:r.category||r.cat||'한식', area:r.area||'', address:r.address||'', comment:r.comment||'', yt:r.yt||'', lat:r.lat||37.5665, lng:r.lng||126.9780, visits:r.visits||0, saves:r.saves||0, avgRating:r.avgRating||0, ratingCount:r.ratingCount||0, phone:r.phone||'', place_url:r.place_url||''});
   });
+  if (textQ && DATA.length === 0) {
+    showKakaoFallback(textQ);
+    return;
+  }
   renderList();
+}
+
+function showKakaoFallback(q) {
+  const body = document.getElementById('listBody');
+  const kakaoUrl = `https://map.kakao.com/link/search/${encodeURIComponent(q)}`;
+  const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(q)}`;
+  body.innerHTML = `
+    <div class="empty-result">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-txt">스타스푼에 등록된 맛집이 없어요</div>
+      <div class="empty-sub" style="margin-bottom:20px">"<b>${q}</b>" 검색 결과가 없어요</div>
+      <a href="${kakaoUrl}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:#FEE500;border-radius:12px;color:#3A1D1D;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px">
+        🗺️ 카카오맵에서 "${q}" 검색
+      </a>
+      <a href="${naverUrl}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:#03C75A;border-radius:12px;color:#fff;font-size:15px;font-weight:700;text-decoration:none">
+        🟢 네이버지도에서 "${q}" 검색
+      </a>
+    </div>`;
+  document.getElementById('listCountTxt').textContent = '스타스푼 미등록';
 }
 
 window.setSort = function(v) {
@@ -4145,9 +4169,10 @@ window.toggleUserMenu = async () => {
 // ── 큐레이터 로드 ──
 async function loadCurators() {
   try {
-    const snap = await getDocs(query(collection(db, 'curators'), orderBy('order')));
+    const snap = await getDocs(collection(db, 'curators'));
     STAR_CURATORS = [];
     snap.forEach(d => { if (d.data().type === 'star') STAR_CURATORS.push({id:d.id, ...d.data()}); });
+    STAR_CURATORS.sort((a,b) => (a.order||99) - (b.order||99));
     if (!STAR_CURATORS.length) {
       STAR_CURATORS = [
         {name:'성시경',icon:'🎵'},{name:'풍자',icon:'😄'},{name:'이영자',icon:'👩'},{name:'백종원',icon:'👨‍🍳'},
@@ -4290,7 +4315,30 @@ async function loadAll(textQ) {
     if (textQ && !r.name?.includes(textQ) && !r.area?.includes(textQ) && !r.celeb?.includes(textQ) && !r.comment?.includes(textQ)) return;
     DATA.push({id:d.id, ...r, name:r.name||'', celeb:r.celeb||'', celebs:r.celebs||[r.celeb||''], cat:r.category||r.cat||'한식', area:r.area||'', address:r.address||'', comment:r.comment||'', yt:r.yt||'', lat:r.lat||37.5665, lng:r.lng||126.9780, visits:r.visits||0, saves:r.saves||0, avgRating:r.avgRating||0, ratingCount:r.ratingCount||0, phone:r.phone||'', place_url:r.place_url||''});
   });
+  if (textQ && DATA.length === 0) {
+    showKakaoFallback(textQ);
+    return;
+  }
   renderList();
+}
+
+function showKakaoFallback(q) {
+  const body = document.getElementById('listBody');
+  const kakaoUrl = `https://map.kakao.com/link/search/${encodeURIComponent(q)}`;
+  const naverUrl = `https://map.naver.com/v5/search/${encodeURIComponent(q)}`;
+  body.innerHTML = `
+    <div class="empty-result">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-txt">스타스푼에 등록된 맛집이 없어요</div>
+      <div class="empty-sub" style="margin-bottom:20px">"<b>${q}</b>" 검색 결과가 없어요</div>
+      <a href="${kakaoUrl}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:#FEE500;border-radius:12px;color:#3A1D1D;font-size:15px;font-weight:700;text-decoration:none;margin-bottom:10px">
+        🗺️ 카카오맵에서 "${q}" 검색
+      </a>
+      <a href="${naverUrl}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;background:#03C75A;border-radius:12px;color:#fff;font-size:15px;font-weight:700;text-decoration:none">
+        🟢 네이버지도에서 "${q}" 검색
+      </a>
+    </div>`;
+  document.getElementById('listCountTxt').textContent = '스타스푼 미등록';
 }
 
 window.setSort = function(v) {
