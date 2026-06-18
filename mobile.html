@@ -686,52 +686,21 @@ async function loadNearbyRests(lat, lng) {
   try {
     document.getElementById('sheet-title').textContent = '맛집 로딩 중...';
 
-    // 내 위치 기준 ±0.15도 범위 (약 16km) 내 맛집만 로드
-    const latMin = lat - 0.15, latMax = lat + 0.15;
-    const lngMin = lng - 0.15, lngMax = lng + 0.15;
-
-    // 위도 범위로 필터링 (Firebase는 범위 쿼리 1개만 가능)
-    const snapNear = await getDocs(query(
-      collection(db, 'restaurants'),
-      where('lat', '>=', latMin),
-      where('lat', '<=', latMax),
-      limit(50)
-    ));
-
+    // 전체 데이터 로드
+    const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
     ALL_DATA = [];
-    snapNear.forEach(d => {
+    snapAll.forEach(d => {
       const r = d.data();
-      // 경도 범위도 클라이언트에서 추가 필터링
-      if ((r.lng||0) >= lngMin && (r.lng||0) <= lngMax) {
-        ALL_DATA.push({
-          id: d.id, name: r.name||'', celeb: r.celeb||'',
-          celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
-          area: r.area||'', address: r.address||'', comment: r.comment||'',
-          yt: r.yt||r.video_url||'',
-          lat: r.lat||37.5665, lng: r.lng||126.9780,
-          saves: r.saves||0, avgRating: r.avgRating||0,
-          ratingCount: r.ratingCount||0, visits: r.visits||0,
-        });
-      }
-    });
-
-    // 주변에 맛집이 너무 적으면 전국 데이터로 폴백
-    if (ALL_DATA.length < 3) {
-      const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(100)));
-      ALL_DATA = [];
-      snapAll.forEach(d => {
-        const r = d.data();
-        ALL_DATA.push({
-          id: d.id, name: r.name||'', celeb: r.celeb||'',
-          celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
-          area: r.area||'', address: r.address||'', comment: r.comment||'',
-          yt: r.yt||r.video_url||'',
-          lat: r.lat||37.5665, lng: r.lng||126.9780,
-          saves: r.saves||0, avgRating: r.avgRating||0,
-          ratingCount: r.ratingCount||0, visits: r.visits||0,
-        });
+      ALL_DATA.push({
+        id: d.id, name: r.name||'', celeb: r.celeb||'',
+        celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+        area: r.area||'', address: r.address||'', comment: r.comment||'',
+        yt: r.yt||r.video_url||'',
+        lat: r.lat||37.5665, lng: r.lng||126.9780,
+        saves: r.saves||0, avgRating: r.avgRating||0,
+        ratingCount: r.ratingCount||0, visits: r.visits||0,
       });
-    }
+    });
 
     // 거리 계산 후 정렬
     ALL_DATA.forEach(r => {
@@ -1177,59 +1146,19 @@ window.doSearch = function() {
     p.classList.toggle('on', p.dataset.name === selCurator);
   });
   closeSearch();
-  // 지역 검색이면 해당 지역 좌표로 Firebase 재쿼리
+  applyFilter();
+  // 지역 있으면 지도 이동
   if (selRegion && map) {
     const gc = new kakao.maps.services.Geocoder();
-    gc.addressSearch(selRegion, async (res, status) => {
+    gc.addressSearch(selRegion, (res, status) => {
       if (status === kakao.maps.services.Status.OK) {
-        const lat = parseFloat(res[0].y);
-        const lng = parseFloat(res[0].x);
-        map.setCenter(new kakao.maps.LatLng(lat, lng));
+        map.setCenter(new kakao.maps.LatLng(res[0].y, res[0].x));
         map.setLevel(8);
-        // 해당 지역 좌표 기준으로 Firebase 재쿼리 (±0.3도 = 약 33km)
-        document.getElementById('sheet-title').textContent = selRegion + ' 검색 중...';
-        const latMin = lat - 0.3, latMax = lat + 0.3;
-        const lngMin = lng - 0.3, lngMax = lng + 0.3;
-        try {
-          const snap = await getDocs(query(
-            collection(db, 'restaurants'),
-            where('lat', '>=', latMin),
-            where('lat', '<=', latMax),
-            limit(200)
-          ));
-          const regionData = [];
-          snap.forEach(d => {
-            const r = d.data();
-            if ((r.lng||0) >= lngMin && (r.lng||0) <= lngMax) {
-              const dlat = r.lat - lat, dlng = r.lng - lng;
-              regionData.push({
-                id: d.id, name: r.name||'', celeb: r.celeb||'',
-                celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
-                area: r.area||'', address: r.address||'', comment: r.comment||'',
-                yt: r.yt||r.video_url||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
-                saves: r.saves||0, avgRating: r.avgRating||0,
-                ratingCount: r.ratingCount||0, visits: r.visits||0,
-                dist: Math.sqrt(dlat*dlat + dlng*dlng)
-              });
-            }
-          });
-          // ALL_DATA에 없는 것 추가
-          regionData.forEach(r => {
-            if (!ALL_DATA.find(x => x.id === r.id)) ALL_DATA.push(r);
-          });
-          applyFilter();
-        } catch(e) {
-          console.log('지역 검색 실패:', e);
-          applyFilter();
-        }
       }
     });
-  } else {
-    applyFilter();
-    if (DATA.length > 0 && map) {
-      map.setCenter(new kakao.maps.LatLng(DATA[0].lat, DATA[0].lng));
-      map.setLevel(8);
-    }
+  } else if (DATA.length > 0 && map) {
+    map.setCenter(new kakao.maps.LatLng(DATA[0].lat, DATA[0].lng));
+    map.setLevel(8);
   }
 };
 
