@@ -488,6 +488,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
   </div>
   <div id="search-footer">
     <button id="search-submit" onclick="doSearch()">🔍 검색하기</button>
+    <div onclick="openNaverSearch()" style="display:flex;align-items:center;gap:10px;background:#EEF9F3;border-radius:12px;padding:13px 16px;border:1px solid #00C73C;cursor:pointer;margin-top:8px">
+      <i class="ti ti-map-2" style="font-size:20px;color:#00C73C;flex-shrink:0"></i>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#005C1A">네이버 지도에서 검색</div>
+        <div style="font-size:11px;color:#007A24">스타스푼에 없는 가게 찾기</div>
+      </div>
+      <i class="ti ti-external-link" style="font-size:15px;color:#00C73C;margin-left:auto"></i>
+    </div>
   </div>
 </div>
 
@@ -1386,6 +1394,14 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 window.showToast = showToast;
+
+window.openNaverSearch = function() {
+  const q = document.getElementById('search-input').value.trim();
+  const url = q
+    ? 'https://map.naver.com/v5/search/' + encodeURIComponent(q)
+    : 'https://map.naver.com';
+  window.open(url, '_blank');
+};
 
 // ── 초기화 ──
 handleKakaoCallback();
