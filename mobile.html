@@ -1409,13 +1409,18 @@ window.toggleUserMenu = function() {
 
 // ── PWA 홈화면 추가 ──
 let deferredPrompt = null;
+const _isStandalone = window.navigator.standalone === true
+  || window.matchMedia('(display-mode: standalone)').matches;
 
+// 안드로이드: beforeinstallprompt 이벤트 캐치
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  // 버튼 표시
-  const btn = document.getElementById('pwa-btn');
-  if (btn) btn.style.display = 'block';
+  // 이미 설치된 상태 아닐 때만 버튼 표시
+  if (!_isStandalone) {
+    const btn = document.getElementById('pwa-btn');
+    if (btn) btn.style.display = 'block';
+  }
 });
 
 window.installPWA = async function() {
@@ -1427,17 +1432,18 @@ window.installPWA = async function() {
   const result = await deferredPrompt.userChoice;
   if (result.outcome === 'accepted') {
     showToast('홈화면에 추가됐어요! 🎉');
+    const btn = document.getElementById('pwa-btn');
+    if (btn) btn.style.display = 'none';
   }
   deferredPrompt = null;
-  const btn = document.getElementById('pwa-btn');
-  if (btn) btn.style.display = 'none';
 };
 
-// 이미 설치된 경우 버튼 숨기기
+// 설치 완료 시 버튼 숨기기
 window.addEventListener('appinstalled', () => {
   const btn = document.getElementById('pwa-btn');
   if (btn) btn.style.display = 'none';
   deferredPrompt = null;
+  localStorage.setItem('pwa_installed', '1');
 });
 
 // iOS 홈화면 추가 안내
@@ -1445,16 +1451,21 @@ function showIOSInstallBanner() {
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const isStandalone = window.navigator.standalone === true;
   const dismissed = localStorage.getItem('ios_banner_dismissed');
-  if (isIOS && !isStandalone && !dismissed) {
-    setTimeout(() => {
-      document.getElementById('ios-install-banner').style.display = 'block';
-    }, 3000); // 3초 후 표시
-  }
+  const installed = localStorage.getItem('pwa_installed');
+  const today = new Date().toDateString();
+  // 이미 홈화면 추가됐거나 오늘 이미 닫았으면 안 뜸
+  if (!isIOS || isStandalone || dismissed === today || installed) return;
+  setTimeout(() => {
+    const banner = document.getElementById('ios-install-banner');
+    if (banner) banner.style.display = 'block';
+  }, 3000);
 }
 
 window.dismissIOSBanner = function() {
-  document.getElementById('ios-install-banner').style.display = 'none';
-  localStorage.setItem('ios_banner_dismissed', '1');
+  const banner = document.getElementById('ios-install-banner');
+  if (banner) banner.style.display = 'none';
+  // 하루 동안 안 보이게 (오늘 날짜 저장)
+  localStorage.setItem('ios_banner_dismissed', new Date().toDateString());
 };
 
 showIOSInstallBanner();
