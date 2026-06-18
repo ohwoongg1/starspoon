@@ -430,7 +430,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   <div class="header-search">
     <div style="flex:2;display:flex;align-items:center;background:var(--bg2);border-radius:10px;padding:0 12px;border:1px solid var(--border)">
       <i class="ti ti-search" style="font-size:16px;color:var(--text3);flex-shrink:0"></i>
-      <input type="text" id="mainSearch" placeholder="맛집·음식·지역 검색  예: 강서구, 냉면, 성시경" 
+      <input type="text" id="mainSearch" placeholder="스타 맛집 검색  예: 강서구, 냉면, 성시경" 
         style="flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--text);padding:9px 8px"
         oninput="doSearch(this.value)" 
         onkeydown="if(event.key==='Escape')clearSearch();if(event.key==='Enter')doSearch(this.value)">
@@ -440,7 +440,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
       <i class="ti ti-map-pin" style="font-size:15px;color:#B8A000;flex-shrink:0"></i>
       <input type="text" id="kakaoSearch" placeholder="카카오맵에서 가게 찾기" 
         style="border:none;outline:none;background:none;font-size:13px;color:#5C4E00;padding:9px 0;width:160px"
-        onkeydown="if(event.key==='Enter')openKakaoSearch()">
+        onkeydown="if(event.key==='Enter'){openKakaoSearch();this.value=''}">
       <button onclick="openKakaoSearch()" style="background:none;border:none;cursor:pointer;padding:6px 8px;color:#B8A000;font-size:16px;display:flex;align-items:center">
         <i class="ti ti-corner-down-left" style="font-size:16px;color:#B8A000"></i>
       </button>
@@ -3227,10 +3227,13 @@ if (lastSeen !== new Date().toDateString()) {
 </html>
 <script>
 window.openKakaoSearch = function() {
-  const q = document.getElementById('kakaoSearch').value.trim();
+  const input = document.getElementById('kakaoSearch');
+  const q = input.value.trim();
   const url = q
     ? 'https://map.kakao.com/link/search/' + encodeURIComponent(q)
     : 'https://map.kakao.com';
   window.open(url, '_blank');
+  input.value = '';
+  input.blur();
 };
 </script>
