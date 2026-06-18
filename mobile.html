@@ -1407,6 +1407,13 @@ window.toggleUserMenu = function() {
   }
 };
 
+// ── Service Worker 등록 ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW 등록 실패:', e));
+  });
+}
+
 // ── PWA 홈화면 추가 ──
 let deferredPrompt = null;
 const _isStandalone = window.navigator.standalone === true
