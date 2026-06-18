@@ -661,13 +661,17 @@ function renderSearchCurators() {
     ).join('');
 }
 
-// 주변 맛집 로드
+// 주변 맛집 로드 - 1단계: 30개 먼저, 백그라운드에서 나머지 로드
+let _loadAllDone = false; // 전체 로드 완료 여부
+
 async function loadNearbyRests(lat, lng) {
   try {
     document.getElementById('sheet-title').textContent = '맛집 로딩 중...';
-    const snap = await getDocs(query(collection(db, 'restaurants'), limit(500)));
+
+    // 1단계: 30개 먼저 로드 (빠른 표시)
+    const snap30 = await getDocs(query(collection(db, 'restaurants'), limit(30)));
     ALL_DATA = [];
-    snap.forEach(d => {
+    snap30.forEach(d => {
       const r = d.data();
       ALL_DATA.push({
         id: d.id, name: r.name||'', celeb: r.celeb||'',
@@ -679,12 +683,39 @@ async function loadNearbyRests(lat, lng) {
         ratingCount: r.ratingCount||0, visits: r.visits||0,
       });
     });
-    // 거리 계산 후 정렬
+    // 거리 계산
     ALL_DATA.forEach(r => {
       const dlat = r.lat - lat, dlng = r.lng - lng;
       r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
     });
+    ALL_DATA.sort((a,b) => a.dist - b.dist);
     applyFilter();
+
+    // 2단계: 백그라운드에서 나머지 전체 로드
+    setTimeout(async () => {
+      try {
+        const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(500)));
+        const newData = [];
+        snapAll.forEach(d => {
+          const r = d.data();
+          const dlat = (r.lat||37.5665) - lat, dlng = (r.lng||126.9780) - lng;
+          newData.push({
+            id: d.id, name: r.name||'', celeb: r.celeb||'',
+            celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+            area: r.area||'', address: r.address||'', comment: r.comment||'',
+            yt: r.yt||r.video_url||'',
+            lat: r.lat||37.5665, lng: r.lng||126.9780,
+            saves: r.saves||0, avgRating: r.avgRating||0,
+            ratingCount: r.ratingCount||0, visits: r.visits||0,
+            dist: Math.sqrt(dlat*dlat + dlng*dlng)
+          });
+        });
+        ALL_DATA = newData;
+        ALL_DATA.sort((a,b) => a.dist - b.dist);
+        _loadAllDone = true;
+        applyFilter(); // 전체 로드 후 자동 갱신
+      } catch(e) { console.log('전체 로드 실패:', e); }
+    }, 1000); // 1초 후 백그라운드 로드 시작
     // 딥링크 처리
     const params = new URLSearchParams(location.search);
     const deepId = params.get('id');
