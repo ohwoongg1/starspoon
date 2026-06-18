@@ -31,7 +31,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .logo-icon{width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
 .logo-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
 .logo-text span{color:var(--gold)}
-.header-search{flex:1;max-width:420px;position:relative}
+.header-search{flex:1;max-width:700px;position:relative;display:flex;gap:10px;align-items:center}
 .header-search input{width:100%;height:36px;border-radius:18px;border:1.5px solid var(--border2);background:var(--bg2);padding:0 14px 0 38px;font-size:13px;color:var(--text);outline:none;transition:all .2s}
 .header-search input:focus{border-color:var(--gold);background:var(--white);box-shadow:0 0 0 3px rgba(245,158,11,0.12)}
 .header-search .si{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px}
@@ -428,11 +428,22 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     <span class="logo-text">Star<span>spoon</span></span>
   </a>
   <div class="header-search">
-    <i class="ti ti-search si"></i>
-    <input type="text" id="mainSearch" placeholder="맛집·음식·지역 검색  예: 강서구, 냉면, 성시경" 
-      oninput="doSearch(this.value)" 
-      onkeydown="if(event.key==='Escape')clearSearch();if(event.key==='Enter')doSearch(this.value)">
-    <button id="clearSearchBtn" onclick="clearSearch()" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0">✕</button>
+    <div style="flex:2;position:relative;display:flex;align-items:center;background:var(--bg2);border-radius:10px;padding:0 12px;border:1px solid var(--border)">
+      <i class="ti ti-search si" style="flex-shrink:0"></i>
+      <input type="text" id="mainSearch" placeholder="맛집·음식·지역 검색  예: 강서구, 냉면, 성시경" 
+        style="flex:1;border:none;outline:none;background:none;font-size:14px;color:var(--text);padding:9px 8px"
+        oninput="doSearch(this.value)" 
+        onkeydown="if(event.key==='Escape')clearSearch();if(event.key==='Enter')doSearch(this.value)">
+      <button id="clearSearchBtn" onclick="clearSearch()" style="display:none;background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;padding:0">✕</button>
+    </div>
+    <div onclick="openKakaoSearch()" style="flex:1;display:flex;align-items:center;gap:8px;background:#FFFBE6;border-radius:10px;padding:9px 14px;border:1px solid #F9E000;cursor:pointer;min-width:0">
+      <i class="ti ti-map-pin" style="font-size:16px;color:#B8A000;flex-shrink:0"></i>
+      <div style="min-width:0">
+        <div style="font-size:13px;font-weight:600;color:#5C4E00;white-space:nowrap">카카오맵 검색</div>
+        <div style="font-size:11px;color:#8A7200;white-space:nowrap">스타스푼에 없는 가게 찾기</div>
+      </div>
+      <i class="ti ti-external-link" style="font-size:13px;color:#B8A000;margin-left:auto;flex-shrink:0"></i>
+    </div>
   </div>
   <div class="header-right">
     <div class="header-reg-btns">
@@ -3213,3 +3224,12 @@ if (lastSeen !== new Date().toDateString()) {
 
 </body>
 </html>
+<script>
+window.openKakaoSearch = function() {
+  const q = document.getElementById('mainSearch').value.trim();
+  const url = q
+    ? 'https://map.kakao.com/link/search/' + encodeURIComponent(q)
+    : 'https://map.kakao.com';
+  window.open(url, '_blank');
+};
+</script>
