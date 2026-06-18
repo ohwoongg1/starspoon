@@ -670,22 +670,54 @@ async function loadNearbyRests(lat, lng) {
   try {
     document.getElementById('sheet-title').textContent = '맛집 로딩 중...';
 
-    // 1단계: 30개 먼저 로드 (빠른 표시)
-    const snap30 = await getDocs(query(collection(db, 'restaurants'), limit(30)));
+    // 내 위치 기준 ±0.3도 범위 (약 33km) 내 맛집만 로드
+    const latMin = lat - 0.3, latMax = lat + 0.3;
+    const lngMin = lng - 0.3, lngMax = lng + 0.3;
+
+    // 위도 범위로 필터링 (Firebase는 범위 쿼리 1개만 가능)
+    const snapNear = await getDocs(query(
+      collection(db, 'restaurants'),
+      where('lat', '>=', latMin),
+      where('lat', '<=', latMax),
+      limit(200)
+    ));
+
     ALL_DATA = [];
-    snap30.forEach(d => {
+    snapNear.forEach(d => {
       const r = d.data();
-      ALL_DATA.push({
-        id: d.id, name: r.name||'', celeb: r.celeb||'',
-        celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
-        area: r.area||'', address: r.address||'', comment: r.comment||'',
-        yt: r.yt||r.video_url||'',
-        lat: r.lat||37.5665, lng: r.lng||126.9780,
-        saves: r.saves||0, avgRating: r.avgRating||0,
-        ratingCount: r.ratingCount||0, visits: r.visits||0,
-      });
+      // 경도 범위도 클라이언트에서 추가 필터링
+      if ((r.lng||0) >= lngMin && (r.lng||0) <= lngMax) {
+        ALL_DATA.push({
+          id: d.id, name: r.name||'', celeb: r.celeb||'',
+          celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+          area: r.area||'', address: r.address||'', comment: r.comment||'',
+          yt: r.yt||r.video_url||'',
+          lat: r.lat||37.5665, lng: r.lng||126.9780,
+          saves: r.saves||0, avgRating: r.avgRating||0,
+          ratingCount: r.ratingCount||0, visits: r.visits||0,
+        });
+      }
     });
-    // 거리 계산
+
+    // 주변에 맛집이 너무 적으면 전국 데이터로 폴백
+    if (ALL_DATA.length < 5) {
+      const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(200)));
+      ALL_DATA = [];
+      snapAll.forEach(d => {
+        const r = d.data();
+        ALL_DATA.push({
+          id: d.id, name: r.name||'', celeb: r.celeb||'',
+          celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+          area: r.area||'', address: r.address||'', comment: r.comment||'',
+          yt: r.yt||r.video_url||'',
+          lat: r.lat||37.5665, lng: r.lng||126.9780,
+          saves: r.saves||0, avgRating: r.avgRating||0,
+          ratingCount: r.ratingCount||0, visits: r.visits||0,
+        });
+      });
+    }
+
+    // 거리 계산 후 정렬
     ALL_DATA.forEach(r => {
       const dlat = r.lat - lat, dlng = r.lng - lng;
       r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
