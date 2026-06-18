@@ -6,12 +6,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#F59E0B">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="스타스푼">
-<link rel="apple-touch-icon" href="/icon-512.png">
+
 <title>Starspoon — 연예인 맛집 큐레이터</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=25b433faf5d746c938cbcc7658f650b0&libraries=services"></script>
@@ -402,7 +397,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
     <div id="auth-area">
       <button id="login-btn" onclick="openLoginModal()">로그인</button>
     </div>
-    <button id="pwa-btn" onclick="installPWA()" title="홈화면에 추가" style="display:none;background:none;border:none;cursor:pointer;font-size:20px;flex-shrink:0;padding:0 2px">📲</button>
   </div>
   <!-- 큐레이터 -->
   <div id="curator-strip">
@@ -569,24 +563,6 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
 <!-- 토스트 -->
 <div id="toast"></div>
 
-<!-- iOS 홈화면 추가 안내 팝업 -->
-<div id="ios-install-banner" style="display:none;position:fixed;bottom:20px;left:12px;right:12px;z-index:999;
-  background:#1A1A18;color:#fff;border-radius:16px;padding:14px 16px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.3)">
-  <button onclick="dismissIOSBanner()" style="position:absolute;top:10px;right:12px;background:none;border:none;color:#999;font-size:18px;cursor:pointer">✕</button>
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-    <span style="font-size:24px">📲</span>
-    <div>
-      <div style="font-size:14px;font-weight:700;margin-bottom:2px">홈화면에 추가하면 앱처럼!</div>
-      <div style="font-size:12px;color:#aaa">빠르게 스타스푼을 열 수 있어요</div>
-    </div>
-  </div>
-  <div style="background:#2A2A28;border-radius:10px;padding:10px 12px;font-size:12px;color:#ddd;line-height:1.8">
-    1. 하단 공유 버튼 <span style="font-size:14px">⬆️</span> 탭<br>
-    2. <strong style="color:#F59E0B">"홈 화면에 추가"</strong> 선택<br>
-    3. 오른쪽 상단 <strong style="color:#F59E0B">"추가"</strong> 탭
-  </div>
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
@@ -1407,75 +1383,7 @@ window.toggleUserMenu = function() {
   }
 };
 
-// ── Service Worker 등록 ──
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW 등록 실패:', e));
-  });
-}
 
-// ── PWA 홈화면 추가 ──
-let deferredPrompt = null;
-const _isStandalone = window.navigator.standalone === true
-  || window.matchMedia('(display-mode: standalone)').matches;
-
-// 안드로이드: beforeinstallprompt 이벤트 캐치
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredPrompt = e;
-  // 이미 설치된 상태 아닐 때만 버튼 표시
-  if (!_isStandalone) {
-    const btn = document.getElementById('pwa-btn');
-    if (btn) btn.style.display = 'block';
-  }
-});
-
-window.installPWA = async function() {
-  if (!deferredPrompt) {
-    showToast('이미 홈화면에 추가됐거나 지원하지 않는 브라우저예요');
-    return;
-  }
-  deferredPrompt.prompt();
-  const result = await deferredPrompt.userChoice;
-  if (result.outcome === 'accepted') {
-    showToast('홈화면에 추가됐어요! 🎉');
-    const btn = document.getElementById('pwa-btn');
-    if (btn) btn.style.display = 'none';
-  }
-  deferredPrompt = null;
-};
-
-// 설치 완료 시 버튼 숨기기
-window.addEventListener('appinstalled', () => {
-  const btn = document.getElementById('pwa-btn');
-  if (btn) btn.style.display = 'none';
-  deferredPrompt = null;
-  localStorage.setItem('pwa_installed', '1');
-});
-
-// iOS 홈화면 추가 안내
-function showIOSInstallBanner() {
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const isStandalone = window.navigator.standalone === true;
-  const dismissed = localStorage.getItem('ios_banner_dismissed');
-  const installed = localStorage.getItem('pwa_installed');
-  const today = new Date().toDateString();
-  // 이미 홈화면 추가됐거나 오늘 이미 닫았으면 안 뜸
-  if (!isIOS || isStandalone || dismissed === today || installed) return;
-  setTimeout(() => {
-    const banner = document.getElementById('ios-install-banner');
-    if (banner) banner.style.display = 'block';
-  }, 3000);
-}
-
-window.dismissIOSBanner = function() {
-  const banner = document.getElementById('ios-install-banner');
-  if (banner) banner.style.display = 'none';
-  // 하루 동안 안 보이게 (오늘 날짜 저장)
-  localStorage.setItem('ios_banner_dismissed', new Date().toDateString());
-};
-
-showIOSInstallBanner();
 
 // ── 토스트 ──
 function showToast(msg) {
