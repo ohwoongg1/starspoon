@@ -1177,19 +1177,59 @@ window.doSearch = function() {
     p.classList.toggle('on', p.dataset.name === selCurator);
   });
   closeSearch();
-  applyFilter();
-  // 지역 있으면 지도 이동
+  // 지역 검색이면 해당 지역 좌표로 Firebase 재쿼리
   if (selRegion && map) {
     const gc = new kakao.maps.services.Geocoder();
-    gc.addressSearch(selRegion, (res, status) => {
+    gc.addressSearch(selRegion, async (res, status) => {
       if (status === kakao.maps.services.Status.OK) {
-        map.setCenter(new kakao.maps.LatLng(res[0].y, res[0].x));
+        const lat = parseFloat(res[0].y);
+        const lng = parseFloat(res[0].x);
+        map.setCenter(new kakao.maps.LatLng(lat, lng));
         map.setLevel(8);
+        // 해당 지역 좌표 기준으로 Firebase 재쿼리 (±0.3도 = 약 33km)
+        document.getElementById('sheet-title').textContent = selRegion + ' 검색 중...';
+        const latMin = lat - 0.3, latMax = lat + 0.3;
+        const lngMin = lng - 0.3, lngMax = lng + 0.3;
+        try {
+          const snap = await getDocs(query(
+            collection(db, 'restaurants'),
+            where('lat', '>=', latMin),
+            where('lat', '<=', latMax),
+            limit(200)
+          ));
+          const regionData = [];
+          snap.forEach(d => {
+            const r = d.data();
+            if ((r.lng||0) >= lngMin && (r.lng||0) <= lngMax) {
+              const dlat = r.lat - lat, dlng = r.lng - lng;
+              regionData.push({
+                id: d.id, name: r.name||'', celeb: r.celeb||'',
+                celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+                area: r.area||'', address: r.address||'', comment: r.comment||'',
+                yt: r.yt||r.video_url||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
+                saves: r.saves||0, avgRating: r.avgRating||0,
+                ratingCount: r.ratingCount||0, visits: r.visits||0,
+                dist: Math.sqrt(dlat*dlat + dlng*dlng)
+              });
+            }
+          });
+          // ALL_DATA에 없는 것 추가
+          regionData.forEach(r => {
+            if (!ALL_DATA.find(x => x.id === r.id)) ALL_DATA.push(r);
+          });
+          applyFilter();
+        } catch(e) {
+          console.log('지역 검색 실패:', e);
+          applyFilter();
+        }
       }
     });
-  } else if (DATA.length > 0 && map) {
-    map.setCenter(new kakao.maps.LatLng(DATA[0].lat, DATA[0].lng));
-    map.setLevel(8);
+  } else {
+    applyFilter();
+    if (DATA.length > 0 && map) {
+      map.setCenter(new kakao.maps.LatLng(DATA[0].lat, DATA[0].lng));
+      map.setLevel(8);
+    }
   }
 };
 
