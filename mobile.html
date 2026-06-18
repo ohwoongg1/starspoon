@@ -608,17 +608,31 @@ function initMap(lat, lng) {
 
 // 내 위치 가져오기
 function getMyLocation() {
+  // 마지막 위치가 있으면 즉시 표시
+  const lastLat = parseFloat(localStorage.getItem('last_lat'));
+  const lastLng = parseFloat(localStorage.getItem('last_lng'));
+  if (lastLat && lastLng) {
+    initMap(lastLat, lastLng); // 즉시 지도 표시
+  }
+  // 백그라운드에서 현재 위치 파악
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       pos => {
         myLat = pos.coords.latitude;
         myLng = pos.coords.longitude;
-        initMap(myLat, myLng);
+        localStorage.setItem('last_lat', myLat);
+        localStorage.setItem('last_lng', myLng);
+        if (!lastLat || !lastLng) {
+          initMap(myLat, myLng);
+        } else {
+          loadNearbyRests(myLat, myLng);
+          if (map) map.setCenter(new kakao.maps.LatLng(myLat, myLng));
+        }
       },
-      () => initMap(37.5665, 126.9780) // 실패시 서울 중심
+      () => { if (!lastLat || !lastLng) initMap(37.5665, 126.9780); }
     );
   } else {
-    initMap(37.5665, 126.9780);
+    if (!lastLat || !lastLng) initMap(37.5665, 126.9780);
   }
 }
 
