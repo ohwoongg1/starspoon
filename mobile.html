@@ -670,16 +670,16 @@ async function loadNearbyRests(lat, lng) {
   try {
     document.getElementById('sheet-title').textContent = '맛집 로딩 중...';
 
-    // 내 위치 기준 ±0.3도 범위 (약 33km) 내 맛집만 로드
-    const latMin = lat - 0.3, latMax = lat + 0.3;
-    const lngMin = lng - 0.3, lngMax = lng + 0.3;
+    // 내 위치 기준 ±0.15도 범위 (약 16km) 내 맛집만 로드
+    const latMin = lat - 0.15, latMax = lat + 0.15;
+    const lngMin = lng - 0.15, lngMax = lng + 0.15;
 
     // 위도 범위로 필터링 (Firebase는 범위 쿼리 1개만 가능)
     const snapNear = await getDocs(query(
       collection(db, 'restaurants'),
       where('lat', '>=', latMin),
       where('lat', '<=', latMax),
-      limit(200)
+      limit(50)
     ));
 
     ALL_DATA = [];
@@ -700,8 +700,8 @@ async function loadNearbyRests(lat, lng) {
     });
 
     // 주변에 맛집이 너무 적으면 전국 데이터로 폴백
-    if (ALL_DATA.length < 5) {
-      const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(200)));
+    if (ALL_DATA.length < 3) {
+      const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(100)));
       ALL_DATA = [];
       snapAll.forEach(d => {
         const r = d.data();
