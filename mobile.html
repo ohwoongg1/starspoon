@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
@@ -972,6 +973,13 @@ window.openNaverMap = function() {
 };
 window.openYoutube = function() {
   if (!currentRest) return;
+  // 영상 클릭 통계 기록 (백그라운드)
+  addDoc(collection(db, 'videoClicks'), {
+    celeb: currentRest.celeb || '',
+    restName: currentRest.name || '',
+    restId: currentRest.id || '',
+    clickedAt: new Date().toISOString()
+  }).catch(() => {});
   if (currentRest.yt) window.open(currentRest.yt, '_blank');
   else window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(currentRest.celeb+' '+currentRest.name)}`, '_blank');
 };
