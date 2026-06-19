@@ -690,6 +690,7 @@ function renderSearchCurators() {
 
 // 주변 맛집 로드 - 1단계: 30개 먼저, 백그라운드에서 나머지 로드
 let _loadAllDone = false; // 전체 로드 완료 여부
+let _pendingSearch = false; // 로딩 전 검색 대기 여부
 
 async function loadNearbyRests(lat, lng) {
   try {
@@ -717,7 +718,10 @@ async function loadNearbyRests(lat, lng) {
       r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
     });
     ALL_DATA.sort((a,b) => a.dist - b.dist);
+    _loadAllDone = true;
     applyFilter();
+    // 로딩 전에 검색했던 텍스트가 있으면 다시 실행
+    if (_pendingSearch) { _pendingSearch = false; doSearch(); }
 
     // 백그라운드 로드 제거 - 30개로 충분
     // 딥링크 처리
@@ -763,7 +767,8 @@ function applyFilter() {
   }
   if (searchText) {
     const q = searchText;
-    items = items.filter(r => r.name.includes(q)||r.celeb.includes(q)||r.area.includes(q)||r.comment.includes(q));
+    const qn = q.replace(/\s/g,'');
+    items = items.filter(r => r.name.includes(q)||r.name.replace(/\s/g,'').includes(qn)||r.celeb.includes(q)||r.area.includes(q)||r.comment.includes(q));
   }
   // 정렬: 항상 거리순 (지역/텍스트 검색일 때만 평점순)
   if (searchText && !selCurator) {
@@ -1154,6 +1159,13 @@ window.selectRegion = function(el, region) {
 };
 window.doSearch = function() {
   const text = document.getElementById('search-input').value.trim();
+  // 아직 전체 로드 안 됐으면 대기
+  if (!_loadAllDone && text) {
+    _pendingSearch = true;
+    document.getElementById('sheet-title').textContent = '맛집 로딩 중...';
+    closeSearch();
+    return;
+  }
   searchText = text;
   selCurator = searchSelCurator;
   selRegion = searchSelRegion;
