@@ -3107,42 +3107,46 @@ if (lastSeen !== new Date().toDateString()) {
       <button class="modal-close" onclick="closeIntro()" style="color:#fff">✕</button>
     </div>
     <div class="modal-bd">
-      <p style="font-size:14px;color:var(--text2);margin-bottom:16px;line-height:1.7">
-        <strong style="color:var(--text)">스타스푼</strong>은 연예인과 유튜버들이 직접 방문한 맛집을 지도로 보여주는 <strong style="color:var(--gold)">맛집 큐레이터 플랫폼</strong>이에요.
+      <p style="font-size:15px;color:var(--gold);font-weight:700;margin-bottom:4px;line-height:1.6">
+        어디에 있든, 내 근처 스타들이 간 맛집을 거리순으로 알려드려요.
       </p>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <div style="background:var(--bg2);border-radius:10px;padding:14px">
-          <div style="font-size:20px;margin-bottom:6px">⭐</div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:4px">스타 맛집 탐색</div>
-          <div style="font-size:12px;color:var(--text3)">성시경, 풍자 등 스타들이 직접 방문한 맛집을 지도에서 찾아보세요</div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+        성시경·풍자·이영자·히밥·최자로드 등 연예인이 직접 방문한 맛집만 모았어요.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
+          <span style="font-size:20px;flex-shrink:0">🌟</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:2px">큐레이터 버튼으로 스타 맛집만 골라보세요</div>
+            <div style="font-size:12px;color:var(--text3)">성시경·풍자·이영자·히밥·최자로드 등</div>
+          </div>
         </div>
-        <div style="background:var(--bg2);border-radius:10px;padding:14px">
-          <div style="font-size:20px;margin-bottom:6px">🥄</div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:4px">나만의 큐레이터</div>
-          <div style="font-size:12px;color:var(--text3)">내가 아는 맛집을 등록하고 스푼 등급을 올려보세요</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
+          <span style="font-size:20px;flex-shrink:0">📍</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:2px">지역·식당 이름으로 검색하면 지도에서 바로 찾아요</div>
+            <div style="font-size:12px;color:var(--text3)">예: 강남, 냉면, 을지로 ...</div>
+          </div>
         </div>
-        <div style="background:var(--bg2);border-radius:10px;padding:14px">
-          <div style="font-size:20px;margin-bottom:6px">🏆</div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:4px">순위 시스템</div>
-          <div style="font-size:12px;color:var(--text3)">평점·저장·댓글로 맛집 순위가 실시간으로 바뀌어요</div>
+        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
+          <span style="font-size:20px;flex-shrink:0">▶️</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:2px">영상 버튼으로 실제 방문 영상을 바로 봐요</div>
+            <div style="font-size:12px;color:var(--text3)">유튜브 영상으로 바로 연결</div>
+          </div>
         </div>
-        <div style="background:var(--bg2);border-radius:10px;padding:14px">
-          <div style="font-size:20px;margin-bottom:6px">🎯</div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:4px">포인트 적립</div>
-          <div style="font-size:12px;color:var(--text3)">
-            🍽️ 등록 +10pt · 🔗 링크 +5pt<br>
-            💬 댓글 +3pt · ⭐ 평점 +2pt<br>
-            스푼→은스푼→금스푼→별스푼!
+        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
+          <span style="font-size:20px;flex-shrink:0">🧭</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:2px">길찾기 버튼으로 네이버·카카오 지도로 바로 출발</div>
+            <div style="font-size:12px;color:var(--text3)">클릭 한 번으로 바로 출발</div>
           </div>
         </div>
       </div>
-      <div style="background:var(--gold-bg);border:1.5px solid var(--gold);border-radius:10px;padding:12px;margin-bottom:16px">
-        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">🥄 스푼 등급 시스템</div>
-        <div style="display:flex;justify-content:space-between;font-size:12px">
-          <span>🥄 스푼 <span style="color:var(--text3)">(0pt~)</span></span>
-          <span>🥈 은스푼 <span style="color:var(--text3)">(100pt~)</span></span>
-          <span>🥇 금스푼 <span style="color:var(--text3)">(500pt~)</span></span>
-          <span>⭐ 별스푼 <span style="color:var(--text3)">(2000pt~)</span></span>
+      <div style="background:var(--bg2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+        <span style="font-size:16px;flex-shrink:0;">📱</span>
+        <div style="font-size:12px;color:var(--text2);line-height:1.5;">
+          모바일에서 검색하면 바로 사용 가능 · <span style="color:var(--gold);font-weight:700;">홈화면에 추가</span>하면 앱처럼 더 빠르게!
         </div>
       </div>
       <button onclick="closeIntro()" class="btn-primary">시작하기 🚀</button>
