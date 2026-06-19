@@ -1699,6 +1699,10 @@ window.focusCard = function(id) {
   if (d && map) {
     map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
     map.setLevel(5);
+    // 지도 핀 팝업 자동으로 열기
+    if (markerMap[id]) {
+      kakao.maps.event.trigger(markerMap[id], 'click');
+    }
   }
   updateDoc(doc(db, 'restaurants', id), {visits: increment(1)}).catch(()=>{});
 };
