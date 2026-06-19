@@ -956,7 +956,8 @@ window.shareKakao = function() {
   const r = currentRest;
   if (!Kakao.isInitialized()) Kakao.init('25b433faf5d746c938cbcc7658f650b0');
   const rating = r.avgRating ? `⭐ ${r.avgRating.toFixed(1)}점` : '';
-  const desc = [r.cat, r.area, rating].filter(Boolean).join(' · ');
+  const desc = [r.cat, r.area, rating].filter(Boolean).join(' · ') +
+    '\n📲 홈화면에 추가하면 앱처럼 빠르게!';
   const shareUrl = `https://www.starspoon.co.kr/mobile.html?name=${encodeURIComponent(r.name)}&celeb=${encodeURIComponent(r.celeb)}`;
   Kakao.Share.sendDefault({
     objectType: 'feed',
