@@ -309,6 +309,14 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
 .onboard-card-icon{font-size:22px;margin-bottom:6px}
 .onboard-card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px}
 .onboard-card-desc{font-size:11.5px;color:#888;line-height:1.4}
+.onboard-tip{display:flex;align-items:flex-start;gap:10px;background:#fafafa;border-radius:12px;padding:10px 12px;}
+.onboard-tip-icon{font-size:18px;margin-top:1px;flex-shrink:0}
+.onboard-tip-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.onboard-tip-sub{font-size:11px;color:#aaa}
+.onboard-home-box{
+  background:#fffbef;border:1.5px solid #FEE500;border-radius:14px;
+  padding:14px 12px;margin-bottom:14px;
+}
 .onboard-grade-box{
   background:#fffbef;border:1.5px solid #FEE500;border-radius:14px;
   padding:14px 12px;margin-bottom:14px;
@@ -469,7 +477,10 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
     </div>
   </div>
   <div id="search-body">
-    <div class="search-section-title">🌟 큐레이터</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="search-section-title" style="margin-bottom:0">🌟 큐레이터</div>
+      <button id="search-home-btn" onclick="triggerHomeAdd()" style="font-size:11px;color:#888;border:0.5px solid #ddd;border-radius:20px;padding:3px 9px;background:#f8f8f8;cursor:pointer;display:flex;align-items:center;gap:3px;">📲 홈화면 추가</button>
+    </div>
     <div class="search-curator-grid" id="search-curator-grid"></div>
     <div class="search-section-title">📍 지역</div>
     <div class="search-region-grid">
@@ -505,39 +516,41 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
   <div class="onboard-box">
     <button class="onboard-close" onclick="closeOnboard()">✕</button>
     <div class="onboard-title">🥄 스타스푼에 오신걸 환영해요!</div>
-    <p style="font-size:13px;color:#555;margin-bottom:14px;line-height:1.5">
-      <strong>스타스푼</strong>은 연예인과 유튜버들이 직접 방문한 맛집을 지도로 보여주는 <span style="color:#f5a623;font-weight:700">맛집 큐레이터 플랫폼</span>이에요.
+    <p style="font-size:14px;color:#f5a623;font-weight:700;margin-bottom:4px;line-height:1.6">
+      어디에 있든, 내 근처 스타들이 간 맛집을<br>거리순으로 알려드려요.
     </p>
-    <div class="onboard-grid">
-      <div class="onboard-card">
-        <div class="onboard-card-icon">⭐</div>
-        <div class="onboard-card-title">스타 맛집 탐색</div>
-        <div class="onboard-card-desc">성시경, 풍자 등 스타들이 직접 방문한 맛집을 지도에서 찾아보세요</div>
+    <p style="font-size:12px;color:#888;margin-bottom:14px;line-height:1.5">
+      성시경·풍자·이영자·히밥·최자로드 등 연예인이 직접 방문한 맛집만 모았어요.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+      <div class="onboard-tip">
+        <span class="onboard-tip-icon">🌟</span>
+        <div><div class="onboard-tip-title">큐레이터 버튼으로 스타 맛집만 골라보세요</div><div class="onboard-tip-sub">성시경·풍자·이영자·히밥·최자로드 등</div></div>
       </div>
-      <div class="onboard-card">
-        <div class="onboard-card-icon">🥄</div>
-        <div class="onboard-card-title">나만의 큐레이터</div>
-        <div class="onboard-card-desc">내가 아는 맛집을 등록하고 스푼 등급을 올려보세요</div>
+      <div class="onboard-tip">
+        <span class="onboard-tip-icon">📍</span>
+        <div><div class="onboard-tip-title">지역·식당 이름으로 검색하면 지도에서 바로 찾아요</div><div class="onboard-tip-sub">예: 강남, 냉면, 을지로 ...</div></div>
       </div>
-      <div class="onboard-card">
-        <div class="onboard-card-icon">🏆</div>
-        <div class="onboard-card-title">순위 시스템</div>
-        <div class="onboard-card-desc">평점·저장·댓글로 맛집 순위가 실시간으로 바뀌어요</div>
+      <div class="onboard-tip">
+        <span class="onboard-tip-icon">▶️</span>
+        <div><div class="onboard-tip-title">영상 버튼으로 실제 방문 영상을 바로 봐요</div><div class="onboard-tip-sub">유튜브 영상으로 바로 연결</div></div>
       </div>
-      <div class="onboard-card">
-        <div class="onboard-card-icon">🎯</div>
-        <div class="onboard-card-title">포인트 적립</div>
-        <div class="onboard-card-desc">등록 +10pt · 링크 +5pt<br>댓글 +3pt · 평점 +2pt<br>스푼→은스푼→금스푼→별스푼!</div>
+      <div class="onboard-tip">
+        <span class="onboard-tip-icon">🧭</span>
+        <div><div class="onboard-tip-title">길찾기 버튼으로 네이버·카카오 지도로 바로 출발</div><div class="onboard-tip-sub">클릭 한 번으로 바로 출발</div></div>
       </div>
     </div>
-    <div class="onboard-grade-box">
-      <div class="onboard-grade-title">🥄 스푼 등급 시스템</div>
-      <div class="onboard-grade-list">
-        <div class="onboard-grade-item">🥄 스푼 (0pt~)</div>
-        <div class="onboard-grade-item">🥈 은스푼 (100pt~)</div>
-        <div class="onboard-grade-item">🥇 금스푼 (500pt~)</div>
-        <div class="onboard-grade-item">⭐ 별스푼 (2000pt~)</div>
+    <div class="onboard-home-box" id="onboard-home-box">
+      <div class="onboard-grade-title">📲 앱처럼 빠르게 — 홈화면에 추가하세요!</div>
+      <div id="ob-ios" style="display:none;font-size:12px;color:#666;line-height:2;">
+        1. 하단 공유 버튼 <strong style="color:#f5a623">⬆️</strong> 탭<br>
+        2. <strong style="color:#f5a623">"홈 화면에 추가"</strong> 선택<br>
+        3. 오른쪽 상단 <strong style="color:#f5a623">"추가"</strong> 탭
       </div>
+      <div id="ob-android" style="display:none;">
+        <button id="ob-install-btn" style="width:100%;background:#f5a623;color:#fff;border:none;border-radius:10px;padding:10px;font-size:14px;font-weight:700;cursor:pointer;">📲 홈화면에 추가하기</button>
+      </div>
+      <div id="ob-other" style="display:none;font-size:12px;color:#aaa;">모바일에서 접속하면 홈화면 추가 안내가 표시돼요.</div>
     </div>
     <button class="onboard-start-btn" onclick="closeOnboard()">시작하기 🚀</button>
     <div class="onboard-skip">
@@ -1278,6 +1291,39 @@ window.setOnboardNoShow = function(){
     localStorage.removeItem('onboard_no_show');
   }
 };
+
+// 홈화면 추가
+let _deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _deferredPrompt = e;
+});
+window.triggerHomeAdd = function() {
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  if (isAndroid && _deferredPrompt) {
+    _deferredPrompt.prompt();
+    _deferredPrompt.userChoice.then(() => { _deferredPrompt = null; });
+  } else if (isIOS) {
+    showToast('하단 공유버튼 ⬆️ → "홈 화면에 추가" 탭하세요!');
+  } else {
+    showToast('모바일에서 접속하면 홈화면에 추가할 수 있어요.');
+  }
+};
+
+// 온보딩 기기감지
+function initHomeGuide() {
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const ios = document.getElementById('ob-ios');
+  const android = document.getElementById('ob-android');
+  const other = document.getElementById('ob-other');
+  if (ios) ios.style.display = isIOS ? 'block' : 'none';
+  if (android) android.style.display = isAndroid ? 'block' : 'none';
+  if (other) other.style.display = (!isIOS && !isAndroid) ? 'block' : 'none';
+  const installBtn = document.getElementById('ob-install-btn');
+  if (installBtn) installBtn.onclick = () => triggerHomeAdd();
+}
 function initOnboard() {
   // 딥링크 처리 전용 (팝업은 초기화 맨 끝에서 별도 실행)
 }
@@ -1494,7 +1540,7 @@ loadCurators();
   const noShow = localStorage.getItem('onboard_no_show');
   if (noShow === today) return;
   const modal = document.getElementById('onboard-modal');
-  if (modal) modal.classList.remove('hidden');
+  if (modal) { modal.classList.remove('hidden'); initHomeGuide(); }
 })();
 </script>
 </body>
