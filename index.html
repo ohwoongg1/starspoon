@@ -1455,7 +1455,8 @@ function filtered() {
     if (selCat !== '전체' && d.cat !== selCat) return false;
     if (searchQ) {
       const q = searchQ;
-      if (!d.name.includes(q) && !d.area.includes(q) && !d.comment.includes(q) && !d.celeb.includes(q)) return false;
+      const qn = q.replace(/\s/g,'');
+      if (!d.name.includes(q) && !d.name.replace(/\s/g,'').includes(qn) && !d.area.includes(q) && !d.comment.includes(q) && !d.celeb.includes(q)) return false;
     }
     return true;
   });
