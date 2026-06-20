@@ -1630,6 +1630,7 @@ function renderList() {
           </button>
           <a class="btn-sm" href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);if(window.innerWidth<=768){event.preventDefault();location.href=this.href;}" style="text-decoration:none;color:#FF0000;border-color:#FF0000">▶️ 영상</a>
           <a class="btn-sm" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()" style="text-decoration:none;color:#03C75A;border-color:#03C75A">📅 예약</a>
+          <button class="btn-sm" onclick="event.stopPropagation();shareKakaoPC('${d.id}')" style="background:#FEE500;border-color:#F0D000;color:#3A1D1D">💬 공유</button>
         </div>
       </div>
       <div class="rest-link">
@@ -1775,7 +1776,9 @@ function renderPins() {
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" style="font-size:12px;color:#F59E0B;border:1px solid #F59E0B;border-radius:6px;padding:5px 10px;text-decoration:none;font-weight:600">🗺️ 길찾기</a>
           <a href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" target="_blank" style="font-size:12px;color:#FF0000;border:1px solid #FF0000;border-radius:6px;padding:5px 10px;text-decoration:none;font-weight:600">▶️ 영상</a>
+          <a href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" style="font-size:12px;color:#03C75A;border:1px solid #03C75A;border-radius:6px;padding:5px 10px;text-decoration:none;font-weight:600">📅 예약</a>
           <button onclick="toggleSave('${d.id}')" style="font-size:12px;color:${isSaved?'#F59E0B':'#6B6B67'};border:1px solid ${isSaved?'#F59E0B':'#D4D3CF'};border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">${isSaved?'❤️ 저장됨':'🤍 저장'}</button>
+          <button onclick="shareKakaoPC('${d.id}')" style="font-size:12px;color:#3A1D1D;border:1px solid #F0D000;border-radius:6px;padding:5px 10px;background:#FEE500;cursor:pointer;font-weight:600">💬 카카오공유</button>
           <button onclick="openCommentModal('${d.id}','${d.name}')" style="font-size:12px;color:#6B6B67;border:1px solid #D4D3CF;border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">💬 댓글·평점</button>
         </div>
       </div>`;
@@ -3100,6 +3103,25 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 window.showToast = showToast;
+
+window.shareKakaoPC = function(id) {
+  const d = DATA.find(x => x.id === id);
+  if (!d) return;
+  if (!window.Kakao?.isInitialized()) window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
+  const rating = d.avgRating ? `⭐ ${d.avgRating.toFixed(1)}점` : '';
+  const desc = [d.cat, d.area, rating].filter(Boolean).join(' · ');
+  const shareUrl = `https://www.starspoon.co.kr/mobile.html?name=${encodeURIComponent(d.name)}&celeb=${encodeURIComponent(d.celeb)}`;
+  window.Kakao.Share.sendDefault({
+    objectType: 'feed',
+    content: {
+      title: `🥄 [${d.celeb}] ${d.name}`,
+      description: desc + (d.address ? '\n📍 ' + d.address : '') + '\n📲 스타스푼에서 보기',
+      imageUrl: 'https://www.starspoon.co.kr/og-image.png',
+      link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+    },
+    buttons: [{ title: '스타스푼에서 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } }],
+  });
+};
 
 window.logVideoClick = function(celeb, restName, restId) {
   addDoc(collection(db, 'videoClicks'), {
