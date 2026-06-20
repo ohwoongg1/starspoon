@@ -1629,43 +1629,36 @@ kakao.maps.load(function() {
   // 데이터 로드 완료 후 핀 표시
   setTimeout(() => { if (DATA.length) renderPins(); }, 1500);
 
-  // 지도 이동/줌 끝날 때 현재 범위 안 맛집만 표시
-  kakao.maps.event.addListener(map, 'dragend', window.filterByMapBounds);
-  kakao.maps.event.addListener(map, 'zoom_changed', window.filterByMapBounds);
-});
-
-window.filterByMapBounds = function() {
-  if (!map || !DATA.length) return;
-  const bounds = map.getBounds();
-  const sw = bounds.getSouthWest();
-  const ne = bounds.getNorthEast();
-  // 지도 중심 기준 거리 재계산
-  const center = map.getCenter();
-  const cLat = center.getLat(), cLng = center.getLng();
-  DATA.forEach(r => {
-    const dlat = r.lat - cLat, dlng = r.lng - cLng;
-    r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
+  // 지도 움직임 멈추면 현재 범위 안 맛집만 표시
+  kakao.maps.event.addListener(map, 'idle', function() {
+    if (!DATA.length) return;
+    const bounds = map.getBounds();
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
+    const center = map.getCenter();
+    const cLat = center.getLat(), cLng = center.getLng();
+    DATA.forEach(r => {
+      const dlat = r.lat - cLat, dlng = r.lng - cLng;
+      r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
+    });
+    const allFiltered = filtered();
+    const inBounds = allFiltered.filter(r =>
+      r.lat >= sw.getLat() && r.lat <= ne.getLat() &&
+      r.lng >= sw.getLng() && r.lng <= ne.getLng()
+    );
+    inBounds.sort((a,b) => (a.dist||999) - (b.dist||999));
+    document.getElementById('listCount').textContent = inBounds.length + '곳';
+    const list = document.getElementById('restList');
+    if (!inBounds.length) {
+      list.innerHTML = '<div class="empty"><i class="ti ti-map-search"></i><p>현재 지도 범위에 맛집이 없어요<br><small>지도를 이동하거나 축소해보세요</small></p></div>';
+      return;
+    }
+    const origData = DATA;
+    DATA = inBounds;
+    renderList();
+    DATA = origData;
   });
-  // 지도 범위 안의 맛집만 임시 DATA로
-  const allFiltered = filtered();
-  const inBounds = allFiltered.filter(r =>
-    r.lat >= sw.getLat() && r.lat <= ne.getLat() &&
-    r.lng >= sw.getLng() && r.lng <= ne.getLng()
-  );
-  inBounds.sort((a,b) => (a.dist||999) - (b.dist||999));
-  // 리스트 타이틀/카운트 업데이트
-  document.getElementById('listCount').textContent = inBounds.length + '곳';
-  const list = document.getElementById('restList');
-  if (!inBounds.length) {
-    list.innerHTML = '<div class="empty"><i class="ti ti-map-search"></i><p>현재 지도 범위에 맛집이 없어요<br><small>지도를 이동하거나 축소해보세요</small></p></div>';
-    return;
-  }
-  // DATA를 inBounds로 임시 교체 후 renderList 호출
-  const origData = DATA;
-  DATA = inBounds;
-  renderList();
-  DATA = origData;
-}
+});
 
 
 function renderPins() {
