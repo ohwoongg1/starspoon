@@ -1629,18 +1629,20 @@ kakao.maps.load(function() {
   // 데이터 로드 완료 후 핀 표시
   setTimeout(() => { if (DATA.length) renderPins(); }, 1500);
 
-  // 지도 움직임 멈추면 현재 범위 안 맛집만 표시
-  kakao.maps.event.addListener(map, 'idle', function() {
+  // 드래그 끝날 때만 → 지도 중심 기준 주변 맛집으로 리스트 업데이트
+  kakao.maps.event.addListener(map, 'dragend', function() {
     if (!DATA.length) return;
     const bounds = map.getBounds();
     const sw = bounds.getSouthWest();
     const ne = bounds.getNorthEast();
     const center = map.getCenter();
     const cLat = center.getLat(), cLng = center.getLng();
+    // 거리 재계산
     DATA.forEach(r => {
       const dlat = r.lat - cLat, dlng = r.lng - cLng;
       r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
     });
+    // 현재 지도 범위 안 맛집만 필터
     const allFiltered = filtered();
     const inBounds = allFiltered.filter(r =>
       r.lat >= sw.getLat() && r.lat <= ne.getLat() &&
@@ -1658,6 +1660,7 @@ kakao.maps.load(function() {
     renderList();
     DATA = origData;
   });
+  // 줌 변경은 리스트 건드리지 않음 (핀은 그대로 유지)
 });
 
 
