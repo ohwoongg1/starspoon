@@ -2679,6 +2679,7 @@ window.doSearch = async function(q) {
 
   // 일반 검색 (맛집명/음식/연예인) - 전체 DB에서 검색
   regionFilter = '';
+  selCurator = '전체'; // ← 큐레이터 필터 해제해야 전체에서 찾음
   document.getElementById('listCount').textContent = '검색 중...';
   try {
     const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
