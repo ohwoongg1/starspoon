@@ -832,6 +832,9 @@ function applyFilter() {
       return area.includes(selRegion) || addr.includes(selRegion);
     });
   }
+  if (selCat) {
+    items = items.filter(r => r.cat === selCat || (r.cat||'').includes(selCat));
+  }
   if (searchText) {
     const q = searchText;
     const qn = q.replace(/\s/g,'');
@@ -1220,6 +1223,10 @@ window.resetHome = function() {
   selCurator = '';
   selRegion = '';
   searchText = '';
+  selCat = '';
+  searchSelCurator = '';
+  searchSelRegion = '';
+  searchSelCat = '';
   document.querySelectorAll('.c-pill').forEach(p => p.classList.remove('on'));
   const allPill = document.querySelector('.c-pill[data-name=""]');
   if (allPill) allPill.classList.add('on');
