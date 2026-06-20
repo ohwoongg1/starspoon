@@ -1542,9 +1542,7 @@ function renderList() {
             ${isSaved?'❤️ 저장됨':'🤍 저장'}
           </button>
           <a class="btn-sm" href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);if(window.innerWidth<=768){event.preventDefault();location.href=this.href;}" style="text-decoration:none;color:#FF0000;border-color:#FF0000">▶️ 영상</a>
-          <button class="btn-sm" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')">
-            💬 댓글·평점
-          </button>
+          <a class="btn-sm" href="https://booking.naver.com/booking/6/bizes?query=${encodeURIComponent(d.name+' '+d.area)}" target="_blank" onclick="event.stopPropagation()" style="text-decoration:none;color:#03C75A;border-color:#03C75A">📅 예약</a>
         </div>
       </div>
       <div class="rest-link">
@@ -1558,6 +1556,7 @@ function renderList() {
              </a>`
           : `<button class="link-btn link-add" onclick="event.stopPropagation();openYtModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><i class="ti ti-plus"></i> 링크 추가</button>`
         }
+        <button class="link-btn" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:600">💬 댓글·평점</button>
       </div>
       <div class="card-detail" id="detail-${d.id}">
         ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
