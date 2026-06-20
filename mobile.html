@@ -408,10 +408,16 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
 
 <!-- 상단 바 -->
 <div id="top-bar">
+  <!-- 로고 -->
+  <div id="logo-bar" onclick="resetHome()" style="padding:8px 16px 4px;cursor:pointer;display:flex;align-items:center;gap:8px;">
+    <img src="/icon-192.png" style="width:28px;height:28px;border-radius:7px;" alt="스타스푼 로고">
+    <span style="font-size:15px;font-weight:700;color:var(--text);">Star<span style="color:var(--gold);">spoon</span></span>
+  </div>
   <!-- 검색창 -->
   <div id="search-box">
     <i class="ti ti-search"></i>
     <div id="search-placeholder" onclick="openSearch()">지역 / 큐레이터 / 식당이름</div>
+    <button id="reset-btn" onclick="resetHome()" style="display:none;background:none;border:none;font-size:18px;color:var(--text3);cursor:pointer;padding:0 4px;">✕</button>
     <div id="auth-area">
       <button id="login-btn" onclick="openLoginModal()">로그인</button>
     </div>
@@ -1166,6 +1172,17 @@ window.selectCurator = function(el, name) {
 let searchSelCurator = '';
 let searchSelRegion = '';
 
+window.resetHome = function() {
+  selCurator = '';
+  selRegion = '';
+  document.querySelectorAll('.c-pill').forEach(p => p.classList.remove('on'));
+  const allPill = document.querySelector('.c-pill[data-name=""]');
+  if (allPill) allPill.classList.add('on');
+  document.getElementById('search-placeholder').textContent = '지역 / 큐레이터 / 식당이름';
+  document.getElementById('reset-btn').style.display = 'none';
+  loadNearby();
+};
+
 window.openSearch = function() {
   document.getElementById('search-panel').classList.add('open');
   setTimeout(() => document.getElementById('search-input').focus(), 300);
@@ -1213,6 +1230,18 @@ window.doSearch = function() {
   });
   closeSearch();
   applyFilter();
+  // 검색 결과 있으면 placeholder 업데이트 + X버튼 표시
+  const parts = [];
+  if (searchSelCurator) parts.push(searchSelCurator);
+  if (searchSelRegion) parts.push(searchSelRegion);
+  if (text) parts.push(text);
+  if (parts.length > 0) {
+    document.getElementById('search-placeholder').textContent = parts.join(' · ');
+    document.getElementById('reset-btn').style.display = 'block';
+  } else {
+    document.getElementById('search-placeholder').textContent = '지역 / 큐레이터 / 식당이름';
+    document.getElementById('reset-btn').style.display = 'none';
+  }
   // 지역 있으면 지도 이동
   if (selRegion && map) {
     const gc = new kakao.maps.services.Geocoder();
