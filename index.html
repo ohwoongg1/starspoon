@@ -1644,7 +1644,14 @@ function filterByMapBounds() {
     r.lat >= sw.getLat() && r.lat <= ne.getLat() &&
     r.lng >= sw.getLng() && r.lng <= ne.getLng()
   );
-  // 리스트만 업데이트 (핀은 그대로 유지)
+  // 지도 중심 기준 거리 재계산
+  const center = map.getCenter();
+  const cLat = center.getLat(), cLng = center.getLng();
+  inBounds.forEach(r => {
+    const dlat = r.lat - cLat, dlng = r.lng - cLng;
+    r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
+  });
+  inBounds.sort((a,b) => a.dist - b.dist);
   document.getElementById('listCount').textContent = inBounds.length + '곳';
   const list = document.getElementById('restList');
   if (!inBounds.length) {
