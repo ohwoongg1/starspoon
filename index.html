@@ -1630,11 +1630,11 @@ kakao.maps.load(function() {
   setTimeout(() => { if (DATA.length) renderPins(); }, 1500);
 
   // 지도 이동/줌 끝날 때 현재 범위 안 맛집만 표시
-  kakao.maps.event.addListener(map, 'dragend', filterByMapBounds);
-  kakao.maps.event.addListener(map, 'zoom_changed', filterByMapBounds);
+  kakao.maps.event.addListener(map, 'dragend', window.filterByMapBounds);
+  kakao.maps.event.addListener(map, 'zoom_changed', window.filterByMapBounds);
 });
 
-function filterByMapBounds() {
+window.filterByMapBounds = function filterByMapBounds() {
   if (!map || !DATA.length) return;
   const bounds = map.getBounds();
   const sw = bounds.getSouthWest();
