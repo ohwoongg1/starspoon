@@ -1238,6 +1238,18 @@ window.resetHome = function() {
 };
 
 window.openSearch = function() {
+  // 검색 패널 열 때 이전 조건 초기화
+  searchSelCurator = '';
+  searchSelRegion = '';
+  searchSelCat = '';
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  // 큐레이터 버튼 전체 초기화
+  document.querySelectorAll('.search-curator-btn').forEach(b => b.classList.remove('on'));
+  const allBtn = document.querySelector('.search-curator-btn');
+  if (allBtn) allBtn.classList.add('on');
+  // 지역/카테고리 버튼 초기화
+  document.querySelectorAll('.search-region-btn').forEach(b => b.classList.remove('on'));
   document.getElementById('search-panel').classList.add('open');
   setTimeout(() => document.getElementById('search-input').focus(), 300);
 };
