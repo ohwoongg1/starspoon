@@ -2694,13 +2694,17 @@ window.doSearch = async function(q) {
         avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
       });
     });
-  } catch(e) { console.log('검색 로드 오류:', e); }
-  renderList();
-  renderPins();
-  const items = filtered();
-  if (items.length > 0 && map) {
-    map.setCenter(new kakao.maps.LatLng(items[0].lat, items[0].lng));
-    map.setLevel(6);
+    renderList();
+    renderPins();
+    const items = filtered();
+    if (items.length > 0 && map) {
+      map.setCenter(new kakao.maps.LatLng(items[0].lat, items[0].lng));
+      map.setLevel(6);
+    }
+  } catch(e) {
+    console.log('검색 로드 오류:', e);
+    renderList();
+    renderPins();
   }
 };
 
