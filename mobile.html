@@ -1032,8 +1032,7 @@ window.openKakaoMap = function() {
 };
 window.openNaverReserve = function() {
   if (!currentRest) return;
-  const query = encodeURIComponent(currentRest.name + ' ' + (currentRest.area || ''));
-  window.open('https://m.place.naver.com/restaurant/list?query=' + query, '_blank');
+  window.open('https://map.naver.com/p/search/' + encodeURIComponent(currentRest.name + ' 예약'), '_blank');
 };
 
 window.openNaverMap = function() {
