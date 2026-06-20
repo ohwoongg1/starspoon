@@ -736,6 +736,7 @@ let currentCommentId = null;
 let myRating = 0;
 let repRestData = null;
 let regionFilter = ''; // 지역 필터 상태
+let mapBoundsFilter = null; // 드래그로 설정된 지도 범위 필터 {sw, ne, cLat, cLng}
 
 // ── 고정 스타 큐레이터 ──
 // 스타 큐레이터 → Firebase curators 컬렉션에서 동적 로드
@@ -1104,13 +1105,19 @@ window.setCuratorTab = function(tab, el) {
 async function renderCuratorList() {
   const list = document.getElementById('curatorList');
   if (selCuratorTab === 'star') {
-    const allItem = `<div class="curator-item${selCurator===''||selCurator==='전체'?' on':''}" onclick="selectAllCurator()">
-      <div class="rank-num rank-n" style="font-size:10px">전</div>
-      <div class="curator-avatar star-curator">🍽️</div>
+    const isAllOn = selCurator===''||selCurator==='전체';
+    const allItem = `<div class="curator-item" onclick="selectAllCurator()" style="
+      background:${isAllOn?'var(--gold)':'var(--bg2)'};
+      border-radius:10px;margin-bottom:8px;padding:10px;
+      border:2px solid ${isAllOn?'var(--gold)':'var(--border2)'};
+    ">
+      <div style="width:36px;height:36px;border-radius:50%;background:${isAllOn?'rgba(255,255,255,0.3)':'var(--white)'};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🍽️</div>
       <div class="curator-info">
-        <div class="curator-name">전체</div>
+        <div class="curator-name" style="color:${isAllOn?'#fff':'var(--text)'}">전체 맛집</div>
+        <div class="curator-sub" style="color:${isAllOn?'rgba(255,255,255,0.8)':'var(--text3)'}">모든 큐레이터</div>
       </div>
-    </div>`;
+    </div>
+    <div style="height:1px;background:var(--border);margin:4px 0 8px"></div>`;
     list.innerHTML = allItem + STAR_CURATORS.map((c, i) => {
       const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
       return `<div class="curator-item${selCurator===c.name?' on':''}" onclick="selectCurator('${c.name}')">
@@ -1191,6 +1198,7 @@ window.selectCuratorByUser = async function(name, uid) {
 
 window.selectAllCurator = async function() {
   selCurator = '전체';
+  mapBoundsFilter = null; // 드래그 범위 초기화
   renderCuratorList();
   document.getElementById('listTitle').textContent = '전체 맛집';
   hideRegionBanner();
@@ -1221,7 +1229,50 @@ window.selectAllCurator = async function() {
 
 window.selectCurator = async function(name, uid) {
   selCurator = name;
-  renderMobileCuratorStrip(); // 모바일 pill 상태 업데이트
+  renderMobileCuratorStrip();
+  renderCuratorList();
+
+  // 드래그로 지도 범위가 설정된 상태면 → 그 범위 안에서 해당 큐레이터만 표시
+  if (mapBoundsFilter) {
+    const {sw, ne, cLat, cLng} = mapBoundsFilter;
+    document.getElementById('listTitle').textContent = name + ' 맛집 (지도 범위)';
+    // DATA가 전체 상태여야 하므로 전체 로드 후 필터
+    try {
+      const snap = await getDocs(query(collection(db, 'restaurants'), where('celeb', '==', name), limit(2000)));
+      DATA = [];
+      snap.forEach(d => {
+        const r = d.data();
+        const dlat = (r.lat||37.5665) - cLat, dlng = (r.lng||126.9780) - cLng;
+        DATA.push({
+          id: d.id, name: r.name||'', celeb: r.celeb||'',
+          celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+          area: r.area||'', comment: r.comment||'',
+          yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
+          visits: r.visits||0, saves: r.saves||0,
+          avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+          dist: Math.sqrt(dlat*dlat + dlng*dlng),
+        });
+      });
+      // 지도 범위 필터
+      const inBounds = DATA.filter(r =>
+        r.lat >= sw.getLat() && r.lat <= ne.getLat() &&
+        r.lng >= sw.getLng() && r.lng <= ne.getLng()
+      );
+      inBounds.sort((a,b) => (a.dist||999) - (b.dist||999));
+      renderPins();
+      if (inBounds.length) {
+        const origData = DATA;
+        DATA = inBounds;
+        renderList();
+        DATA = origData;
+      } else {
+        renderList();
+        showToast(`현재 지도 범위에 ${name} 맛집이 없어요. 전체 표시합니다.`);
+      }
+      document.getElementById('listCount').textContent = (inBounds.length||DATA.length) + '곳';
+    } catch(e) { showToast('로드 실패'); }
+    return;
+  }
 
   if (regionFilter) {
     document.getElementById('listTitle').textContent = `${regionFilter} · ${name} 맛집`;
@@ -1673,6 +1724,8 @@ kakao.maps.load(function() {
     const ne = bounds.getNorthEast();
     const center = map.getCenter();
     const cLat = center.getLat(), cLng = center.getLng();
+    // 드래그 범위 저장 (큐레이터 선택 시 재사용)
+    mapBoundsFilter = {sw, ne, cLat, cLng};
     // 거리 재계산
     DATA.forEach(r => {
       const dlat = r.lat - cLat, dlng = r.lng - cLng;
@@ -1685,7 +1738,6 @@ kakao.maps.load(function() {
       r.lng >= sw.getLng() && r.lng <= ne.getLng()
     );
     inBounds.sort((a,b) => (a.dist||999) - (b.dist||999));
-    // 범위 안에 맛집 없으면 리스트 그대로 유지 (건드리지 않음)
     if (!inBounds.length) return;
     document.getElementById('listCount').textContent = inBounds.length + '곳';
     const origData = DATA;
