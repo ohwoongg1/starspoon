@@ -1104,14 +1104,20 @@ window.setCuratorTab = function(tab, el) {
 async function renderCuratorList() {
   const list = document.getElementById('curatorList');
   if (selCuratorTab === 'star') {
-    list.innerHTML = STAR_CURATORS.map((c, i) => {
+    const allItem = `<div class="curator-item${selCurator===''||selCurator==='전체'?' on':''}" onclick="selectAllCurator()">
+      <div class="rank-num rank-n" style="font-size:10px">전</div>
+      <div class="curator-avatar star-curator">🍽️</div>
+      <div class="curator-info">
+        <div class="curator-name">전체</div>
+      </div>
+    </div>`;
+    list.innerHTML = allItem + STAR_CURATORS.map((c, i) => {
       const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
       return `<div class="curator-item${selCurator===c.name?' on':''}" onclick="selectCurator('${c.name}')">
         <div class="rank-num ${rankClass}" style="font-size:10px">${i+1}</div>
         <div class="curator-avatar star-curator">${c.icon}</div>
         <div class="curator-info">
           <div class="curator-name">${c.name}</div>
-  
         </div>
       </div>`;
     }).join('');
@@ -1181,6 +1187,36 @@ window.selectCuratorByUser = async function(name, uid) {
     renderList();
     renderPins();
   } catch(e) { showToast('불러오기 실패'); }
+};
+
+window.selectAllCurator = async function() {
+  selCurator = '전체';
+  renderCuratorList();
+  document.getElementById('listTitle').textContent = '전체 맛집';
+  hideRegionBanner();
+  regionFilter = '';
+  // 전체 DB 로드
+  document.getElementById('listCount').textContent = '로딩 중...';
+  try {
+    const snap = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
+    DATA = [];
+    snap.forEach(d => {
+      const r = d.data();
+      DATA.push({
+        id: d.id, name: r.name||'', celeb: r.celeb||'',
+        celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+        area: r.area||'', comment: r.comment||'',
+        yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
+        visits: r.visits||0, saves: r.saves||0,
+        avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+        registeredBy: r.registeredBy||null,
+      });
+    });
+    renderList();
+    renderPins();
+    if (map) { map.setCenter(new kakao.maps.LatLng(37.5550, 126.9700)); map.setLevel(8); }
+    showToast('전체 맛집 ' + DATA.length + '곳');
+  } catch(e) { showToast('로드 실패'); }
 };
 
 window.selectCurator = async function(name, uid) {
@@ -1649,12 +1685,9 @@ kakao.maps.load(function() {
       r.lng >= sw.getLng() && r.lng <= ne.getLng()
     );
     inBounds.sort((a,b) => (a.dist||999) - (b.dist||999));
+    // 범위 안에 맛집 없으면 리스트 그대로 유지 (건드리지 않음)
+    if (!inBounds.length) return;
     document.getElementById('listCount').textContent = inBounds.length + '곳';
-    const list = document.getElementById('restList');
-    if (!inBounds.length) {
-      list.innerHTML = '<div class="empty"><i class="ti ti-map-search"></i><p>현재 지도 범위에 맛집이 없어요<br><small>지도를 이동하거나 축소해보세요</small></p></div>';
-      return;
-    }
     const origData = DATA;
     DATA = inBounds;
     renderList();
