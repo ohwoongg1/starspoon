@@ -794,7 +794,13 @@ function applyFilter() {
     items = items.filter(r => r.celeb === selCurator || (r.celebs||[]).includes(selCurator));
   }
   if (selRegion) {
-    items = items.filter(r => (r.area||'').includes(selRegion) || (r.address||'').includes(selRegion));
+    items = items.filter(r => {
+      const area = r.area || '';
+      const addr = r.address || '';
+      // 광주 검색 시 경기 광주시 제외 (광주광역시만 매칭)
+      if (selRegion === '광주') return area.startsWith('광주') && !area.includes('경기');
+      return area.includes(selRegion) || addr.includes(selRegion);
+    });
   }
   if (searchText) {
     const q = searchText;
