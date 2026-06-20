@@ -13,9 +13,7 @@
 <link rel="apple-touch-icon" href="/icon-512.png">
 <link rel="manifest" href="/manifest.json">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
+
 
 <title>Starspoon — 연예인 맛집 큐레이터</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
@@ -612,7 +610,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, getDocs, query, where, orderBy, limit, doc, getDoc, updateDoc, addDoc, increment } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, collection, getDocs, query, where, orderBy, limit, doc, getDoc, updateDoc, addDoc, increment } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -623,7 +621,7 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  localCache: persistentLocalCache()
 });
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider();
@@ -733,12 +731,9 @@ async function loadNearbyRests(lat, lng) {
   try {
     document.getElementById('sheet-title').textContent = '맛집 로딩 중...';
 
-    // 전체 데이터 로드
-    const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
-    ALL_DATA = [];
-    snapAll.forEach(d => {
+    function parseRest(d) {
       const r = d.data();
-      ALL_DATA.push({
+      return {
         id: d.id, name: r.name||'', celeb: r.celeb||'',
         celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
         area: r.area||'', address: r.address||'', comment: r.comment||'',
@@ -746,21 +741,36 @@ async function loadNearbyRests(lat, lng) {
         lat: r.lat||37.5665, lng: r.lng||126.9780,
         saves: r.saves||0, avgRating: r.avgRating||0,
         ratingCount: r.ratingCount||0, visits: r.visits||0,
+      };
+    }
+    function calcDist(items) {
+      items.forEach(r => {
+        const dlat = r.lat - lat, dlng = r.lng - lng;
+        r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
       });
-    });
+    }
 
-    // 거리 계산 후 정렬
-    ALL_DATA.forEach(r => {
-      const dlat = r.lat - lat, dlng = r.lng - lng;
-      r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
-    });
+    // 1단계: 300개 먼저 빠르게 로드
+    const snap1 = await getDocs(query(collection(db, 'restaurants'), limit(300)));
+    ALL_DATA = [];
+    snap1.forEach(d => ALL_DATA.push(parseRest(d)));
+    calcDist(ALL_DATA);
     ALL_DATA.sort((a,b) => a.dist - b.dist);
-    _loadAllDone = true;
     applyFilter();
-    // 로딩 전에 검색했던 텍스트가 있으면 다시 실행
-    if (_pendingSearch) { _pendingSearch = false; doSearch(); }
+    document.getElementById('sheet-title').textContent = '내 주변 맛집';
 
-    // 백그라운드 로드 제거 - 30개로 충분
+    // 2단계: 나머지 백그라운드 로드
+    getDocs(query(collection(db, 'restaurants'), limit(2000))).then(snapAll => {
+      const newData = [];
+      snapAll.forEach(d => newData.push(parseRest(d)));
+      calcDist(newData);
+      ALL_DATA = newData;
+      ALL_DATA.sort((a,b) => a.dist - b.dist);
+      _loadAllDone = true;
+      applyFilter();
+      if (_pendingSearch) { _pendingSearch = false; doSearch(); }
+    }).catch(e => console.log('전체 로드 실패:', e));
+
     // 딥링크 처리
     const params = new URLSearchParams(location.search);
     const deepId = params.get('id');
