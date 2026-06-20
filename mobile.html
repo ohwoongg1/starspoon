@@ -1172,7 +1172,7 @@ window.selectCurator = function(el, name) {
     document.getElementById('reset-btn').style.display = 'block';
   } else {
     document.getElementById('search-placeholder').textContent = '지역 / 큐레이터 / 식당이름';
-    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('reset-btn').style.display = 'block';
   }
 };
 
@@ -1187,7 +1187,7 @@ window.resetHome = function() {
   const allPill = document.querySelector('.c-pill[data-name=""]');
   if (allPill) allPill.classList.add('on');
   document.getElementById('search-placeholder').textContent = '지역 / 큐레이터 / 식당이름';
-  document.getElementById('reset-btn').style.display = 'none';
+  document.getElementById('reset-btn').style.display = 'block';
   loadNearby();
 };
 
@@ -1248,7 +1248,7 @@ window.doSearch = function() {
     document.getElementById('reset-btn').style.display = 'block';
   } else {
     document.getElementById('search-placeholder').textContent = '지역 / 큐레이터 / 식당이름';
-    document.getElementById('reset-btn').style.display = 'none';
+    document.getElementById('reset-btn').style.display = 'block';
   }
   // 지역 있으면 지도 이동
   if (selRegion && map) {
