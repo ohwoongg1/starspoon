@@ -483,7 +483,7 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
     <button id="search-back" onclick="closeSearch()"><i class="ti ti-arrow-left"></i></button>
     <div id="search-input-wrap">
       <i class="ti ti-search" style="color:var(--text3);font-size:16px;flex-shrink:0"></i>
-      <input id="search-input" type="text" placeholder="지역 / 큐레이터 / 식당이름"
+      <input id="search-input" type="text" placeholder="큐레이터·지역·음식 선택 후 엔터"
         oninput="onSearchInput(this.value)"
         onkeydown="if(event.key==='Enter')doSearch()">
       <button id="search-clear" onclick="clearSearchInput()">✕</button>
@@ -510,14 +510,27 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:-apple-system,'Pret
       <button class="search-region-btn" onclick="selectRegion(this,'경상')">경상</button>
       <button class="search-region-btn" onclick="selectRegion(this,'제주')">제주</button>
     </div>
+    <div class="search-section-title" style="margin-top:14px">🍽️ 음식 카테고리</div>
+    <div class="search-region-grid">
+      <button class="search-region-btn" onclick="selectCat(this,'한식')">🍚 한식</button>
+      <button class="search-region-btn" onclick="selectCat(this,'국밥·탕')">🍲 국밥·탕</button>
+      <button class="search-region-btn" onclick="selectCat(this,'고기')">🥩 고기</button>
+      <button class="search-region-btn" onclick="selectCat(this,'냉면')">🍜 냉면</button>
+      <button class="search-region-btn" onclick="selectCat(this,'중식')">🥡 중식</button>
+      <button class="search-region-btn" onclick="selectCat(this,'일식')">🍣 일식</button>
+      <button class="search-region-btn" onclick="selectCat(this,'분식')">🍢 분식</button>
+      <button class="search-region-btn" onclick="selectCat(this,'해산물')">🦞 해산물</button>
+      <button class="search-region-btn" onclick="selectCat(this,'양식')">🍝 양식</button>
+      <button class="search-region-btn" onclick="selectCat(this,'제과·빵')">🥐 빵</button>
+      <button class="search-region-btn" onclick="selectCat(this,'카페·디저트')">☕ 카페</button>
+    </div>
   </div>
-  <div id="search-footer">
-    <button id="search-submit" onclick="doSearch()">🔍 검색하기</button>
-    <div onclick="openNaverSearch()" style="display:flex;align-items:center;gap:10px;background:#EEF9F3;border-radius:12px;padding:13px 16px;border:1px solid #00C73C;cursor:pointer;margin-top:8px">
+  <div id="search-footer" style="padding:12px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom))">
+    <div onclick="openNaverSearch()" style="display:flex;align-items:center;gap:10px;background:#EEF9F3;border-radius:12px;padding:13px 16px;border:1px solid #00C73C;cursor:pointer">
       <i class="ti ti-map-2" style="font-size:20px;color:#00C73C;flex-shrink:0"></i>
       <div>
-        <div style="font-size:14px;font-weight:700;color:#005C1A">네이버 지도에서 검색</div>
-        <div style="font-size:11px;color:#007A24">스타스푼에 없는 가게 찾기</div>
+        <div style="font-size:14px;font-weight:700;color:#005C1A">스타스푼 이외의 일반음식점 검색</div>
+        <div style="font-size:11px;color:#007A24">네이버 지도에서 찾기</div>
       </div>
       <i class="ti ti-external-link" style="font-size:15px;color:#00C73C;margin-left:auto"></i>
     </div>
@@ -1228,10 +1241,25 @@ window.clearSearchInput = function() {
   document.getElementById('search-input').value = '';
   document.getElementById('search-clear').style.display = 'none';
 };
+
+// 검색창 조건 텍스트 업데이트
+function updateSearchInputText() {
+  const parts = [];
+  if (searchSelCurator) parts.push(searchSelCurator);
+  if (searchSelRegion) parts.push(searchSelRegion);
+  if (searchSelCat) parts.push(searchSelCat);
+  const input = document.getElementById('search-input');
+  if (input) {
+    input.value = parts.join(' ');
+    document.getElementById('search-clear').style.display = parts.length ? 'block' : 'none';
+  }
+}
+
 window.searchSelectCurator = function(el, name) {
   searchSelCurator = name;
   document.querySelectorAll('.search-curator-btn').forEach(b => b.classList.remove('on'));
   el.classList.add('on');
+  updateSearchInputText();
 };
 window.selectRegion = function(el, region) {
   if (searchSelRegion === region) {
@@ -1239,9 +1267,34 @@ window.selectRegion = function(el, region) {
     el.classList.remove('on');
   } else {
     searchSelRegion = region;
-    document.querySelectorAll('.search-region-btn').forEach(b => b.classList.remove('on'));
+    // 지역 버튼만 off (카테고리 버튼 건드리지 않게)
+    document.querySelectorAll('.search-region-btn').forEach(b => {
+      if (!['한식','국밥·탕','고기','냉면','중식','일식','분식','해산물','양식','제과·빵','카페·디저트'].some(c => b.textContent.includes(c))) {
+        b.classList.remove('on');
+      }
+    });
     el.classList.add('on');
   }
+  updateSearchInputText();
+};
+
+// 카테고리 선택 (검색패널)
+let searchSelCat = '';
+window.selectCat = function(el, cat) {
+  if (searchSelCat === cat) {
+    searchSelCat = '';
+    el.classList.remove('on');
+  } else {
+    searchSelCat = cat;
+    // 카테고리 버튼만 off
+    document.querySelectorAll('.search-region-btn').forEach(b => {
+      if (['한식','국밥·탕','고기','냉면','중식','일식','분식','해산물','양식','제과·빵','카페·디저트'].some(c => b.textContent.includes(c))) {
+        b.classList.remove('on');
+      }
+    });
+    el.classList.add('on');
+  }
+  updateSearchInputText();
 };
 window.doSearch = function() {
   const text = document.getElementById('search-input').value.trim();
@@ -1255,6 +1308,8 @@ window.doSearch = function() {
   searchText = text;
   selCurator = searchSelCurator;
   selRegion = searchSelRegion;
+  // 카테고리 동기화
+  if (searchSelCat) selCat = searchSelCat;
   // 큐레이터 스트립 동기화
   document.querySelectorAll('.c-pill').forEach(p => {
     p.classList.toggle('on', p.dataset.name === selCurator);
