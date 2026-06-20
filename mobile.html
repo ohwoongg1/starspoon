@@ -1023,7 +1023,7 @@ window.openKakaoMap = function() {
 window.openNaverReserve = function() {
   if (!currentRest) return;
   const query = encodeURIComponent(currentRest.name + ' ' + (currentRest.area || ''));
-  window.open('https://booking.naver.com/booking/6/bizes?query=' + query, '_blank');
+  window.open('https://m.place.naver.com/restaurant/list?query=' + query, '_blank');
 };
 
 window.openNaverMap = function() {
