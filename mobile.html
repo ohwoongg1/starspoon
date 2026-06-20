@@ -896,13 +896,20 @@ window.openDetail = function(id) {
     <div class="action-grid">
       <button class="action-btn primary" onclick="openNaverMap()"><i class="ti ti-map-2"></i>네이버 길찾기</button>
       <button class="action-btn red" onclick="openYoutube()"><i class="ti ti-brand-youtube"></i>영상</button>
-      <button class="action-btn" onclick="openCommentModal('${id}','${r.name}')"><i class="ti ti-message-circle" style="color:var(--gold)"></i>댓글·평점</button>
+      <button class="action-btn" onclick="openNaverReserve()" style="background:#FFF;border-color:#03C75A;color:#03C75A"><i class="ti ti-calendar" style="color:#03C75A"></i>네이버 예약</button>
       <button class="action-btn" onclick="shareKakao()" style="background:#FEE500;border-color:#FEE500;color:#3A1D1D">
         <svg width="20" height="20" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
         카카오 공유
       </button>
     </div>
-    ${r.avgRating ? `<div style="font-size:13px;color:var(--text3);text-align:center;margin-top:8px">★ ${r.avgRating.toFixed(1)} (${r.ratingCount}개 평점)</div>` : ''}
+    <div style="border-top:1px solid var(--border);margin:14px 0 10px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span style="font-size:14px;font-weight:700;color:var(--text)">💬 댓글·평점</span>
+      ${r.avgRating ? `<span style="font-size:13px;color:var(--gold);font-weight:600">★ ${r.avgRating.toFixed(1)} (${r.ratingCount}개)</span>` : '<span style="font-size:12px;color:var(--text3)">첫 평점을 남겨보세요!</span>'}
+    </div>
+    <button onclick="openCommentModal('${id}','${r.name}')" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--border2);background:#fff;font-size:14px;font-weight:600;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+      <i class="ti ti-message-circle" style="font-size:18px;color:var(--gold)"></i> 댓글 보기 · 평점 남기기
+    </button>
   `;
   document.getElementById('detail-panel').classList.add('open');
   // 저장 버튼 상태 업데이트
@@ -1013,6 +1020,12 @@ window.openKakaoMap = function() {
   appLink.click();
   setTimeout(() => window.open(webUrl, '_blank'), 1500);
 };
+window.openNaverReserve = function() {
+  if (!currentRest) return;
+  const query = encodeURIComponent(currentRest.name + ' ' + (currentRest.area || ''));
+  window.open('https://booking.naver.com/booking/6/bizes?query=' + query, '_blank');
+};
+
 window.openNaverMap = function() {
   if (!currentRest) return;
   const query = currentRest.address
