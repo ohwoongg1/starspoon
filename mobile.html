@@ -1166,6 +1166,14 @@ window.selectCurator = function(el, name) {
     map.setCenter(new kakao.maps.LatLng(first.lat, first.lng));
     map.setLevel(8);
   }
+  // X버튼 표시/숨김
+  if (name) {
+    document.getElementById('search-placeholder').textContent = name;
+    document.getElementById('reset-btn').style.display = 'block';
+  } else {
+    document.getElementById('search-placeholder').textContent = '지역 / 큐레이터 / 식당이름';
+    document.getElementById('reset-btn').style.display = 'none';
+  }
 };
 
 // ── 검색 패널 ──
