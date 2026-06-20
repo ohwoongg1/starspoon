@@ -1321,6 +1321,11 @@ function matchRegion(r, region) {
   const addr = r.address || '';
   const combined = area + ' ' + addr;
 
+  // 광주 검색 시 경기 광주시 제외 (광주광역시만 매칭)
+  if (norm === '광주') {
+    return area.startsWith('광주') && !area.includes('경기');
+  }
+
   // 직접 매칭
   if (combined.includes(norm) || combined.includes(region) ||
       area.startsWith(norm) || addr.includes(norm)) return true;
