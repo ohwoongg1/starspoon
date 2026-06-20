@@ -2677,8 +2677,24 @@ window.doSearch = async function(q) {
     return;
   }
 
-  // 일반 검색 (맛집명/음식/연예인)
+  // 일반 검색 (맛집명/음식/연예인) - 전체 DB에서 검색
   regionFilter = '';
+  document.getElementById('listCount').textContent = '검색 중...';
+  try {
+    const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
+    DATA = [];
+    snapAll.forEach(d => {
+      const r = d.data();
+      DATA.push({
+        id: d.id, name: r.name||'', celeb: r.celeb||'',
+        celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+        area: r.area||'', comment: r.comment||'',
+        yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
+        visits: r.visits||0, saves: r.saves||0,
+        avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+      });
+    });
+  } catch(e) { console.log('검색 로드 오류:', e); }
   renderList();
   renderPins();
   const items = filtered();
