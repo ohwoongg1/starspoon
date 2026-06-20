@@ -1306,7 +1306,10 @@ window.doSearch = function() {
     closeSearch();
     return;
   }
-  searchText = text;
+  // 검색창 텍스트가 순수 타이핑인지 조건 표시용인지 구분
+  // 조건 버튼으로 채워진 경우 searchText는 비워서 이름검색 안 함
+  const isConditionOnly = (searchSelCurator || searchSelRegion || searchSelCat) && !text.replace(searchSelCurator,'').replace(searchSelRegion,'').replace(searchSelCat,'').replace(/·/g,'').trim();
+  searchText = isConditionOnly ? '' : text;
   selCurator = searchSelCurator;
   selRegion = searchSelRegion;
   // 카테고리 동기화
