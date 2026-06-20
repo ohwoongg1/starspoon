@@ -647,7 +647,11 @@ let ALL_DATA = []; // 전체 로드된 맛집
 let STAR_CURATORS = [];
 let selCurator = '';
 let selRegion = '';
+let selCat = '';
 let searchText = '';
+let searchSelCurator = '';
+let searchSelRegion = '';
+let searchSelCat = '';
 let savedList = [];
 let currentRest = null;
 let map, markers = [], markerMap = {};
@@ -1216,8 +1220,6 @@ window.selectCurator = function(el, name) {
 };
 
 // ── 검색 패널 ──
-let searchSelCurator = '';
-let searchSelRegion = '';
 
 window.resetHome = function() {
   selCurator = '';
@@ -1287,7 +1289,6 @@ window.selectRegion = function(el, region) {
 };
 
 // 카테고리 선택 (검색패널)
-let searchSelCat = '';
 window.selectCat = function(el, cat) {
   if (searchSelCat === cat) {
     searchSelCat = '';
