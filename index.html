@@ -1542,7 +1542,7 @@ function renderList() {
             ${isSaved?'❤️ 저장됨':'🤍 저장'}
           </button>
           <a class="btn-sm" href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);if(window.innerWidth<=768){event.preventDefault();location.href=this.href;}" style="text-decoration:none;color:#FF0000;border-color:#FF0000">▶️ 영상</a>
-          <a class="btn-sm" href="https://m.place.naver.com/restaurant/list?query=${encodeURIComponent(d.name+' '+d.area)}" target="_blank" onclick="event.stopPropagation()" style="text-decoration:none;color:#03C75A;border-color:#03C75A">📅 예약</a>
+          <a class="btn-sm" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()" style="text-decoration:none;color:#03C75A;border-color:#03C75A">📅 예약</a>
         </div>
       </div>
       <div class="rest-link">
