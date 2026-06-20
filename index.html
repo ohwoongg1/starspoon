@@ -1628,7 +1628,72 @@ kakao.maps.load(function() {
   map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
   // 데이터 로드 완료 후 핀 표시
   setTimeout(() => { if (DATA.length) renderPins(); }, 1500);
+
+  // 지도 이동/줌 끝날 때 현재 범위 안 맛집만 표시
+  kakao.maps.event.addListener(map, 'dragend', filterByMapBounds);
+  kakao.maps.event.addListener(map, 'zoom_changed', filterByMapBounds);
 });
+
+function filterByMapBounds() {
+  if (!map || !DATA.length) return;
+  const bounds = map.getBounds();
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+  const allItems = filtered(); // 현재 필터 적용된 전체 목록
+  const inBounds = allItems.filter(r =>
+    r.lat >= sw.getLat() && r.lat <= ne.getLat() &&
+    r.lng >= sw.getLng() && r.lng <= ne.getLng()
+  );
+  // 리스트만 업데이트 (핀은 그대로 유지)
+  document.getElementById('listCount').textContent = inBounds.length + '곳';
+  const list = document.getElementById('restList');
+  if (!inBounds.length) {
+    list.innerHTML = '<div class="empty"><i class="ti ti-map-search"></i><p>현재 지도 범위에 맛집이 없어요<br><small>지도를 이동하거나 축소해보세요</small></p></div>';
+    return;
+  }
+  const savedListLocal = savedList;
+  list.innerHTML = inBounds.map((d, i) => {
+    const isSaved = savedListLocal.includes(d.id);
+    const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
+    return `<div class="rest-card" id="card-${d.id}" onclick="focusCard('${d.id}')" onmouseenter="hoverCard('${d.id}')" onmouseleave="unhoverCard('${d.id}')">
+      <div class="rest-card-top">
+        <div class="rest-rank rank-num ${rankClass}">${i+1}</div>
+        <div class="rest-info">
+          <div class="rest-name" onclick="event.stopPropagation();showMapForCard('${d.id}')">${d.name}</div>
+          <div class="rest-meta">
+            ${(d.celebs||[d.celeb]).map(c => `<span class="rest-badge">${c}</span>`).join('')}
+            <span class="rest-cat">${d.cat}</span>
+            <span style="color:var(--border2)">·</span>
+            <span class="rest-area">${d.area}</span>
+          </div>
+        </div>
+      </div>
+      <div class="rest-comment">"${d.comment || '이 맛집을 소개합니다'}"</div>
+      <div class="rest-foot">
+        <div class="rest-rating">
+          ${d.avgRating ? `<span style="color:var(--gold)">★</span> ${d.avgRating.toFixed(1)}` : '<span style="color:var(--border2)">★</span> 평점없음'}
+          <span class="rest-rating-count">${d.ratingCount ? `(${d.ratingCount})` : ''}</span>
+        </div>
+        <div class="rest-saves"><i class="ti ti-heart" style="font-size:11px"></i> ${d.saves||0}</div>
+        <div class="rest-btns">
+          <a class="btn-sm map" href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" onclick="event.stopPropagation()">🗺️ 길찾기</a>
+          <button class="btn-sm${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')">
+            ${isSaved?'❤️ 저장됨':'🤍 저장'}
+          </button>
+          <a class="btn-sm" href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" target="_blank" style="text-decoration:none;color:#FF0000;border-color:#FF0000" onclick="event.stopPropagation()">▶️ 영상</a>
+          <a class="btn-sm" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()" style="text-decoration:none;color:#03C75A;border-color:#03C75A">📅 예약</a>
+        </div>
+      </div>
+      <div class="rest-link">
+        ${d.yt
+          ? `<a class="link-btn link-yt" href="${d.yt}" target="_blank" onclick="event.stopPropagation()"><i class="ti ti-brand-youtube"></i> 영상 보기</a>`
+          : `<button class="link-btn link-add" onclick="event.stopPropagation();openYtModal('${d.id}','${d.name.replace(/'/g,"\'")}')"><i class="ti ti-plus"></i> 링크 추가</button>`
+        }
+        <button class="link-btn" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\'")}')" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:600">💬 댓글·평점</button>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 function renderPins() {
   markers.forEach(m => m.setMap(null));
