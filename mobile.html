@@ -1205,6 +1205,7 @@ let searchSelRegion = '';
 window.resetHome = function() {
   selCurator = '';
   selRegion = '';
+  searchText = '';
   document.querySelectorAll('.c-pill').forEach(p => p.classList.remove('on'));
   const allPill = document.querySelector('.c-pill[data-name=""]');
   if (allPill) allPill.classList.add('on');
@@ -1561,6 +1562,16 @@ window.openNaverSearch = function() {
 };
 
 // ── 초기화 ──
+// 사파리 BFCache 복원 시 검색 상태 초기화
+window.addEventListener('pageshow', function(e) {
+  if (e.persisted) {
+    searchText = '';
+    selCurator = '';
+    selRegion = '';
+    document.getElementById('search-placeholder').textContent = '지역 / 큐레이터 / 식당이름';
+  }
+});
+
 handleKakaoCallback();
 
 // 딥링크 처리: ?name=xxx&celeb=xxx 로 오면 해당 맛집 찾아서 상세 열기
