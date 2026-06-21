@@ -412,7 +412,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     margin:10px auto 0;flex-shrink:0;
   }
   .list-header{padding:8px 16px 10px;flex-shrink:0}
-  .list-body{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1}
+  .list-body{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;flex:1;overscroll-behavior:contain}
 
   /* 큐레이터 패널 숨기기 (지도 위 pills로 대체) */
   .curator-panel{display:none!important}
@@ -1364,6 +1364,7 @@ window.selectAllCurator = async function() {
     DATA = [];
     snap.forEach(d => {
       const r = d.data();
+      const dlat = (r.lat||37.5665) - myLat, dlng = (r.lng||126.9780) - myLng;
       DATA.push({
         id: d.id, name: r.name||'', celeb: r.celeb||'',
         celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
@@ -1372,12 +1373,13 @@ window.selectAllCurator = async function() {
         visits: r.visits||0, saves: r.saves||0,
         avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
         registeredBy: r.registeredBy||null,
+        dist: Math.sqrt(dlat*dlat + dlng*dlng) * 111320,
       });
     });
+    DATA.sort((a,b) => (a.dist||999999) - (b.dist||999999));
     renderList();
     renderPins();
-    if (map) { map.setCenter(new kakao.maps.LatLng(37.5550, 126.9700)); map.setLevel(8); }
-    showToast('전체 맛집 ' + DATA.length + '곳');
+    showToast('전체 맛집 ' + DATA.length + '곳 · 가까운 순');
   } catch(e) { showToast('로드 실패'); }
 };
 
@@ -1396,7 +1398,7 @@ window.selectCurator = async function(name, uid) {
       DATA = [];
       snap.forEach(d => {
         const r = d.data();
-        const dlat = (r.lat||37.5665) - cLat, dlng = (r.lng||126.9780) - cLng;
+        const dlat = (r.lat||37.5665) - myLat, dlng = (r.lng||126.9780) - myLng;
         DATA.push({
           id: d.id, name: r.name||'', celeb: r.celeb||'',
           celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
@@ -1404,7 +1406,7 @@ window.selectCurator = async function(name, uid) {
           yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
           visits: r.visits||0, saves: r.saves||0,
           avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
-          dist: Math.sqrt(dlat*dlat + dlng*dlng),
+          dist: Math.sqrt(dlat*dlat + dlng*dlng) * 111320,
         });
       });
       // 지도 범위 필터
@@ -1769,6 +1771,7 @@ function renderList() {
             <span class="rest-cat">${d.cat}</span>
             <span style="color:var(--border2)">·</span>
             <span class="rest-area">${d.area}</span>
+            ${d.dist != null ? `<span style="color:var(--border2)">·</span><span style="color:var(--text3);font-size:11px">${d.dist < 1000 ? Math.round(d.dist)+'m' : (d.dist/1000).toFixed(1)+'km'}</span>` : ''}
           </div>
         </div>
       </div>
@@ -1864,6 +1867,9 @@ async function checkAchievements(restId) {
 }
 
 // ── 지도 ──
+// 내 위치 전역 저장
+let myLat = 37.5550, myLng = 126.9700;
+
 kakao.maps.load(function() {
   const container = document.getElementById('kakao-map');
   map = new kakao.maps.Map(container, {
@@ -1871,8 +1877,41 @@ kakao.maps.load(function() {
     level: 8
   });
   map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
-  // 데이터 로드 완료 후 핀 표시
-  setTimeout(() => { if (DATA.length) renderPins(); }, 1500);
+
+  // 내 위치 가져와서 지도 이동 + 거리 재계산
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      myLat = pos.coords.latitude;
+      myLng = pos.coords.longitude;
+      map.setCenter(new kakao.maps.LatLng(myLat, myLng));
+      map.setLevel(7);
+      // 내 위치 마커
+      const mySvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#4A90D9" stroke="white" stroke-width="2"/><circle cx="10" cy="10" r="3" fill="white"/></svg>`;
+      new kakao.maps.Marker({
+        map, zIndex: 99,
+        position: new kakao.maps.LatLng(myLat, myLng),
+        image: new kakao.maps.MarkerImage(
+          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(mySvg),
+          new kakao.maps.Size(20,20), {offset: new kakao.maps.Point(10,10)}
+        )
+      });
+      // 거리 재계산 후 리스트 업데이트
+      if (DATA.length) {
+        DATA.forEach(r => {
+          const dlat = r.lat - myLat, dlng = r.lng - myLng;
+          r.dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320; // 미터 단위
+        });
+        DATA.sort((a,b) => (a.dist||999999) - (b.dist||999999));
+        renderList();
+        renderPins();
+      }
+    }, () => {
+      // 위치 거부 시 서울 기본값
+      if (DATA.length) renderPins();
+    });
+  } else {
+    setTimeout(() => { if (DATA.length) renderPins(); }, 1500);
+  }
 
   // 드래그 끝날 때만 → 지도 중심 기준 주변 맛집으로 리스트 업데이트
   kakao.maps.event.addListener(map, 'dragend', function() {
@@ -1884,10 +1923,10 @@ kakao.maps.load(function() {
     const cLat = center.getLat(), cLng = center.getLng();
     // 드래그 범위 저장 (큐레이터 선택 시 재사용)
     mapBoundsFilter = {sw, ne, cLat, cLng};
-    // 거리 재계산
+    // 거리 재계산 (내 위치 기준, 미터)
     DATA.forEach(r => {
-      const dlat = r.lat - cLat, dlng = r.lng - cLng;
-      r.dist = Math.sqrt(dlat*dlat + dlng*dlng);
+      const dlat = r.lat - myLat, dlng = r.lng - myLng;
+      r.dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
     });
     // 현재 지도 범위 안 맛집만 필터
     const allFiltered = filtered();
