@@ -412,7 +412,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     margin:10px auto 0;flex-shrink:0;
   }
   .list-header{padding:8px 16px 10px;flex-shrink:0}
-  .list-body{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;flex:1;overscroll-behavior:contain}
+  .list-body{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;flex:1;overscroll-behavior:contain;touch-action:pan-y}
 
   /* 큐레이터 패널 숨기기 (지도 위 pills로 대체) */
   .curator-panel{display:none!important}
@@ -1517,18 +1517,19 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // 바텀시트 드래그 처리
+  // 바텀시트 드래그 처리 (핸들 터치로 높이 조절)
   const sheet = document.querySelector('.list-panel');
   if (!sheet) return;
   let startY = 0, startH = 0, dragging = false;
-  const handle = document.createElement('div');
-  handle.style.cssText = 'height:20px;cursor:grab;flex-shrink:0;display:flex;align-items:center;justify-content:center';
-  handle.innerHTML = '<div style="width:40px;height:4px;background:var(--border2);border-radius:2px"></div>';
-  sheet.insertBefore(handle, sheet.firstChild);
 
-  handle.addEventListener('touchstart', e => {
+  // ::before 핸들 영역(상단 20px)에서만 드래그 감지
+  sheet.addEventListener('touchstart', e => {
     if (window.innerWidth > 768) return;
-    startY = e.touches[0].clientY;
+    const rect = sheet.getBoundingClientRect();
+    const touchY = e.touches[0].clientY;
+    // 시트 상단 30px 영역에서만 드래그 시작
+    if (touchY - rect.top > 30) return;
+    startY = touchY;
     startH = sheet.getBoundingClientRect().height;
     dragging = true;
   }, {passive:true});
@@ -1537,6 +1538,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!dragging || window.innerWidth > 768) return;
     const dy = startY - e.touches[0].clientY;
     const newH = Math.min(Math.max(startH + dy, 80), window.innerHeight * 0.85);
+    sheet.style.height = newH + 'px';
     sheet.style.maxHeight = newH + 'px';
   }, {passive:true});
 
@@ -1657,8 +1659,10 @@ async function loadRests(celeb) {
     let q = query(collection(db, 'restaurants'), where('celeb', '==', celeb), limit(2000));
     const snap = await getDocs(q);
     DATA = [];
+    DATA = [];
     snap.forEach(d => {
       const r = d.data();
+      const dlat = (r.lat||37.5665) - myLat, dlng = (r.lng||126.9780) - myLng;
       DATA.push({
         id: d.id,
         name: r.name || '',
@@ -1676,15 +1680,11 @@ async function loadRests(celeb) {
         ratingCount: r.ratingCount || 0,
         registeredBy: r.registeredBy || null,
         hidden: r.hidden || false,
+        dist: Math.sqrt(dlat*dlat + dlng*dlng) * 111320,
       });
     });
     renderList();
     renderPins();
-    // 지도 위치는 서울 중심 고정 (자동 이동 제거)
-    if (map) {
-      map.setCenter(new kakao.maps.LatLng(37.5550, 126.9700));
-      map.setLevel(8);
-    }
   } catch(e) {
     console.log('로드 오류:', e);
     try {
@@ -1771,7 +1771,7 @@ function renderList() {
             <span class="rest-cat">${d.cat}</span>
             <span style="color:var(--border2)">·</span>
             <span class="rest-area">${d.area}</span>
-            ${d.dist != null ? `<span style="color:var(--border2)">·</span><span style="color:var(--text3);font-size:11px">${d.dist < 1000 ? Math.round(d.dist)+'m' : (d.dist/1000).toFixed(1)+'km'}</span>` : ''}
+            ${d.dist > 0 ? `<span style="color:var(--border2)">·</span><span style="color:var(--text3);font-size:11px">${d.dist < 1000 ? Math.round(d.dist)+'m' : (d.dist/1000).toFixed(1)+'km'}</span>` : ''}
           </div>
         </div>
       </div>
@@ -1878,40 +1878,25 @@ kakao.maps.load(function() {
   });
   map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
 
-  // 내 위치 가져와서 지도 이동 + 거리 재계산
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
-      myLat = pos.coords.latitude;
-      myLng = pos.coords.longitude;
-      map.setCenter(new kakao.maps.LatLng(myLat, myLng));
-      map.setLevel(7);
-      // 내 위치 마커
-      const mySvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#4A90D9" stroke="white" stroke-width="2"/><circle cx="10" cy="10" r="3" fill="white"/></svg>`;
-      new kakao.maps.Marker({
-        map, zIndex: 99,
-        position: new kakao.maps.LatLng(myLat, myLng),
-        image: new kakao.maps.MarkerImage(
-          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(mySvg),
-          new kakao.maps.Size(20,20), {offset: new kakao.maps.Point(10,10)}
-        )
-      });
-      // 거리 재계산 후 리스트 업데이트
-      if (DATA.length) {
-        DATA.forEach(r => {
-          const dlat = r.lat - myLat, dlng = r.lng - myLng;
-          r.dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320; // 미터 단위
-        });
-        DATA.sort((a,b) => (a.dist||999999) - (b.dist||999999));
-        renderList();
-        renderPins();
-      }
-    }, () => {
-      // 위치 거부 시 서울 기본값
-      if (DATA.length) renderPins();
+  // 지도 초기화 후 내 위치 마커 표시 (위치는 초기화에서 이미 가져옴)
+  function showMyLocationMarker() {
+    const mySvg = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="#4A90D9" stroke="white" stroke-width="2"/><circle cx="10" cy="10" r="3" fill="white"/></svg>`;
+    new kakao.maps.Marker({
+      map, zIndex: 99,
+      position: new kakao.maps.LatLng(myLat, myLng),
+      image: new kakao.maps.MarkerImage(
+        'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(mySvg),
+        new kakao.maps.Size(20,20), {offset: new kakao.maps.Point(10,10)}
+      )
     });
-  } else {
-    setTimeout(() => { if (DATA.length) renderPins(); }, 1500);
+    map.setCenter(new kakao.maps.LatLng(myLat, myLng));
+    map.setLevel(7);
   }
+  // 데이터 로드 후 지도 업데이트 (비동기이므로 약간 지연)
+  setTimeout(() => {
+    showMyLocationMarker();
+    if (DATA.length) { renderPins(); }
+  }, 500);
 
   // 드래그 끝날 때만 → 지도 중심 기준 주변 맛집으로 리스트 업데이트
   kakao.maps.event.addListener(map, 'dragend', function() {
@@ -3763,27 +3748,44 @@ async function renderSavedPage() {
   }
   body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)"><i class="ti ti-loader" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4"></i>불러오는 중...</div>';
   try {
-    const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js');
-    const q = query(collection(db, 'saves'), where('uid','==',currentUser.uid));
-    const snap = await getDocs(q);
-    const savedIds = snap.docs.map(d => d.data().restId).filter(Boolean);
-    if (cnt) cnt.textContent = savedIds.length ? '(' + savedIds.length + '곳)' : '';
-    if (!savedIds.length) {
-      body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">저장한 맛집이 없어요<br><i class="ti ti-heart" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i><div style="font-size:12px;margin-top:8px">맛집 카드의 ❤️ 버튼으로 저장하세요!</div></div>';
+    // savedList는 로그인 시 이미 로드됨 (상단 import된 Firestore 사용)
+    if (cnt) cnt.textContent = savedList.length ? '(' + savedList.length + '곳)' : '';
+    if (!savedList.length) {
+      body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">저장한 맛집이 없어요<br><i class="ti ti-heart" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i><div style="font-size:12px;margin-top:8px">맛집 카드의 ❤️ 저장 버튼을 눌러보세요!</div></div>';
       return;
     }
-    const allD = (typeof DATA !== 'undefined' ? DATA : []).concat(typeof ALL_DATA !== 'undefined' ? ALL_DATA : []);
-    const items = savedIds.map(id => allD.find(d => d.id === id)).filter(Boolean);
+    // DATA에 없는 것들은 Firebase에서 직접 로드
+    const notInData = savedList.filter(id => !DATA.find(d => d.id === id));
+    let extraData = [];
+    if (notInData.length > 0) {
+      // 한 번에 전체 로드해서 찾기 (최대 20개)
+      for (const id of notInData.slice(0, 20)) {
+        try {
+          const snap = await getDoc(doc(db, 'restaurants', id));
+          if (snap.exists()) {
+            const r = snap.data();
+            extraData.push({
+              id: snap.id, name: r.name||'', celeb: r.celeb||'',
+              cat: r.category||r.cat||'한식', area: r.area||'',
+              lat: r.lat||37.5665, lng: r.lng||126.9780
+            });
+          }
+        } catch(e) {}
+      }
+    }
+    const allD = [...DATA, ...extraData];
+    const items = savedList.map(id => allD.find(d => d.id === id)).filter(Boolean);
     if (!items.length) {
       body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">저장된 맛집 데이터를 불러오는 중이에요<br>잠시 후 다시 시도해보세요!</div>';
       return;
     }
     body.innerHTML = items.map(d => `
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer" onclick="openDetail('${d.id}');setPage('main',document.querySelector('.pnav'))">
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;active-background:var(--bg2)"
+        onclick="setPage('main',document.querySelector('.pnav'));setTimeout(()=>focusCard('${d.id}'),100)">
         <div style="width:44px;height:44px;border-radius:10px;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⭐</div>
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">${d.celeb} · ${d.cat} · ${d.area}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${d.celeb}${d.cat?' · '+d.cat:''}${d.area?' · '+d.area:''}</div>
         </div>
         <i class="ti ti-chevron-right" style="font-size:16px;color:var(--text3);flex-shrink:0"></i>
       </div>`).join('');
@@ -3797,10 +3799,22 @@ renderAuthArea();
 updateRecentBadge();
 initKakaoLogin();
 
-// Firebase 순차 로드
+// 내 위치 먼저 가져온 후 데이터 로드
 (async () => {
+  // geolocation 먼저 (타임아웃 3초)
+  await new Promise(resolve => {
+    if (!navigator.geolocation) { resolve(); return; }
+    const t = setTimeout(resolve, 3000);
+    navigator.geolocation.getCurrentPosition(pos => {
+      myLat = pos.coords.latitude;
+      myLng = pos.coords.longitude;
+      clearTimeout(t);
+      resolve();
+    }, () => { clearTimeout(t); resolve(); }, {timeout:3000, maximumAge:60000});
+  });
+
   await loadStarCurators(); // 큐레이터 먼저
-  await loadRests('성시경'); // 맛집 다음
+  await loadRests('성시경'); // 맛집 다음 (이제 myLat/myLng가 실제 위치)
 })();
 
 // 처음 방문자 팝업
