@@ -288,17 +288,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .m-course-hd{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .m-course-hd-title{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px}
 .m-course-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3)}
-.m-course-search-area{padding:10px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.m-course-search-area{padding:10px 16px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
 .m-course-search-row{display:flex;gap:8px;margin-bottom:10px}
 .m-course-input{flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:14px;outline:none;-webkit-appearance:none}
 .m-course-input:focus{border-color:var(--gold)}
 .m-course-search-btn{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
-.m-course-dist-row{display:flex;align-items:flex-start;gap:10px}
-.m-course-dist-label{font-size:11px;color:var(--text3);flex-shrink:0;margin-top:6px;font-weight:600}
-.m-course-dist-chips-wrap{display:flex;flex-wrap:wrap;gap:5px;flex:1}
-.m-course-dist-chip{font-size:11px;padding:4px 10px;border-radius:12px;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);cursor:pointer;flex-shrink:0;white-space:nowrap}
+.m-course-dist-row{display:flex;align-items:center;gap:6px;margin-top:8px}
+.m-course-dist-label{font-size:11px;color:var(--text3);flex-shrink:0;font-weight:600}
+/* 칩들: 한 줄 가로 스크롤 */
+.m-course-dist-chips-wrap{display:flex;gap:5px;flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.m-course-dist-chips-wrap::-webkit-scrollbar{display:none}
+.m-course-dist-chip{font-size:11px;padding:5px 11px;border-radius:12px;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);cursor:pointer;flex-shrink:0;white-space:nowrap}
 .m-course-dist-chip.on{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700}
-.m-course-action-btns{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
+/* 오른쪽 액션 버튼 3개 세로 */
+.m-course-action-btns{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
 .m-course-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .m-course-cat-section{border-bottom:1px solid var(--border)}
 .m-course-cat-hd{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
@@ -318,14 +321,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .badge-tour{background:#FFF7ED;color:#C2410C}
 .badge-food{background:#FDF2F8;color:#9D174D}
 .m-course-empty{padding:40px 20px;text-align:center;font-size:14px;color:var(--text3);line-height:1.8}
-.m-course-footer{padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--white)}
-.m-course-footer-info{font-size:11px;color:var(--text3);margin-bottom:6px}
-.m-course-footer-btns{display:flex;gap:8px}
-.m-course-confirm-btn{flex:1;padding:11px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.m-course-footer{display:none} /* footer 제거 - 버튼을 검색영역으로 이동 */
+.m-course-confirm-btn{width:100%;padding:11px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px}
 .m-course-confirm-btn:disabled{background:var(--border2);cursor:not-allowed}
+.m-course-footer-info{font-size:11px;color:var(--text3);margin-top:5px;text-align:center}
 /* 사이드 액션 버튼 */
-.m-course-side-save{padding:7px 10px;background:var(--white);color:var(--gold);border:1.5px solid var(--gold);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px}
-.m-course-side-share{padding:7px 10px;background:#FEE500;color:#3A1D1D;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px}
+.m-course-side-save{padding:6px 9px;background:var(--white);color:var(--gold);border:1.5px solid var(--gold);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px}
+.m-course-side-share{padding:6px 9px;background:#FEE500;color:#3A1D1D;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px}
 /* 코스 지도 배지 */
 .m-course-map-badge{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:190;background:var(--gold);color:#fff;padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;display:none;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(245,158,11,0.4);white-space:nowrap}
 .m-course-map-badge.show{display:flex}
@@ -739,7 +741,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   <div class="m-course-sheet" onclick="event.stopPropagation()">
     <div class="m-course-hd">
       <span class="m-course-hd-title"><i class="ti ti-route" style="color:var(--gold)"></i> 코스 짜기</span>
-      <button class="m-course-close" onclick="closeMCourse()">✕</button>
+      <button class="m-course-close" onclick="resetMCourse()" title="초기화">✕</button>
     </div>
     <div class="m-course-search-area">
       <!-- 검색창 -->
@@ -747,7 +749,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
         <input type="text" class="m-course-input" id="mCourseInput" placeholder="기준 장소 입력 예: 경복궁, 강남역">
         <button class="m-course-search-btn" onclick="searchMCourseBase()"><i class="ti ti-search"></i> 검색</button>
       </div>
-      <!-- 반경 칩 (왼쪽) + 저장·공유 버튼 (오른쪽) -->
+      <!-- 반경 칩 (왼쪽 가로스크롤) + 저장·공유 버튼 (오른쪽 세로) -->
       <div class="m-course-dist-row">
         <span class="m-course-dist-label">반경</span>
         <div class="m-course-dist-chips-wrap" id="mCourseDistChips">
@@ -760,26 +762,22 @@ input::placeholder{color:var(--text3) !important;opacity:1}
         <!-- 오른쪽: 저장·공유 버튼 -->
         <div class="m-course-action-btns">
           <button class="m-course-side-save" onclick="saveMCourse()">
-            <i class="ti ti-bookmark" style="font-size:13px"></i> 저장
+            <i class="ti ti-bookmark" style="font-size:12px"></i> 저장
           </button>
           <button class="m-course-side-share" onclick="shareMCourse()">
-            <svg width="12" height="12" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
+            <svg width="11" height="11" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
             공유
           </button>
         </div>
       </div>
+      <!-- 지도 표시 버튼 + 선택 정보 -->
+      <button class="m-course-confirm-btn" id="mCourseConfirmBtn" onclick="confirmMCourse()" disabled>
+        <i class="ti ti-map" style="font-size:15px"></i> 지도에 코스 표시
+      </button>
+      <div class="m-course-footer-info" id="mCourseSelectedInfo">장소를 선택해주세요</div>
     </div>
     <div class="m-course-body" id="mCourseBody">
       <div class="m-course-empty"><i class="ti ti-map-pin" style="font-size:36px;display:block;margin-bottom:10px;opacity:0.25"></i>기준 장소를 검색하면<br>주변 맛집·명소가 카테고리별로 나와요!</div>
-    </div>
-    <!-- footer: 선택정보 + 지도표시 버튼만 -->
-    <div class="m-course-footer">
-      <div class="m-course-footer-info" id="mCourseSelectedInfo">장소를 선택해주세요</div>
-      <div class="m-course-footer-btns">
-        <button class="m-course-confirm-btn" id="mCourseConfirmBtn" onclick="confirmMCourse()" disabled>
-          <i class="ti ti-map" style="font-size:15px;vertical-align:-2px"></i> 지도에 코스 표시
-        </button>
-      </div>
     </div>
   </div>
 </div>
@@ -3653,22 +3651,33 @@ let mCourseMarkers = [];
 
 window.openMCourse = function() {
   document.getElementById('mCourseOverlay').classList.add('show');
+  // 재열 시 기존 상태 복원 (선택된 항목 체크박스 재렌더)
+  if (mCourseBasePlace && Object.keys(mCourseSelected).length) {
+    updateMCourseFooter();
+  }
 };
 
+// 바깥 탭 → 패널만 닫기 (상태 유지)
 window.closeMCourse = function(e) {
   if (!e || e.target === document.getElementById('mCourseOverlay')) {
     document.getElementById('mCourseOverlay').classList.remove('show');
-    document.getElementById('mCourseInput').value = '';
-    document.getElementById('mCourseBody').innerHTML = '<div class="m-course-empty"><i class="ti ti-map-pin" style="font-size:36px;display:block;margin-bottom:10px;opacity:0.25"></i>기준 장소를 검색하면<br>주변 맛집·명소가 카테고리별로 나와요!</div>';
-    mCourseBasePlace = null;
-    mCourseSelected = {};
-    window._mCoursePlaces = {};
-    mCourseRadius = 1000;
-    document.querySelectorAll('.m-course-dist-chip').forEach(c => c.classList.remove('on'));
-    const chip1k = document.querySelector('.m-course-dist-chip[data-r="1000"]');
-    if (chip1k) chip1k.classList.add('on');
-    updateMCourseFooter();
+    // 상태 유지 - 닫아도 코스 데이터 그대로
   }
+};
+
+// X버튼 → 완전 초기화
+window.resetMCourse = function() {
+  document.getElementById('mCourseOverlay').classList.remove('show');
+  document.getElementById('mCourseInput').value = '';
+  document.getElementById('mCourseBody').innerHTML = '<div class="m-course-empty"><i class="ti ti-map-pin" style="font-size:36px;display:block;margin-bottom:10px;opacity:0.25"></i>기준 장소를 검색하면<br>주변 맛집·명소가 카테고리별로 나와요!</div>';
+  mCourseBasePlace = null;
+  mCourseSelected = {};
+  window._mCoursePlaces = {};
+  mCourseRadius = 1000;
+  document.querySelectorAll('.m-course-dist-chip').forEach(c => c.classList.remove('on'));
+  const chip1k = document.querySelector('.m-course-dist-chip[data-r="1000"]');
+  if (chip1k) chip1k.classList.add('on');
+  updateMCourseFooter();
 };
 
 window.setMCourseRadius = function(el, r) {
@@ -3915,22 +3924,57 @@ window.saveMCourse = async function() {
   }
 };
 
-window.shareMCourse = function() {
+window.shareMCourse = async function() {
   const places = Object.values(mCourseSelected);
   if (!places.length) { showToast('공유할 장소를 선택해주세요'); return; }
-  if (!window.Kakao?.isInitialized()) window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
-  const placeNames = places.slice(0,3).map((p,i) => (i+1) + '. ' + p.name).join('\n');
-  const shareUrl = 'https://www.starspoon.co.kr';
-  window.Kakao.Share.sendDefault({
-    objectType: 'feed',
-    content: {
-      title: '🗺️ ' + mCourseBasePlace.name + ' 주변 코스 (' + places.length + '곳)',
-      description: placeNames + (places.length > 3 ? '\n외 ' + (places.length-3) + '곳' : '') + '\n\n스타스푼에서 확인해보세요!',
-      imageUrl: 'https://www.starspoon.co.kr/og-image.png',
-      link: {mobileWebUrl: shareUrl, webUrl: shareUrl}
-    },
-    buttons: [{title: '스타스푼 보기', link: {mobileWebUrl: shareUrl, webUrl: shareUrl}}]
-  });
+  if (!mCourseBasePlace) { showToast('기준 장소를 먼저 검색해주세요'); return; }
+
+  showToast('코스 링크 생성 중...');
+
+  try {
+    // Firebase에 공유용 코스 저장 (로그인 불필요 - 익명 저장)
+    const courseRef = await addDoc(collection(db, 'sharedCourses'), {
+      baseName: mCourseBasePlace.name,
+      baseLat: mCourseBasePlace.lat,
+      baseLng: mCourseBasePlace.lng,
+      radius: mCourseRadius,
+      places: places.map(p => ({
+        id: p.id, name: p.name, sub: p.sub||'',
+        lat: p.lat, lng: p.lng, dist: p.dist||0,
+        badge: p.badge||'', badgeText: p.badgeText||'', type: p.type||''
+      })),
+      createdBy: currentUser?.uid || 'anonymous',
+      createdByName: currentUser?.displayName || '익명',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30*24*60*60*1000).toISOString() // 30일
+    });
+
+    const courseId = courseRef.id;
+    const shareUrl = 'https://www.starspoon.co.kr/mobile.html?courseId=' + courseId;
+
+    if (!window.Kakao?.isInitialized()) window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
+
+    const placeNames = places.slice(0,3).map((p,i) => (i+1) + '. ' + p.name).join('\n');
+    const desc = placeNames + (places.length > 3 ? '\n외 ' + (places.length-3) + '곳' : '')
+               + '\n\n링크를 열면 지도에서 바로 코스를 확인할 수 있어요!';
+
+    window.Kakao.Share.sendDefault({
+      objectType: 'feed',
+      content: {
+        title: '🗺️ ' + mCourseBasePlace.name + ' 코스 (' + places.length + '곳)',
+        description: desc,
+        imageUrl: 'https://www.starspoon.co.kr/og-image.png',
+        link: {mobileWebUrl: shareUrl, webUrl: shareUrl}
+      },
+      buttons: [{
+        title: '코스 지도에서 보기 🗺️',
+        link: {mobileWebUrl: shareUrl, webUrl: shareUrl}
+      }]
+    });
+
+  } catch(e) {
+    showToast('공유 실패: ' + e.message);
+  }
 };
 
 
@@ -4121,8 +4165,99 @@ initKakaoLogin();
   });
 
   await loadStarCurators(); // 큐레이터 먼저
-  await loadRests('성시경'); // 성시경 맛집 (거리순 정렬)
+
+  // URL에 courseId 있으면 공유받은 코스 표시
+  const _urlParams = new URLSearchParams(window.location.search);
+  const _courseId = _urlParams.get('courseId');
+  if (_courseId) {
+    await loadSharedCourse(_courseId);
+  } else {
+    await loadRests('성시경'); // 성시경 맛집 (거리순 정렬)
+  }
 })();
+
+// ── 공유받은 코스 로드 ──
+async function loadSharedCourse(courseId) {
+  try {
+    showToast('공유받은 코스를 불러오는 중...');
+    const snap = await getDoc(doc(db, 'sharedCourses', courseId));
+    if (!snap.exists()) {
+      showToast('코스를 찾을 수 없어요 (만료됐을 수 있어요)');
+      await loadRests('성시경');
+      return;
+    }
+    const c = snap.data();
+
+    // 맛집 데이터도 로드
+    await loadRests('성시경');
+
+    // 지도가 준비될 때까지 대기
+    await new Promise(resolve => {
+      const check = setInterval(() => {
+        if (map) { clearInterval(check); resolve(); }
+      }, 100);
+      setTimeout(() => { clearInterval(check); resolve(); }, 3000);
+    });
+
+    // 코스 지도에 표시
+    if (mCoursePolyline) { mCoursePolyline.setMap(null); mCoursePolyline = null; }
+    mCourseMarkers.forEach(m => m.setMap(null));
+    mCourseMarkers = [];
+
+    const points = [
+      new kakao.maps.LatLng(c.baseLat, c.baseLng),
+      ...c.places.map(p => new kakao.maps.LatLng(p.lat, p.lng))
+    ];
+
+    mCoursePolyline = new kakao.maps.Polyline({
+      path: points, strokeWeight: 3,
+      strokeColor: '#F59E0B', strokeOpacity: 0.9, strokeStyle: 'solid'
+    });
+    mCoursePolyline.setMap(map);
+
+    points.forEach((pos, i) => {
+      const isBase = i === 0;
+      const svg = isBase
+        ? `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="38" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#1A1A18"/><text x="18" y="25" text-anchor="middle" font-size="13" fill="white">📍</text></svg>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="34" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><text x="18" y="24" text-anchor="middle" font-size="13" fill="white">${i}</text></svg>`;
+      const img = new kakao.maps.MarkerImage(
+        'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
+        isBase ? new kakao.maps.Size(32,38) : new kakao.maps.Size(28,34),
+        {offset: isBase ? new kakao.maps.Point(16,38) : new kakao.maps.Point(14,34)}
+      );
+      mCourseMarkers.push(new kakao.maps.Marker({map, position: pos, image: img}));
+    });
+
+    // 공유받은 코스 안내 배지
+    let badge = document.querySelector('.m-course-map-badge');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.className = 'm-course-map-badge';
+      document.body.appendChild(badge);
+    }
+    badge.innerHTML = `<i class="ti ti-route"></i> ${c.createdByName}의 코스 · ${c.places.length}곳 · <span style="cursor:pointer;text-decoration:underline" onclick="clearMCourseFromMap()">닫기</span>`;
+    badge.classList.add('show');
+
+    const bounds = new kakao.maps.LatLngBounds();
+    points.forEach(p => bounds.extend(p));
+    const topPad = window.innerWidth <= 768 ? 140 : 80;
+    map.setBounds(bounds, topPad);
+    setTimeout(() => { try { map.panBy(0, -70); } catch(e) {} }, 400);
+
+    // URL에서 courseId 파라미터 제거 (뒤로가기 방지)
+    window.history.replaceState({}, '', window.location.pathname);
+
+    // 공유받은 코스를 내 저장 코스에도 추가 제안
+    setTimeout(() => {
+      showToast('📍 ' + c.createdByName + '의 ' + c.baseName + ' 코스예요! 저장 탭에서 보관할 수 있어요');
+    }, 1000);
+
+  } catch(e) {
+    console.log('코스 로드 오류:', e);
+    showToast('코스 불러오기 실패');
+    await loadRests('성시경');
+  }
+}
 
 // 처음 방문자 팝업
 window.closeIntro = function() {
