@@ -3550,13 +3550,14 @@ function updateCourseFooter() {
     info.textContent = '장소를 선택해주세요';
     btn.disabled = true;
   } else {
-    info.textContent = cnt + '곳 선택됨 · 클릭 순서대로 코스가 만들어져요';
+    info.textContent = cnt + '곳 선택됨 · 기준 장소에서 가까운 순으로 코스가 만들어져요';
     btn.disabled = false;
   }
 }
 
 window.confirmCourse = function() {
-  const places = Object.values(courseSelected);
+  // 기준 장소에서 가까운 순으로 자동 정렬
+  const places = Object.values(courseSelected).sort((a, b) => a.dist - b.dist);
   if (!places.length) return;
   document.getElementById('courseOverlay').classList.remove('show');
 
