@@ -3399,8 +3399,20 @@ window.openCoursePlanner = function() {
 };
 
 window.closeCoursePanel = function(e) {
-  if (!e || e.target === document.getElementById('courseOverlay'))
+  if (!e || e.target === document.getElementById('courseOverlay')) {
     document.getElementById('courseOverlay').classList.remove('show');
+    // 패널 초기화
+    document.getElementById('courseBaseInput').value = '';
+    document.getElementById('courseBody').innerHTML = '<div class="course-empty"><i class="ti ti-map-pin" style="font-size:32px;display:block;margin-bottom:8px;opacity:0.3"></i>기준 장소를 검색하면<br>주변 맛집·명소가 카테고리별로 나와요!</div>';
+    courseBasePlace = null;
+    courseSelected = {};
+    window._coursePlaces = {};
+    // 반경 1km로 초기화
+    courseRadius = 1000;
+    document.querySelectorAll('.course-dist-chip').forEach(c => c.classList.remove('on'));
+    document.querySelector('.course-dist-chip[data-r="1000"]').classList.add('on');
+    updateCourseFooter();
+  }
 };
 
 window.setCourseRadius = function(el, r) {
