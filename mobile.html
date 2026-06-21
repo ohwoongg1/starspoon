@@ -525,9 +525,6 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   </div>
   <div class="header-right">
     <div class="header-reg-btns">
-      <button onclick="openMCourse()" style="background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:4px;color:var(--text2);font-size:13px;font-weight:600;white-space:nowrap">
-        <i class="ti ti-route" style="font-size:18px;color:var(--gold)"></i> 코스
-      </button>
       <button onclick="openMyRestModal()" style="background:var(--white);color:var(--gold);border:1.5px solid var(--gold);border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap">
         <i class="ti ti-plus"></i> 내 맛집
       </button>
@@ -570,13 +567,13 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     <i class="ti ti-map" style="font-size:18px"></i>
     <span>맛집지도</span>
   </div>
-  <div class="pnav" onclick="setPage('rank',this)">
-    <i class="ti ti-trophy" style="font-size:18px"></i>
-    <span>순위</span>
+  <div class="pnav" onclick="openMCourse()">
+    <i class="ti ti-route" style="font-size:18px"></i>
+    <span>코스짜기</span>
   </div>
-  <div class="pnav" onclick="setPage('my',this)">
-    <i class="ti ti-spoon" style="font-size:18px"></i>
-    <span>내 스푼</span>
+  <div class="pnav" onclick="setPage('saved',this)">
+    <i class="ti ti-heart" style="font-size:18px"></i>
+    <span>저장한 장소</span>
   </div>
 </div>
 
@@ -652,6 +649,20 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 </div>
 
 <!-- ── 순위 페이지 ── -->
+<!-- ── 저장한 장소 페이지 ── -->
+<div class="rank-page" id="savedPage" style="display:none">
+  <div style="padding:16px 0 8px;font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px">
+    ❤️ 저장한 맛집
+    <span id="savedPageCount" style="font-size:12px;font-weight:400;color:var(--text3)"></span>
+  </div>
+  <div id="savedPageBody">
+    <div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">
+      로그인 후 저장한 맛집이 여기 나와요<br>
+      <i class="ti ti-heart" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i>
+    </div>
+  </div>
+</div>
+
 <div class="rank-page" id="rankPage">
   <!-- 순위 탭 -->
   <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
@@ -2869,10 +2880,15 @@ function renderMyPage() {
 window.setPage = function(page, el) {
   currentPage = page;
   document.querySelectorAll('.pnav').forEach(t => t.classList.remove('on'));
-  el.classList.add('on');
+  if (el) el.classList.add('on');
   document.getElementById('mainLayout').style.display = page==='main' ? 'flex' : 'none';
   document.getElementById('rankPage').classList.toggle('show', page==='rank');
   document.getElementById('myPage').classList.toggle('show', page==='my');
+  const savedPageEl = document.getElementById('savedPage');
+  if (savedPageEl) {
+    savedPageEl.style.display = page==='saved' ? 'block' : 'none';
+    if (page==='saved') renderSavedPage();
+  }
   if (page==='rank') renderRankPage();
   if (page==='my') renderMyPage();
 };
@@ -3684,6 +3700,48 @@ window.shareMCourse = function() {
     buttons: [{title: '스타스푼 보기', link: {mobileWebUrl: shareUrl, webUrl: shareUrl}}]
   });
 };
+
+
+// ── 저장한 장소 페이지 렌더 ──
+async function renderSavedPage() {
+  const body = document.getElementById('savedPageBody');
+  const cnt = document.getElementById('savedPageCount');
+  if (!body) return;
+  if (!currentUser) {
+    body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">로그인 후 저장한 맛집이 여기 나와요<br><i class="ti ti-heart" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i></div>';
+    if (cnt) cnt.textContent = '';
+    return;
+  }
+  body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)"><i class="ti ti-loader" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4"></i>불러오는 중...</div>';
+  try {
+    const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js');
+    const q = query(collection(db, 'saves'), where('uid','==',currentUser.uid));
+    const snap = await getDocs(q);
+    const savedIds = snap.docs.map(d => d.data().restId).filter(Boolean);
+    if (cnt) cnt.textContent = savedIds.length ? '(' + savedIds.length + '곳)' : '';
+    if (!savedIds.length) {
+      body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">저장한 맛집이 없어요<br><i class="ti ti-heart" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i><div style="font-size:12px;margin-top:8px">맛집 카드의 ❤️ 버튼으로 저장하세요!</div></div>';
+      return;
+    }
+    const allD = (typeof DATA !== 'undefined' ? DATA : []).concat(typeof ALL_DATA !== 'undefined' ? ALL_DATA : []);
+    const items = savedIds.map(id => allD.find(d => d.id === id)).filter(Boolean);
+    if (!items.length) {
+      body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">저장된 맛집 데이터를 불러오는 중이에요<br>잠시 후 다시 시도해보세요!</div>';
+      return;
+    }
+    body.innerHTML = items.map(d => `
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer" onclick="openDetail('${d.id}');setPage('main',document.querySelector('.pnav'))">
+        <div style="width:44px;height:44px;border-radius:10px;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⭐</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${d.celeb} · ${d.cat} · ${d.area}</div>
+        </div>
+        <i class="ti ti-chevron-right" style="font-size:16px;color:var(--text3);flex-shrink:0"></i>
+      </div>`).join('');
+  } catch(e) {
+    body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">불러오기 실패: ' + e.message + '</div>';
+  }
+}
 
 // ── 초기화 ──
 renderAuthArea();
