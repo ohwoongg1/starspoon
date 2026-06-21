@@ -397,6 +397,12 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     width:100%;
     overflow:hidden;
     will-change:height;
+    /* 지도로 터치 이벤트 전파 차단 */
+    touch-action:none;
+  }
+  /* list-body만 스크롤 허용 */
+  .list-panel .list-body{
+    touch-action:pan-y;
   }
   /* 검색 중일 때 바텀시트 풀스크린 */
   .list-panel.search-mode{
@@ -1578,18 +1584,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const curH = sheet.getBoundingClientRect().height;
     // 속도 기반 스냅
     if (velocity > 8) {
-      // 빠르게 위로 → 큰 시트
       snapTo(SNAP_LARGE);
     } else if (velocity < -8) {
-      // 빠르게 아래로 → 작은 시트
       snapTo(SNAP_SMALL);
     } else {
-      // 가장 가까운 스냅 포인트로
       const snaps = [SNAP_SMALL, SNAP_MID, SNAP_LARGE];
       const nearest = snaps.reduce((a,b) => Math.abs(a-curH) < Math.abs(b-curH) ? a : b);
       snapTo(nearest);
     }
   });
+
+  // ── 핵심: list-body 스크롤 시 지도로 이벤트 전파 차단 ──
+  const listBody = document.querySelector('.list-body');
+  if (listBody) {
+    // 스크롤 중일 때 touchmove가 지도(카카오맵)로 전파되지 않게 막음
+    listBody.addEventListener('touchstart', e => {
+      // 스크롤 가능한 상태면 이벤트 전파 중단
+      listBody._touchStartY = e.touches[0].clientY;
+      listBody._scrollTop = listBody.scrollTop;
+    }, {passive:true});
+
+    listBody.addEventListener('touchmove', e => {
+      const dy = listBody._touchStartY - e.touches[0].clientY;
+      const atTop    = listBody.scrollTop <= 0 && dy < 0;
+      const atBottom = listBody.scrollTop + listBody.clientHeight >= listBody.scrollHeight && dy > 0;
+      // 스크롤 한계가 아닌 경우에만 전파 차단
+      if (!atTop && !atBottom) {
+        e.stopPropagation(); // 지도로 전파 안 됨
+      }
+    }, {passive:true});
+  }
 });
 
 // ── 데이터 로드 ──
@@ -1747,6 +1771,7 @@ async function loadRests(celeb) {
     return;
   }
   try {
+    document.getElementById('listTitle').textContent = celeb + ' 맛집';
     document.getElementById('listCount').textContent = '로딩 중...';
     let q = query(collection(db, 'restaurants'), where('celeb', '==', celeb), limit(2000));
     const snap = await getDocs(q);
@@ -1774,6 +1799,8 @@ async function loadRests(celeb) {
         dist: Math.sqrt(dlat*dlat + dlng*dlng) * 111320,
       });
     });
+    // 거리순 정렬
+    DATA.sort((a,b) => (a.dist||999999) - (b.dist||999999));
     renderList();
     renderPins();
   } catch(e) {
@@ -3905,7 +3932,7 @@ initKakaoLogin();
   });
 
   await loadStarCurators(); // 큐레이터 먼저
-  await loadNearby30();      // 전체 중 내 위치 가까운 30개
+  await loadRests('성시경'); // 성시경 맛집 (거리순 정렬)
 })();
 
 // 처음 방문자 팝업
