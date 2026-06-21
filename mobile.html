@@ -275,6 +275,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .recent-item-name{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .recent-item-sub{font-size:11px;color:var(--text3);margin-top:1px}
 .recent-item-del{background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px;flex-shrink:0}
+
+/* ── 신고 모달 ── */
+.report-reason-btn{width:100%;padding:11px 14px;margin-bottom:8px;border:1.5px solid var(--border2);border-radius:10px;background:var(--white);font-size:13px;color:var(--text2);cursor:pointer;text-align:left;transition:all .15s}
+.report-reason-btn:hover,.report-reason-btn.on{border-color:var(--red);background:#FEF2F2;color:var(--red);font-weight:600}
+/* ── 저장 패널 ── */
+.saved-panel{position:fixed;top:56px;left:0;right:0;z-index:250;background:var(--white);border-bottom:2px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,0.12);display:none;max-height:360px;overflow-y:auto}
+.saved-panel.open{display:block}
 /* ── 토스트 ── */
 .toast{position:fixed;bottom:20px;right:20px;background:#1A1A18;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;box-shadow:var(--shadow-lg);max-width:320px}
 .toast.show{display:flex}
@@ -478,7 +485,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
         <i class="ti ti-plus"></i> 내 맛집
       </button>
       <button onclick="openReportModal()" style="background:var(--gold);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap">
-        <i class="ti ti-star"></i> 스타 맛집
+        <i class="ti ti-star"></i> 스타 맛집 등록
       </button>
     </div>
     <div id="authArea"></div>
@@ -1124,6 +1131,13 @@ document.addEventListener('click', function(e) {
       rp.classList.remove('open');
     }
   }
+  const sp = document.getElementById('savedPanel');
+  if (sp && sp.classList.contains('open')) {
+    const sb = document.querySelector('[onclick="openMySavedPanel()"]');
+    if (!sp.contains(e.target) && sb && !sb.contains(e.target)) {
+      sp.classList.remove('open');
+    }
+  }
 });
 
 // ── 큐레이터 탭 ──
@@ -1551,6 +1565,7 @@ async function loadRests(celeb) {
         avgRating: r.avgRating || 0,
         ratingCount: r.ratingCount || 0,
         registeredBy: r.registeredBy || null,
+        hidden: r.hidden || false,
       });
     });
     renderList();
@@ -1577,6 +1592,7 @@ async function loadRests(celeb) {
 
 function filtered() {
   let items = DATA.filter(d => {
+    if (d.hidden) return false;
     // 큐레이터 필터: selCurator가 '전체'가 아닐 때만 적용
     // (지역검색 중이든 아니든 동일하게 적용 — loadRestsByRegion에서 selCurator를 보존해두므로)
     if (selCurator && selCurator !== '전체') {
@@ -1677,6 +1693,7 @@ function renderList() {
         }
         <button class="link-btn" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:600">💬 댓글·평점</button>
         <button class="link-btn" onclick="event.stopPropagation();shareKakaoPC('${d.id}')" style="background:#FEE500;border:1px solid #F0D000;border-radius:8px;padding:6px 12px;font-size:12px;color:#3A1D1D;cursor:pointer;font-weight:600">💛 카카오공유</button>
+        <button class="link-btn" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')" style="background:none;border:1px solid #FECACA;border-radius:8px;padding:6px 10px;font-size:11px;color:#EF4444;cursor:pointer;font-weight:600">🚨 신고</button>
       </div>
       <div class="card-detail" id="detail-${d.id}">
         ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
@@ -2380,6 +2397,9 @@ window.searchYtForRep = function() {
 };
 
 window.submitReport = async function() {
+  if (!currentUser) { showToast('로그인 후 등록할 수 있어요!'); return; }
+  const _usnap = await getDoc(doc(db, 'users', currentUser.uid));
+  if (_usnap.data()?.reportBanned) { showToast('⛔ 잘못된 등록 3회로 등록 기능이 정지됐어요'); return; }
   if (!repRestData) { showToast('식당을 검색해서 선택해주세요!'); return; }
   const celeb = document.getElementById('repCeleb').value.trim();
   if (!celeb) { showToast('연예인/큐레이터 이름을 입력해주세요!'); return; }
@@ -2706,7 +2726,7 @@ function renderMyPage() {
         <div class="my-points">총 <strong>${pts}</strong>pt 보유</div>
         <div class="my-stats">
           <div class="my-stat"><div class="my-stat-num">${myRests.length}</div><div class="my-stat-label">등록 맛집</div></div>
-          <div class="my-stat"><div class="my-stat-num">${mySaved}</div><div class="my-stat-label">저장 맛집</div></div>
+          <div class="my-stat" onclick="openMySavedPanel()" style="cursor:pointer"><div class="my-stat-num" style="color:var(--gold)">${mySaved}</div><div class="my-stat-label" style="color:var(--gold)">❤️ 저장 맛집</div></div>
         </div>
       </div>
     </div>
@@ -3188,6 +3208,98 @@ window.clearRecentViewed = function() {
   localStorage.removeItem(RECENT_KEY); updateRecentBadge(); renderRecentPanel();
   showToast('최근 본 맛집이 삭제됐어요');
 };
+
+// ── 저장한 맛집 패널 ──
+window.openMySavedPanel = function() {
+  if (!currentUser) { showToast('로그인 후 저장한 맛집을 볼 수 있어요!'); return; }
+  const p = document.getElementById('savedPanel');
+  if (p.classList.contains('open')) {
+    p.classList.remove('open');
+  } else {
+    renderSavedPanel();
+    p.classList.add('open');
+  }
+};
+window.closeSavedPanel = function() {
+  document.getElementById('savedPanel').classList.remove('open');
+};
+function renderSavedPanel() {
+  const body = document.getElementById('savedPanelBody');
+  if (!savedList.length) {
+    body.innerHTML = '<div class="recent-empty">아직 저장한 맛집이 없어요<br><span style="font-size:12px;color:var(--text3);margin-top:4px;display:block">맛집 카드의 🤍 저장 버튼을 눌러보세요!</span></div>';
+    return;
+  }
+  body.innerHTML = '<div class="recent-list">' +
+    savedList.map(id => {
+      const r = DATA.find(x => x.id === id) || {id, name:'(다른 큐레이터 맛집)', celeb:'', cat:'', area:''};
+      return '<div class="recent-item" onclick="closeSavedPanel();focusCard(\'' + id + '\')">' +
+        '<span style="font-size:16px;flex-shrink:0">❤️</span>' +
+        '<div class="recent-item-info">' +
+        '<div class="recent-item-name">' + r.name + '</div>' +
+        '<div class="recent-item-sub">' + r.celeb + (r.cat?' · '+r.cat:'') + (r.area?' · '+r.area:'') + '</div>' +
+        '</div>' +
+        '<button class="recent-item-del" onclick="event.stopPropagation();removeSaved(\'' + id + '\')" title="저장 취소">×</button>' +
+        '</div>';
+    }).join('') + '</div>';
+}
+window.removeSaved = async function(id) {
+  await toggleSave(id);
+  renderSavedPanel();
+};
+
+// ── 맛집 신고 ──
+let _reportRestId = '', _reportRestName = '', _reportRegisteredBy = '', _reportReason = '';
+window.openRestReportModal = function(id, name, registeredBy) {
+  if (!currentUser) { showToast('로그인 후 신고할 수 있어요!'); return; }
+  _reportRestId = id; _reportRestName = name; _reportRegisteredBy = registeredBy; _reportReason = '';
+  document.getElementById('reportRestName').textContent = name;
+  document.querySelectorAll('.report-reason-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById('reportReasonEtc').style.display = 'none';
+  document.getElementById('reportEtcText').value = '';
+  document.getElementById('restReportOverlay').classList.add('show');
+};
+window.closeRestReportModal = function(e) {
+  if (!e || e.target === document.getElementById('restReportOverlay'))
+    document.getElementById('restReportOverlay').classList.remove('show');
+};
+window.selectReportReason = function(el, reason) {
+  _reportReason = reason;
+  document.querySelectorAll('.report-reason-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('reportReasonEtc').style.display = reason === '기타' ? 'block' : 'none';
+};
+window.submitRestReport = async function() {
+  if (!currentUser) { showToast('로그인이 필요해요!'); return; }
+  if (!_reportReason) { showToast('신고 사유를 선택해주세요'); return; }
+  let reason = _reportReason;
+  if (reason === '기타') {
+    const etc = document.getElementById('reportEtcText').value.trim();
+    if (!etc) { showToast('신고 사유를 입력해주세요'); return; }
+    reason = '기타: ' + etc;
+  }
+  try {
+    const existSnap = await getDocs(query(collection(db,'reports'), where('restId','==',_reportRestId), where('reportedBy','==',currentUser.uid)));
+    if (!existSnap.empty) { showToast('이미 신고한 맛집이에요'); document.getElementById('restReportOverlay').classList.remove('show'); return; }
+    await addDoc(collection(db,'reports'), {
+      restId: _reportRestId, restName: _reportRestName,
+      registeredBy: _reportRegisteredBy, reason,
+      reportedBy: currentUser.uid, reportedByName: currentUser.displayName||'익명',
+      status: 'pending', createdAt: new Date().toISOString()
+    });
+    const allSnap = await getDocs(query(collection(db,'reports'), where('restId','==',_reportRestId), where('status','==','pending')));
+    if (allSnap.size >= 3 && _reportRegisteredBy) {
+      const userRef = doc(db,'users',_reportRegisteredBy);
+      const userSnap = await getDoc(userRef);
+      const violations = (userSnap.data()?.reportViolations||0) + 1;
+      const banned = violations >= 3;
+      await updateDoc(userRef, {reportViolations: violations, reportBanned: banned});
+      await updateDoc(doc(db,'restaurants',_reportRestId), {hidden: true});
+      if (banned) showToast('🚨 신고 누적으로 해당 등록자의 기능이 정지됐어요');
+    }
+    document.getElementById('restReportOverlay').classList.remove('show');
+    showToast('신고가 접수됐어요. 검토 후 처리될게요 🙏');
+  } catch(e) { showToast('신고 실패: ' + e.message); }
+};
 window.shareKakaoPC = function(id) {
   const d = DATA.find(x => x.id === id);
   if (!d) return;
@@ -3312,6 +3424,45 @@ if (lastSeen !== new Date().toDateString()) {
       <p class="notice">※ 맛집 등록 시 <strong style="color:var(--gold)">+10pt</strong> · 링크 추가 시 <strong style="color:var(--gold)">+5pt</strong> 추가 적립!</p>
       <p class="notice">※ 맛집 3개 이상 등록하면 일반 큐레이터로 활성화돼요! 🥄</p>
       <button onclick="submitMyRest()" class="btn-primary">내 맛집 등록하기 🥄</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 저장한 맛집 패널 ── -->
+<div class="saved-panel" id="savedPanel">
+  <div class="recent-panel-hd">
+    <span class="recent-panel-title">❤️ 저장한 맛집</span>
+    <button onclick="closeSavedPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3)">✕</button>
+  </div>
+  <div id="savedPanelBody"></div>
+</div>
+
+<!-- ── 맛집 신고 모달 ── -->
+<div class="overlay" id="restReportOverlay" onclick="closeRestReportModal(event)">
+  <div class="modal" style="width:440px">
+    <div class="modal-hd">
+      <span class="modal-title">🚨 맛집 신고</span>
+      <button class="modal-close" onclick="closeRestReportModal()">✕</button>
+    </div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:var(--text2);margin-bottom:6px">신고할 맛집: <strong id="reportRestName"></strong></p>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:14px">허위 신고 시 본인 계정이 제재될 수 있어요.</p>
+      <div style="margin-bottom:14px">
+        <div style="font-size:12px;font-weight:700;color:var(--text2);margin-bottom:8px">신고 사유를 선택해주세요</div>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'허위 정보 (방문하지 않은 가게)')">📋 허위 정보 (방문하지 않은 가게)</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'존재하지 않는 가게')">🏚️ 존재하지 않는 가게 (폐업 등)</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'중복 등록')">♻️ 중복 등록</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'부적절한 내용')">⚠️ 부적절한 내용</button>
+        <button class="report-reason-btn" onclick="selectReportReason(this,'기타')">✏️ 기타</button>
+      </div>
+      <div id="reportReasonEtc" style="display:none;margin-bottom:14px">
+        <input type="text" class="form-input" id="reportEtcText" placeholder="신고 사유를 직접 입력해주세요">
+      </div>
+      <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:11px;color:#991B1B;line-height:1.6">
+        ⚠️ 같은 맛집이 <strong>3회 신고</strong>되면 자동으로 등록자의 위반 횟수가 올라가요.<br>
+        위반 <strong>3회 누적</strong> 시 해당 유저의 등록 기능이 영구 정지됩니다.
+      </div>
+      <button onclick="submitRestReport()" class="btn-primary" style="background:var(--red)">신고하기</button>
     </div>
   </div>
 </div>
@@ -3498,7 +3649,7 @@ if (lastSeen !== new Date().toDateString()) {
 
 <!-- 모바일 플로팅 버튼 -->
 <div class="mobile-fab">
-  <button class="fab-btn fab-my" onclick="openMyRestModal()"><i class="ti ti-plus"></i> 내 맛집 등록</button>
+  <button class="fab-btn fab-my" onclick="openMySavedPanel()"><i class="ti ti-heart"></i> 내 맛집</button>
   <button class="fab-btn fab-star" onclick="openReportModal()"><i class="ti ti-star"></i> 스타 맛집 등록</button>
 </div>
 
