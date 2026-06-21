@@ -685,16 +685,21 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 <!-- ── 순위 페이지 ── -->
 <!-- ── 저장한 장소 페이지 ── -->
 <div class="rank-page" id="savedPage" style="display:none">
-  <div style="padding:16px 0 8px;font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px">
-    ❤️ 저장한 맛집
-    <span id="savedPageCount" style="font-size:12px;font-weight:400;color:var(--text3)"></span>
+  <!-- 탭 -->
+  <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:0">
+    <button id="savedTabRest" onclick="setSavedTab('rest')"
+      style="flex:1;padding:12px;font-size:14px;font-weight:700;border:none;background:none;cursor:pointer;color:var(--gold);border-bottom:2px solid var(--gold);margin-bottom:-2px">
+      ❤️ 저장 맛집 <span id="savedRestCount" style="font-size:11px;font-weight:400;color:var(--text3)"></span>
+    </button>
+    <button id="savedTabCourse" onclick="setSavedTab('course')"
+      style="flex:1;padding:12px;font-size:14px;font-weight:700;border:none;background:none;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-2px">
+      🗺️ 내 코스 <span id="savedCourseCount" style="font-size:11px;font-weight:400;color:var(--text3)"></span>
+    </button>
   </div>
-  <div id="savedPageBody">
-    <div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">
-      로그인 후 저장한 맛집이 여기 나와요<br>
-      <i class="ti ti-heart" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i>
-    </div>
-  </div>
+  <!-- 맛집 목록 -->
+  <div id="savedPageBody"></div>
+  <!-- 코스 목록 -->
+  <div id="savedCourseBody" style="display:none"></div>
 </div>
 
 <div class="rank-page" id="rankPage">
@@ -895,7 +900,25 @@ let selSort = 'rating';
 let searchQ = '';
 let currentPage = 'main';
 let map, markers = [], overlays = [], markerMap = {};
-let savedList = [];
+// ── 저장 관련 로컬스토리지 키 ──
+const SAVE_KEY   = 'starspoon_saved';    // 맛집 저장
+const COURSE_KEY = 'starspoon_courses';  // 코스 저장
+
+// 로컬 저장 목록 (로그인 여부 무관)
+function getLocalSaved() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch { return []; }
+}
+function setLocalSaved(list) {
+  localStorage.setItem(SAVE_KEY, JSON.stringify(list));
+}
+function getLocalCourses() {
+  try { return JSON.parse(localStorage.getItem(COURSE_KEY) || '[]'); } catch { return []; }
+}
+function setLocalCourses(list) {
+  localStorage.setItem(COURSE_KEY, JSON.stringify(list));
+}
+
+let savedList = getLocalSaved(); // 초기값 로컬에서 로드
 let currentCommentId = null;
 let myRating = 0;
 let repRestData = null;
@@ -1196,11 +1219,21 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const snap = await getDoc(doc(db, 'users', user.uid));
     currentUserData = snap.exists() ? snap.data() : null;
-    savedList = currentUserData?.saved || [];
+    // Firebase saved와 로컬 병합
+    const fbSaved = currentUserData?.saved || [];
+    const localSaved = getLocalSaved();
+    const merged = [...new Set([...fbSaved, ...localSaved])];
+    savedList = merged;
+    setLocalSaved(merged);
+    // 병합된 목록을 Firebase에도 저장
+    if (merged.length > fbSaved.length) {
+      setDoc(doc(db, 'users', user.uid), {saved: merged}, {merge: true}).catch(()=>{});
+    }
     renderAuthArea();
     renderList();
   } else {
-    currentUser = null; currentUserData = null; savedList = [];
+    currentUser = null; currentUserData = null;
+    savedList = getLocalSaved(); // 비로그인도 로컬에서 로드
     renderAuthArea();
     renderList();
   }
@@ -1937,35 +1970,39 @@ function renderList() {
 
 // ── 저장 ──
 window.toggleSave = async function(id) {
-  if (!currentUser) { showToast('로그인 후 저장할 수 있어요!'); return; }
   const idx = savedList.indexOf(id);
   const wasSaved = idx >= 0;
   if (wasSaved) savedList.splice(idx, 1);
   else savedList.push(id);
-  await setDoc(doc(db, 'users', currentUser.uid), {saved: savedList}, {merge: true});
 
-  // 저장 카운트 업데이트
-  const restRef = doc(db, 'restaurants', id);
-  await updateDoc(restRef, {saves: increment(wasSaved ? -1 : 1)});
+  // 항상 로컬에 저장
+  setLocalSaved(savedList);
 
-  // 등록자에게 포인트 지급
-  if (!wasSaved) {
-    const restSnap = await getDoc(restRef);
-    const registeredBy = restSnap.data()?.registeredBy;
-    if (registeredBy && registeredBy !== currentUser.uid) {
-      const saverPts = currentUserData?.points || 0;
-      const multiplier = getGradeMultiplier(saverPts);
-      await addPoints(registeredBy, multiplier, `내 가게 저장 (${getGrade(saverPts).name})`);
+  // 로그인 상태면 Firebase에도 저장 + 포인트
+  if (currentUser) {
+    setDoc(doc(db, 'users', currentUser.uid), {saved: savedList}, {merge: true}).catch(()=>{});
+    const restRef = doc(db, 'restaurants', id);
+    updateDoc(restRef, {saves: increment(wasSaved ? -1 : 1)}).catch(()=>{});
+    if (!wasSaved) {
+      const restSnap = await getDoc(restRef).catch(()=>null);
+      const registeredBy = restSnap?.data()?.registeredBy;
+      if (registeredBy && registeredBy !== currentUser.uid) {
+        const saverPts = currentUserData?.points || 0;
+        const multiplier = getGradeMultiplier(saverPts);
+        await addPoints(registeredBy, multiplier, `내 가게 저장 (${getGrade(saverPts).name})`);
+      }
+      checkAchievements(id).catch(()=>{});
     }
   }
-
-  // 달성 보너스 체크
-  if (!wasSaved) await checkAchievements(id);
 
   const d = DATA.find(x => x.id === id);
   if (d) d.saves = (d.saves||0) + (wasSaved ? -1 : 1);
   renderList();
-  showToast(wasSaved ? '저장 취소됐어요' : '내 스푼에 저장됐어요! ❤️ +2pt');
+  if (wasSaved) {
+    showToast('저장 취소됐어요');
+  } else {
+    showToast(currentUser ? '저장됐어요! ❤️' : '저장됐어요! ❤️ 로그인하면 다른 기기에서도 볼 수 있어요');
+  }
 };
 
 // ── 달성 보너스 체크 ──
@@ -3817,22 +3854,36 @@ window.clearMCourseFromMap = function() {
 };
 
 window.saveMCourse = async function() {
-  if (!currentUser) { showToast('로그인 후 코스를 저장할 수 있어요!'); return; }
   const places = Object.values(mCourseSelected);
   if (!places.length) { showToast('장소를 먼저 선택해주세요'); return; }
-  try {
-    await addDoc(collection(db, 'courses'), {
+
+  const courseData = {
+    id: 'course_' + Date.now(),
+    baseName: mCourseBasePlace.name,
+    baseLat: mCourseBasePlace.lat,
+    baseLng: mCourseBasePlace.lng,
+    radius: mCourseRadius,
+    places: places,
+    createdAt: new Date().toISOString()
+  };
+
+  // 항상 로컬에 저장
+  const courses = getLocalCourses();
+  courses.unshift(courseData);
+  if (courses.length > 20) courses.splice(20);
+  setLocalCourses(courses);
+
+  // 로그인 상태면 Firebase에도 저장
+  if (currentUser) {
+    addDoc(collection(db, 'courses'), {
+      ...courseData,
       uid: currentUser.uid,
       userName: currentUser.displayName || '익명',
-      baseName: mCourseBasePlace.name,
-      baseLat: mCourseBasePlace.lat,
-      baseLng: mCourseBasePlace.lng,
-      radius: mCourseRadius,
-      places: places,
-      createdAt: new Date().toISOString()
-    });
+    }).catch(()=>{});
     showToast('코스가 저장됐어요! 🗺️');
-  } catch(e) { showToast('저장 실패: ' + e.message); }
+  } else {
+    showToast('코스가 저장됐어요! 🗺️ 로그인하면 영구 보관돼요');
+  }
 };
 
 window.shareMCourse = function() {
@@ -3855,62 +3906,167 @@ window.shareMCourse = function() {
 
 
 // ── 저장한 장소 페이지 렌더 ──
+// ── 저장 탭 전환 ──
+let _savedTab = 'rest';
+window.setSavedTab = function(tab) {
+  _savedTab = tab;
+  const restBtn    = document.getElementById('savedTabRest');
+  const courseBtn  = document.getElementById('savedTabCourse');
+  const restBody   = document.getElementById('savedPageBody');
+  const courseBody = document.getElementById('savedCourseBody');
+  if (tab === 'rest') {
+    restBtn.style.color       = 'var(--gold)';
+    restBtn.style.borderBottom = '2px solid var(--gold)';
+    courseBtn.style.color       = 'var(--text3)';
+    courseBtn.style.borderBottom = '2px solid transparent';
+    restBody.style.display   = 'block';
+    courseBody.style.display = 'none';
+    renderSavedRests();
+  } else {
+    courseBtn.style.color       = 'var(--gold)';
+    courseBtn.style.borderBottom = '2px solid var(--gold)';
+    restBtn.style.color       = 'var(--text3)';
+    restBtn.style.borderBottom = '2px solid transparent';
+    restBody.style.display   = 'none';
+    courseBody.style.display = 'block';
+    renderSavedCourses();
+  }
+};
+
 async function renderSavedPage() {
+  // 탭 카운트 업데이트
+  const restCnt   = document.getElementById('savedRestCount');
+  const courseCnt = document.getElementById('savedCourseCount');
+  if (restCnt)   restCnt.textContent   = savedList.length ? '(' + savedList.length + ')' : '';
+  if (courseCnt) courseCnt.textContent = getLocalCourses().length ? '(' + getLocalCourses().length + ')' : '';
+  // 현재 탭 렌더
+  setSavedTab(_savedTab);
+}
+
+async function renderSavedRests() {
   const body = document.getElementById('savedPageBody');
-  const cnt = document.getElementById('savedPageCount');
   if (!body) return;
-  if (!currentUser) {
-    body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">로그인 후 저장한 맛집이 여기 나와요<br><i class="ti ti-heart" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i></div>';
-    if (cnt) cnt.textContent = '';
+  if (!savedList.length) {
+    body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">저장한 맛집이 없어요<br><i class="ti ti-heart" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i><div style="font-size:12px;margin-top:8px">맛집 카드의 ❤️ 버튼으로 저장하세요!</div>' +
+      (!currentUser ? '<div style="margin-top:16px;font-size:12px;color:var(--gold)">로그인하면 다른 기기에서도 볼 수 있어요!</div>' : '') + '</div>';
     return;
   }
-  body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)"><i class="ti ti-loader" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4"></i>불러오는 중...</div>';
-  try {
-    // savedList는 로그인 시 이미 로드됨 (상단 import된 Firestore 사용)
-    if (cnt) cnt.textContent = savedList.length ? '(' + savedList.length + '곳)' : '';
-    if (!savedList.length) {
-      body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">저장한 맛집이 없어요<br><i class="ti ti-heart" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i><div style="font-size:12px;margin-top:8px">맛집 카드의 ❤️ 저장 버튼을 눌러보세요!</div></div>';
-      return;
-    }
-    // DATA에 없는 것들은 Firebase에서 직접 로드
-    const notInData = savedList.filter(id => !DATA.find(d => d.id === id));
-    let extraData = [];
-    if (notInData.length > 0) {
-      // 한 번에 전체 로드해서 찾기 (최대 20개)
-      for (const id of notInData.slice(0, 20)) {
-        try {
-          const snap = await getDoc(doc(db, 'restaurants', id));
-          if (snap.exists()) {
-            const r = snap.data();
-            extraData.push({
-              id: snap.id, name: r.name||'', celeb: r.celeb||'',
-              cat: r.category||r.cat||'한식', area: r.area||'',
-              lat: r.lat||37.5665, lng: r.lng||126.9780
-            });
-          }
-        } catch(e) {}
+  body.innerHTML = '<div style="padding:20px;text-align:center;font-size:13px;color:var(--text3)">불러오는 중...</div>';
+  // DATA에 없는 것 Firebase에서 로드
+  const notInData = savedList.filter(id => !DATA.find(d => d.id === id));
+  let extraData = [];
+  for (const id of notInData.slice(0, 30)) {
+    try {
+      const snap = await getDoc(doc(db, 'restaurants', id));
+      if (snap.exists()) {
+        const r = snap.data();
+        extraData.push({id: snap.id, name:r.name||'', celeb:r.celeb||'', cat:r.category||r.cat||'', area:r.area||''});
       }
-    }
-    const allD = [...DATA, ...extraData];
-    const items = savedList.map(id => allD.find(d => d.id === id)).filter(Boolean);
-    if (!items.length) {
-      body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">저장된 맛집 데이터를 불러오는 중이에요<br>잠시 후 다시 시도해보세요!</div>';
-      return;
-    }
-    body.innerHTML = items.map(d => `
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;active-background:var(--bg2)"
-        onclick="setPage('main',document.querySelector('.pnav'));setTimeout(()=>focusCard('${d.id}'),100)">
-        <div style="width:44px;height:44px;border-radius:10px;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">⭐</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">${d.celeb}${d.cat?' · '+d.cat:''}${d.area?' · '+d.area:''}</div>
-        </div>
-        <i class="ti ti-chevron-right" style="font-size:16px;color:var(--text3);flex-shrink:0"></i>
-      </div>`).join('');
-  } catch(e) {
-    body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">불러오기 실패: ' + e.message + '</div>';
+    } catch(e) {}
   }
+  const allD = [...DATA, ...extraData];
+  const items = savedList.map(id => allD.find(d => d.id === id)).filter(Boolean);
+  if (!items.length) {
+    body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">저장된 맛집 정보를 불러올 수 없어요</div>';
+    return;
+  }
+  body.innerHTML = items.map((d,i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer"
+      onclick="setPage('main',document.querySelector('.pnav'));setTimeout(()=>focusCard('${d.id}'),100)">
+      <div style="width:40px;height:40px;border-radius:10px;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">⭐</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${d.name}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${[d.celeb,d.cat,d.area].filter(Boolean).join(' · ')}</div>
+      </div>
+      <button onclick="event.stopPropagation();removeSavedItem('${d.id}')"
+        style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0">×</button>
+    </div>`).join('') +
+    (!currentUser ? '<div style="padding:14px 16px;background:var(--gold-bg);border-top:1px solid var(--border);font-size:12px;color:var(--gold);text-align:center">로그인하면 다른 기기에서도 볼 수 있어요! 📱</div>' : '');
 }
+
+window.removeSavedItem = function(id) {
+  toggleSave(id);
+  renderSavedRests();
+};
+
+function renderSavedCourses() {
+  const body = document.getElementById('savedCourseBody');
+  if (!body) return;
+  const courses = getLocalCourses();
+  if (!courses.length) {
+    body.innerHTML = '<div style="padding:60px 20px;text-align:center;font-size:14px;color:var(--text3)">저장한 코스가 없어요<br><i class="ti ti-route" style="font-size:36px;display:block;margin:12px auto;opacity:0.25"></i><div style="font-size:12px;margin-top:8px">코스짜기에서 북마크 버튼으로 저장하세요!</div>' +
+      (!currentUser ? '<div style="margin-top:12px;font-size:12px;color:var(--gold)">로그인하면 영구 보관돼요!</div>' : '') + '</div>';
+    return;
+  }
+  body.innerHTML = courses.map((c, i) => `
+    <div style="padding:14px 16px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:14px;font-weight:700;color:var(--text)">📍 ${c.baseName}</div>
+        <button onclick="deleteSavedCourse('${c.id}')"
+          style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0">×</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">
+        반경 ${c.radius >= 1000 ? (c.radius/1000).toFixed(1)+'km' : c.radius+'m'} · ${c.places.length}곳 · ${new Date(c.createdAt).toLocaleDateString('ko-KR')}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+        ${c.places.slice(0,5).map(p => `<span style="font-size:11px;background:var(--bg2);border-radius:10px;padding:3px 8px;color:var(--text2)">${p.name}</span>`).join('')}
+        ${c.places.length > 5 ? `<span style="font-size:11px;color:var(--text3)">외 ${c.places.length-5}곳</span>` : ''}
+      </div>
+      <button onclick="replayCourse(${i})"
+        style="width:100%;padding:9px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
+        🗺️ 지도에 표시
+      </button>
+    </div>`).join('') +
+    (!currentUser ? '<div style="padding:14px 16px;background:var(--gold-bg);border-top:1px solid var(--border);font-size:12px;color:var(--gold);text-align:center">로그인하면 코스가 영구 보관돼요! 📱</div>' : '');
+}
+
+window.deleteSavedCourse = function(id) {
+  const courses = getLocalCourses().filter(c => c.id !== id);
+  setLocalCourses(courses);
+  renderSavedCourses();
+  const cnt = document.getElementById('savedCourseCount');
+  if (cnt) cnt.textContent = courses.length ? '(' + courses.length + ')' : '';
+  showToast('코스가 삭제됐어요');
+};
+
+window.replayCourse = function(idx) {
+  const c = getLocalCourses()[idx];
+  if (!c || !map) { showToast('지도를 먼저 열어주세요'); return; }
+  setPage('main', document.querySelector('.pnav'));
+  setTimeout(() => {
+    if (mCoursePolyline) { mCoursePolyline.setMap(null); mCoursePolyline = null; }
+    mCourseMarkers.forEach(m => m.setMap(null));
+    mCourseMarkers = [];
+    const points = [
+      new kakao.maps.LatLng(c.baseLat, c.baseLng),
+      ...c.places.map(p => new kakao.maps.LatLng(p.lat, p.lng))
+    ];
+    mCoursePolyline = new kakao.maps.Polyline({
+      path: points, strokeWeight: 3, strokeColor: '#F59E0B', strokeOpacity: 0.9, strokeStyle: 'solid'
+    });
+    mCoursePolyline.setMap(map);
+    points.forEach((pos, i) => {
+      const isBase = i === 0;
+      const svg = isBase
+        ? `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="38" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#1A1A18"/><text x="18" y="25" text-anchor="middle" font-size="13" fill="white">📍</text></svg>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="34" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><text x="18" y="24" text-anchor="middle" font-size="13" fill="white">${i}</text></svg>`;
+      const img = new kakao.maps.MarkerImage(
+        'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
+        isBase ? new kakao.maps.Size(32,38) : new kakao.maps.Size(28,34),
+        {offset: isBase ? new kakao.maps.Point(16,38) : new kakao.maps.Point(14,34)}
+      );
+      mCourseMarkers.push(new kakao.maps.Marker({map, position: pos, image: img}));
+    });
+    let badge = document.querySelector('.m-course-map-badge');
+    if (!badge) { badge = document.createElement('div'); badge.className = 'm-course-map-badge'; document.body.appendChild(badge); }
+    badge.innerHTML = `<i class="ti ti-route"></i> ${c.baseName} 코스 ${c.places.length}곳 · <span style="cursor:pointer;text-decoration:underline" onclick="clearMCourseFromMap()">지우기</span>`;
+    badge.classList.add('show');
+    const bounds = new kakao.maps.LatLngBounds();
+    points.forEach(p => bounds.extend(p));
+    map.setBounds(bounds, 60);
+    showToast('🗺️ ' + c.baseName + ' 코스를 지도에 표시했어요!');
+  }, 300);
+};
 
 // ── 초기화 ──
 renderAuthArea();
