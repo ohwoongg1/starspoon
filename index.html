@@ -3500,17 +3500,24 @@ async function loadCourseData() {
 }
 
 function buildCourseSection(emoji, label, color, items) {
-  const itemsHTML = items.map(item => `
-    <div class="course-place-item" onclick="toggleCoursePlace('${item.id}', ${JSON.stringify(item).replace(/'/g,"&#39;")})">
-      <div class="course-place-cb${courseSelected[item.id] ? ' on' : ''}" id="cb_${item.id}">
-        ${courseSelected[item.id] ? '<i class="ti ti-check" style="font-size:11px;color:#fff"></i>' : ''}
+  const itemsHTML = items.map(item => {
+    const distStr = item.dist < 1000 ? item.dist + 'm' : (item.dist/1000).toFixed(1) + 'km';
+    const isOn = courseSelected[item.id];
+    const safeId = item.id.replace(/'/g, '_');
+    // 장소 데이터를 전역 변수에 저장
+    window._coursePlaces = window._coursePlaces || {};
+    window._coursePlaces[safeId] = item;
+    return `<div class="course-place-item" onclick="toggleCoursePlace('${safeId}')">
+      <div class="course-place-cb${isOn ? ' on' : ''}" id="cb_${safeId}">
+        ${isOn ? '<i class=\"ti ti-check\" style=\"font-size:11px;color:#fff\"></i>' : ''}
       </div>
       <div class="course-place-info">
         <div class="course-place-name">${item.name}</div>
-        <div class="course-place-sub">${item.sub} · ${item.dist < 1000 ? item.dist + 'm' : (item.dist/1000).toFixed(1) + 'km'}</div>
+        <div class="course-place-sub">${item.sub} · ${distStr}</div>
       </div>
       <span class="course-place-badge ${item.badge}">${item.badgeText}</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   return `<div class="course-cat-section">
     <div class="course-cat-hd">
@@ -3521,8 +3528,9 @@ function buildCourseSection(emoji, label, color, items) {
   </div>`;
 }
 
-window.toggleCoursePlace = function(id, item) {
-  if (typeof item === 'string') item = JSON.parse(item);
+window.toggleCoursePlace = function(id) {
+  const item = (window._coursePlaces || {})[id];
+  if (!item) return;
   const cb = document.getElementById('cb_' + id);
   if (courseSelected[id]) {
     delete courseSelected[id];
