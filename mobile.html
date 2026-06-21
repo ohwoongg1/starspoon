@@ -389,13 +389,14 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     position:fixed;z-index:50;left:0;right:0;bottom:52px;
     background:var(--white);
     border-radius:20px 20px 0 0;
-    box-shadow:0 -4px 20px rgba(0,0,0,0.15);
+    box-shadow:0 -4px 20px rgba(0,0,0,0.12);
     display:flex;flex-direction:column;
     height:36vh;
     max-height:36vh;
-    transition:max-height .3s cubic-bezier(.4,0,.2,1), height .3s;
+    transition:height .25s cubic-bezier(.25,.46,.45,.94), max-height .25s cubic-bezier(.25,.46,.45,.94);
     width:100%;
     overflow:hidden;
+    will-change:height;
   }
   /* 검색 중일 때 바텀시트 풀스크린 */
   .list-panel.search-mode{
@@ -412,7 +413,15 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     margin:10px auto 0;flex-shrink:0;
   }
   .list-header{padding:8px 16px 10px;flex-shrink:0}
-  .list-body{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;flex:1;overscroll-behavior:contain;touch-action:pan-y}
+  .list-body{
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    flex:1;
+    overscroll-behavior:contain;
+    touch-action:pan-y;
+    scroll-behavior:smooth;
+    will-change:scroll-position;
+  }
 
   /* 큐레이터 패널 숨기기 (지도 위 pills로 대체) */
   .curator-panel{display:none!important}
@@ -440,15 +449,16 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 @media(max-width:768px){
   /* 지도 위 검색바 - fixed로 항상 상단 고정 */
   .m-top-bar{
-    display:flex;align-items:center;gap:8px;
-    position:fixed;top:8px;left:12px;right:12px;z-index:200;
+    display:flex;align-items:center;gap:6px;
+    position:fixed;top:8px;left:8px;right:8px;z-index:200;
   }
   .m-search-box{
-    flex:1;display:flex;align-items:center;gap:8px;
-    background:var(--white);border-radius:12px;
-    padding:10px 14px;
-    box-shadow:0 2px 12px rgba(0,0,0,0.18);
+    flex:1;display:flex;align-items:center;gap:6px;
+    background:var(--white);border-radius:10px;
+    padding:8px 10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.14);
     border:1px solid var(--border);
+    min-width:0;
   }
   .m-search-box input{
     flex:1;border:none;outline:none;background:none;
@@ -469,11 +479,12 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     overflow-x:auto;
     -webkit-overflow-scrolling:touch;
     gap:8px;
-    padding:8px 12px;
+    padding:6px 10px;
     position:fixed;
-    top:62px;left:0;right:0;
+    top:66px;left:0;right:0;
     z-index:199;
     scrollbar-width:none;
+    background:linear-gradient(to bottom, rgba(250,250,248,0.92) 80%, transparent);
   }
   .m-curator-strip::-webkit-scrollbar{display:none}
   .m-cpill{
@@ -623,10 +634,17 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
     <!-- 모바일 지도 위 검색바 (탭하면 전체화면 패널 열림) -->
     <div class="m-top-bar">
+      <!-- 로고 -->
+      <a href="/" style="display:flex;align-items:center;gap:6px;text-decoration:none;flex-shrink:0;background:var(--white);border-radius:10px;padding:6px 10px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.12)">
+        <img src="/icon-192.png" style="width:22px;height:22px;border-radius:5px;" alt="">
+        <span style="font-size:13px;font-weight:800;color:var(--text);letter-spacing:-0.3px">Star<span style="color:var(--gold)">spoon</span></span>
+      </a>
+      <!-- 검색창 -->
       <div class="m-search-box" onclick="openMobileSearch()" style="cursor:pointer">
         <i class="ti ti-search" style="color:var(--text3);font-size:16px;flex-shrink:0"></i>
         <span id="mSearchDisplay" style="flex:1;font-size:14px;color:var(--text3)">맛집, 음식, 지역 검색</span>
       </div>
+      <!-- 내 스푼 -->
       <div class="m-my-btn" id="mMyBtn" style="background:var(--white)">
         <i class="ti ti-spoon" style="font-size:20px;color:var(--gold)"></i>
       </div>
@@ -1517,32 +1535,61 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // 바텀시트 드래그 처리 (핸들 터치로 높이 조절)
+  // 바텀시트 드래그 - 부드러운 스냅
   const sheet = document.querySelector('.list-panel');
   if (!sheet) return;
-  let startY = 0, startH = 0, dragging = false;
+  let startY = 0, startH = 0, dragging = false, lastY = 0, velocity = 0;
+  const SNAP_SMALL = Math.round(window.innerHeight * 0.22);
+  const SNAP_MID   = Math.round(window.innerHeight * 0.42);
+  const SNAP_LARGE = Math.round(window.innerHeight * 0.80);
 
-  // ::before 핸들 영역(상단 20px)에서만 드래그 감지
+  function snapTo(h) {
+    sheet.style.transition = 'height .3s cubic-bezier(.25,.46,.45,.94)';
+    sheet.style.height = h + 'px';
+    sheet.style.maxHeight = h + 'px';
+    setTimeout(() => sheet.style.transition = '', 320);
+  }
+
   sheet.addEventListener('touchstart', e => {
     if (window.innerWidth > 768) return;
     const rect = sheet.getBoundingClientRect();
-    const touchY = e.touches[0].clientY;
-    // 시트 상단 30px 영역에서만 드래그 시작
-    if (touchY - rect.top > 30) return;
-    startY = touchY;
+    if (e.touches[0].clientY - rect.top > 36) return; // 핸들 영역만
+    startY = lastY = e.touches[0].clientY;
     startH = sheet.getBoundingClientRect().height;
     dragging = true;
+    velocity = 0;
+    sheet.style.transition = 'none';
   }, {passive:true});
 
   document.addEventListener('touchmove', e => {
     if (!dragging || window.innerWidth > 768) return;
-    const dy = startY - e.touches[0].clientY;
-    const newH = Math.min(Math.max(startH + dy, 80), window.innerHeight * 0.85);
+    const y = e.touches[0].clientY;
+    velocity = lastY - y;
+    lastY = y;
+    const dy = startY - y;
+    const newH = Math.min(Math.max(startH + dy, 60), window.innerHeight * 0.85);
     sheet.style.height = newH + 'px';
     sheet.style.maxHeight = newH + 'px';
   }, {passive:true});
 
-  document.addEventListener('touchend', () => { dragging = false; });
+  document.addEventListener('touchend', () => {
+    if (!dragging) return;
+    dragging = false;
+    const curH = sheet.getBoundingClientRect().height;
+    // 속도 기반 스냅
+    if (velocity > 8) {
+      // 빠르게 위로 → 큰 시트
+      snapTo(SNAP_LARGE);
+    } else if (velocity < -8) {
+      // 빠르게 아래로 → 작은 시트
+      snapTo(SNAP_SMALL);
+    } else {
+      // 가장 가까운 스냅 포인트로
+      const snaps = [SNAP_SMALL, SNAP_MID, SNAP_LARGE];
+      const nearest = snaps.reduce((a,b) => Math.abs(a-curH) < Math.abs(b-curH) ? a : b);
+      snapTo(nearest);
+    }
+  });
 });
 
 // ── 데이터 로드 ──
@@ -1653,12 +1700,56 @@ async function loadRestsByRegion(region) {
   }
 }
 
+// ── 전체 중 내 위치 가까운 30개 초기 로드 ──
+async function loadNearby30() {
+  try {
+    document.getElementById('listTitle').textContent = '내 주변 맛집';
+    document.getElementById('listCount').textContent = '로딩 중...';
+    selCurator = '전체';
+    renderMobileCuratorStrip();
+
+    const snap = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
+    DATA = [];
+    snap.forEach(d => {
+      const r = d.data();
+      if (r.hidden) return;
+      const dlat = (r.lat||37.5665) - myLat, dlng = (r.lng||126.9780) - myLng;
+      DATA.push({
+        id: d.id, name: r.name||'', celeb: r.celeb||'',
+        celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+        area: r.area||'', comment: r.comment||'',
+        yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
+        visits: r.visits||0, saves: r.saves||0,
+        avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+        registeredBy: r.registeredBy||null, hidden: false,
+        dist: Math.sqrt(dlat*dlat + dlng*dlng) * 111320,
+      });
+    });
+    DATA.sort((a,b) => (a.dist||999999) - (b.dist||999999));
+    // 리스트는 30개만, 핀은 전체
+    const top30 = DATA.slice(0, 30);
+    const allData = DATA;
+    DATA = top30;
+    renderList();
+    DATA = allData;
+    renderPins();
+    document.getElementById('listCount').textContent = '30곳 (가까운 순)';
+    document.getElementById('listTitle').textContent = '내 주변 맛집';
+  } catch(e) {
+    showToast('로드 실패: ' + e.message);
+  }
+}
+
 async function loadRests(celeb) {
+  // '전체' 호출 시 selectAllCurator로 분기
+  if (celeb === '전체' || !celeb) {
+    await selectAllCurator();
+    return;
+  }
   try {
     document.getElementById('listCount').textContent = '로딩 중...';
     let q = query(collection(db, 'restaurants'), where('celeb', '==', celeb), limit(2000));
     const snap = await getDocs(q);
-    DATA = [];
     DATA = [];
     snap.forEach(d => {
       const r = d.data();
@@ -3814,7 +3905,7 @@ initKakaoLogin();
   });
 
   await loadStarCurators(); // 큐레이터 먼저
-  await loadRests('성시경'); // 맛집 다음 (이제 myLat/myLng가 실제 위치)
+  await loadNearby30();      // 전체 중 내 위치 가까운 30개
 })();
 
 // 처음 방문자 팝업
