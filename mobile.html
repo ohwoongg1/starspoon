@@ -293,10 +293,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .m-course-input{flex:1;border:1.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:14px;outline:none;-webkit-appearance:none}
 .m-course-input:focus{border-color:var(--gold)}
 .m-course-search-btn{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
-.m-course-dist-row{display:flex;align-items:center;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px}
-.m-course-dist-label{font-size:12px;color:var(--text3);flex-shrink:0}
-.m-course-dist-chip{font-size:12px;padding:5px 12px;border-radius:14px;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);cursor:pointer;flex-shrink:0;white-space:nowrap}
+.m-course-dist-row{display:flex;align-items:flex-start;gap:10px}
+.m-course-dist-label{font-size:11px;color:var(--text3);flex-shrink:0;margin-top:6px;font-weight:600}
+.m-course-dist-chips-wrap{display:flex;flex-wrap:wrap;gap:5px;flex:1}
+.m-course-dist-chip{font-size:11px;padding:4px 10px;border-radius:12px;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);cursor:pointer;flex-shrink:0;white-space:nowrap}
 .m-course-dist-chip.on{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700}
+.m-course-action-btns{display:flex;flex-direction:column;gap:5px;flex-shrink:0}
 .m-course-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .m-course-cat-section{border-bottom:1px solid var(--border)}
 .m-course-cat-hd{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
@@ -316,13 +318,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .badge-tour{background:#FFF7ED;color:#C2410C}
 .badge-food{background:#FDF2F8;color:#9D174D}
 .m-course-empty{padding:40px 20px;text-align:center;font-size:14px;color:var(--text3);line-height:1.8}
-.m-course-footer{padding:12px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--white)}
-.m-course-footer-info{font-size:12px;color:var(--text3);margin-bottom:8px}
+.m-course-footer{padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0;background:var(--white)}
+.m-course-footer-info{font-size:11px;color:var(--text3);margin-bottom:6px}
 .m-course-footer-btns{display:flex;gap:8px}
-.m-course-confirm-btn{flex:1;padding:12px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
+.m-course-confirm-btn{flex:1;padding:11px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer}
 .m-course-confirm-btn:disabled{background:var(--border2);cursor:not-allowed}
-.m-course-share-btn{padding:12px 16px;background:#FEE500;color:#3A1D1D;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:5px}
-.m-course-save-btn{padding:12px 14px;background:var(--white);color:var(--gold);border:1.5px solid var(--gold);border-radius:10px;font-size:13px;font-weight:700;cursor:pointer}
+/* 사이드 액션 버튼 */
+.m-course-side-save{padding:7px 10px;background:var(--white);color:var(--gold);border:1.5px solid var(--gold);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px}
+.m-course-side-share{padding:7px 10px;background:#FEE500;color:#3A1D1D;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px}
 /* 코스 지도 배지 */
 .m-course-map-badge{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:190;background:var(--gold);color:#fff;padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;display:none;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(245,158,11,0.4);white-space:nowrap}
 .m-course-map-badge.show{display:flex}
@@ -646,9 +649,14 @@ input::placeholder{color:var(--text3) !important;opacity:1}
         <span style="font-size:13px;font-weight:800;color:var(--text);letter-spacing:-0.3px">Star<span style="color:var(--gold)">spoon</span></span>
       </a>
       <!-- 검색창 -->
-      <div class="m-search-box" onclick="openMobileSearch()" style="cursor:pointer">
-        <i class="ti ti-search" style="color:var(--text3);font-size:16px;flex-shrink:0"></i>
-        <span id="mSearchDisplay" style="flex:1;font-size:14px;color:var(--text3)">맛집, 음식, 지역 검색</span>
+      <div class="m-search-box" style="cursor:pointer;position:relative">
+        <i class="ti ti-search" style="color:var(--text3);font-size:16px;flex-shrink:0" onclick="openMobileSearch()"></i>
+        <span id="mSearchDisplay" style="flex:1;font-size:14px;color:var(--text3)" onclick="openMobileSearch()">맛집, 음식, 지역 검색</span>
+        <!-- X 새로고침 버튼 - 검색/필터 활성화 시 표시 -->
+        <button id="mTopClearBtn" onclick="clearSearch()" 
+          style="display:none;background:none;border:none;padding:4px;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;flex-shrink:0">
+          <i class="ti ti-x" style="font-size:15px"></i>
+        </button>
       </div>
       <!-- 내 스푼 -->
       <div class="m-my-btn" id="mMyBtn" style="background:var(--white)">
@@ -734,32 +742,42 @@ input::placeholder{color:var(--text3) !important;opacity:1}
       <button class="m-course-close" onclick="closeMCourse()">✕</button>
     </div>
     <div class="m-course-search-area">
+      <!-- 검색창 -->
       <div class="m-course-search-row">
         <input type="text" class="m-course-input" id="mCourseInput" placeholder="기준 장소 입력 예: 경복궁, 강남역">
         <button class="m-course-search-btn" onclick="searchMCourseBase()"><i class="ti ti-search"></i> 검색</button>
       </div>
+      <!-- 반경 칩 (왼쪽) + 저장·공유 버튼 (오른쪽) -->
       <div class="m-course-dist-row">
         <span class="m-course-dist-label">반경</span>
-        <div class="course-dist-chips" id="mCourseDistChips">
+        <div class="m-course-dist-chips-wrap" id="mCourseDistChips">
           <div class="m-course-dist-chip" onclick="setMCourseRadius(this,500)" data-r="500">500m</div>
           <div class="m-course-dist-chip on" onclick="setMCourseRadius(this,1000)" data-r="1000">1km</div>
           <div class="m-course-dist-chip" onclick="setMCourseRadius(this,2000)" data-r="2000">2km</div>
           <div class="m-course-dist-chip" onclick="setMCourseRadius(this,3000)" data-r="3000">3km</div>
           <div class="m-course-dist-chip" onclick="setMCourseRadius(this,5000)" data-r="5000">5km</div>
         </div>
+        <!-- 오른쪽: 저장·공유 버튼 -->
+        <div class="m-course-action-btns">
+          <button class="m-course-side-save" onclick="saveMCourse()">
+            <i class="ti ti-bookmark" style="font-size:13px"></i> 저장
+          </button>
+          <button class="m-course-side-share" onclick="shareMCourse()">
+            <svg width="12" height="12" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
+            공유
+          </button>
+        </div>
       </div>
     </div>
     <div class="m-course-body" id="mCourseBody">
       <div class="m-course-empty"><i class="ti ti-map-pin" style="font-size:36px;display:block;margin-bottom:10px;opacity:0.25"></i>기준 장소를 검색하면<br>주변 맛집·명소가 카테고리별로 나와요!</div>
     </div>
+    <!-- footer: 선택정보 + 지도표시 버튼만 -->
     <div class="m-course-footer">
       <div class="m-course-footer-info" id="mCourseSelectedInfo">장소를 선택해주세요</div>
       <div class="m-course-footer-btns">
-        <button class="m-course-confirm-btn" id="mCourseConfirmBtn" onclick="confirmMCourse()" disabled>지도에 코스 표시</button>
-        <button class="m-course-save-btn" onclick="saveMCourse()" title="저장"><i class="ti ti-bookmark"></i></button>
-        <button class="m-course-share-btn" onclick="shareMCourse()">
-          <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
-          공유
+        <button class="m-course-confirm-btn" id="mCourseConfirmBtn" onclick="confirmMCourse()" disabled>
+          <i class="ti ti-map" style="font-size:15px;vertical-align:-2px"></i> 지도에 코스 표시
         </button>
       </div>
     </div>
@@ -1522,15 +1540,18 @@ function renderMobileCuratorStrip() {
     ).join('');
     strip.innerHTML = allPill + curatorPills;
   }
-  // 검색바에 현재 큐레이터 표시
+  // 검색바에 현재 큐레이터 표시 + X버튼 제어
   const display = document.getElementById('mSearchDisplay');
+  const clearBtn = document.getElementById('mTopClearBtn');
   if (display && window.innerWidth <= 768) {
     const curatorIcon = STAR_CURATORS.find(c => c.name === selCurator)?.icon || '🍽️';
+    const isFiltered = (selCurator && selCurator !== '전체') || !!regionFilter || !!searchQ;
     const label = selCurator && selCurator !== '전체'
       ? `${curatorIcon} ${selCurator}${regionFilter ? ' · ' + regionFilter : ''}`
-      : (regionFilter ? '📍 ' + regionFilter : '맛집, 음식, 지역 검색');
+      : (regionFilter ? '📍 ' + regionFilter : (searchQ ? searchQ : '맛집, 음식, 지역 검색'));
     display.textContent = label;
-    display.style.color = (selCurator && selCurator !== '전체') || regionFilter ? 'var(--text)' : 'var(--text3)';
+    display.style.color = isFiltered ? 'var(--text)' : 'var(--text3)';
+    if (clearBtn) clearBtn.style.display = isFiltered ? 'block' : 'none';
   }
 }
 
@@ -3424,6 +3445,8 @@ window.clearSearch = async function() {
   // 검색바 표시 초기화
   const display = document.getElementById('mSearchDisplay');
   if (display) { display.textContent = '맛집, 음식, 지역 검색'; display.style.color = 'var(--text3)'; }
+  const topClearBtn = document.getElementById('mTopClearBtn');
+  if (topClearBtn) topClearBtn.style.display = 'none';
   // 모바일 search-mode 해제
   const sheet = document.querySelector('.list-panel');
   if (sheet) sheet.classList.remove('search-mode');
@@ -3840,8 +3863,14 @@ window.confirmMCourse = function() {
 
   const bounds = new kakao.maps.LatLngBounds();
   points.forEach(p => bounds.extend(p));
-  map.setBounds(bounds, 60);
+  // 상단 UI(검색바+큐레이터strip) 높이만큼 padding 확보
+  const topPad = window.innerWidth <= 768 ? 140 : 80;
+  map.setBounds(bounds, topPad);
 
+  // 상단 UI 아래로 지도 살짝 내리기 (모바일에서 핀이 검색바에 가리지 않게)
+  if (window.innerWidth <= 768) {
+    setTimeout(() => { try { map.panBy(0, -70); } catch(e) {} }, 400);
+  }
   showToast('🗺️ 코스 ' + places.length + '곳이 지도에 표시됐어요!');
 };
 
@@ -4063,7 +4092,11 @@ window.replayCourse = function(idx) {
     badge.classList.add('show');
     const bounds = new kakao.maps.LatLngBounds();
     points.forEach(p => bounds.extend(p));
-    map.setBounds(bounds, 60);
+    const topPad = window.innerWidth <= 768 ? 140 : 80;
+    map.setBounds(bounds, topPad);
+    if (window.innerWidth <= 768) {
+      setTimeout(() => { try { map.panBy(0, -70); } catch(e) {} }, 400);
+    }
     showToast('🗺️ ' + c.baseName + ' 코스를 지도에 표시했어요!');
   }, 300);
 };
