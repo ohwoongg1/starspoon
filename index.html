@@ -3245,8 +3245,13 @@ window.clearRecentViewed = function() {
 // ── 저장한 맛집 패널 ──
 window.openMySavedPanel = function() {
   if (!currentUser) { showToast('로그인 후 저장한 맛집을 볼 수 있어요!'); return; }
-  renderSavedPanel();
-  document.getElementById('savedPanel').classList.add('open');
+  const p = document.getElementById('savedPanel');
+  if (p.classList.contains('open')) {
+    p.classList.remove('open');
+  } else {
+    renderSavedPanel();
+    p.classList.add('open');
+  }
 };
 window.closeSavedPanel = function() {
   document.getElementById('savedPanel').classList.remove('open');
