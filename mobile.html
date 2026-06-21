@@ -284,16 +284,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 /* ── 코스 짜기 패널 (모바일 바텀시트) ── */
 .m-course-overlay{position:fixed;inset:0;bottom:52px;background:rgba(0,0,0,0.45);z-index:600;display:none;align-items:flex-end}
 .m-course-overlay.show{display:flex}
-.m-course-sheet{width:100%;max-width:100vw;height:auto;max-height:88%;background:var(--white);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box}
+.m-course-sheet{width:100%;max-width:100vw;height:auto;max-height:min(88%,calc(100vh - 120px));background:var(--white);border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;box-sizing:border-box}
 .m-course-hd{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .m-course-hd-title{font-size:15px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px}
 .m-course-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3)}
-.m-course-search-area{padding:10px 12px 8px;border-bottom:1px solid var(--border);flex-shrink:0;box-sizing:border-box;width:100%;overflow:hidden}
+.m-course-search-area{padding:10px 12px 8px;border-bottom:1px solid var(--border);flex-shrink:0;box-sizing:border-box;width:100%}
 .m-course-search-row{display:flex;gap:8px;margin-bottom:10px}
 .m-course-input{flex:1;border:none;border-radius:0;padding:9px 8px 9px 12px;font-size:14px;outline:none;-webkit-appearance:none;min-width:0}
 .m-course-input:focus{outline:none}
 .m-course-search-btn{background:var(--gold);color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
-.m-course-dist-row{display:flex;align-items:center;gap:6px;margin-top:8px;overflow:hidden}
+.m-course-dist-row{display:flex;align-items:center;gap:6px;margin-top:8px}
 .m-course-dist-label{font-size:11px;color:var(--text3);flex-shrink:0;font-weight:600}
 /* 칩들: 한 줄 가로 스크롤 */
 .m-course-dist-chips-wrap{display:flex;gap:5px;flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -301,7 +301,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .m-course-dist-chip{font-size:11px;padding:5px 11px;border-radius:12px;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);cursor:pointer;flex-shrink:0;white-space:nowrap}
 .m-course-dist-chip.on{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700}
 /* 오른쪽 액션 버튼 3개 세로 */
-.m-course-action-btns{display:flex;flex-direction:column;gap:4px;flex-shrink:0;width:52px}
+.m-course-action-btns{display:flex;flex-direction:column;gap:4px;flex-shrink:0;min-width:52px;max-width:56px}
 .m-course-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .m-course-cat-section{border-bottom:1px solid var(--border)}
 .m-course-cat-hd{padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:var(--bg2)}
@@ -754,7 +754,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
             oninput="document.getElementById('mCourseInputClear').style.display=this.value?'flex':'none'"
             onkeydown="if(event.key==='Enter')searchMCourseBase()">
           <button id="mCourseInputClear"
-            onclick="document.getElementById('mCourseInput').value='';document.getElementById('mCourseBody').innerHTML='<div class='m-course-empty'><i class='ti ti-map-pin' style='font-size:36px;display:block;margin-bottom:10px;opacity:0.25'></i>기준 장소를 검색하면<br>주변 맛집·명소가 카테고리별로 나와요!</div>';mCourseBasePlace=null;mCourseSelected={};window._mCoursePlaces={};updateMCourseFooter();this.style.display='none'"
+            onclick="clearMCourseInput()"
             style="display:none;background:none;border:none;padding:6px 8px;cursor:pointer;color:var(--text3);align-items:center;flex-shrink:0">
             <i class="ti ti-x" style="font-size:14px"></i>
           </button>
@@ -3688,6 +3688,20 @@ window.closeMCourse = function(e) {
   }
 };
 
+// 코스 input X버튼 클릭 - 검색어만 초기화
+window.clearMCourseInput = function() {
+  const inp = document.getElementById('mCourseInput');
+  const clearBtn = document.getElementById('mCourseInputClear');
+  if (inp) inp.value = '';
+  if (clearBtn) clearBtn.style.display = 'none';
+  document.getElementById('mCourseBody').innerHTML =
+    '<div class="m-course-empty"><i class="ti ti-map-pin" style="font-size:36px;display:block;margin-bottom:10px;opacity:0.25"></i>기준 장소를 검색하면<br>주변 맛집·명소가 카테고리별로 나와요!</div>';
+  mCourseBasePlace = null;
+  mCourseSelected = {};
+  window._mCoursePlaces = {};
+  updateMCourseFooter();
+};
+
 // X버튼 → 완전 초기화
 window.resetMCourse = function() {
   document.getElementById('mCourseOverlay').classList.remove('show');
@@ -4197,12 +4211,21 @@ if (window.visualViewport) {
     if (!overlay || !overlay.classList.contains('show')) return;
     const sheet = overlay.querySelector('.m-course-sheet');
     if (!sheet) return;
-    // 키보드 높이 = 화면 - viewport 높이
-    const kbHeight = window.innerHeight - window.visualViewport.height;
-    const availH = window.visualViewport.height - 10; // 여유 10px
-    sheet.style.maxHeight = availH + 'px';
-    // 오버레이도 키보드 위로 올리기
-    overlay.style.bottom = kbHeight + 'px';
+    const TAB_BAR_H = 52;
+    const vvH = window.visualViewport.height;
+    const kbHeight = window.innerHeight - vvH;
+    if (kbHeight > 100) {
+      // 키보드 올라옴 → overlay를 키보드 바로 위로
+      overlay.style.bottom = kbHeight + 'px';
+      overlay.style.top = '0';
+      // sheet 최대 높이 = viewport 높이 - 여유
+      sheet.style.maxHeight = (vvH - 10) + 'px';
+    } else {
+      // 키보드 내려감 → 원래대로 (탭바 위까지)
+      overlay.style.bottom = TAB_BAR_H + 'px';
+      overlay.style.top = '0';
+      sheet.style.maxHeight = '88%';
+    }
   });
 }
 
