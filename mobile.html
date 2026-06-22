@@ -366,7 +366,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .m-course-side-save{padding:6px 9px;background:var(--white);color:var(--gold);border:1.5px solid var(--gold);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px}
 .m-course-side-share{padding:6px 9px;background:#FEE500;color:#3A1D1D;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:3px}
 /* 코스 지도 배지 */
-.m-course-map-badge{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:190;background:var(--gold);color:#fff;padding:7px 16px;border-radius:20px;font-size:13px;font-weight:600;display:none;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(245,158,11,0.4);white-space:nowrap}
+.m-course-map-badge{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:190;background:var(--gold);color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;display:none;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(245,158,11,0.5);white-space:nowrap;cursor:pointer}
 .m-course-map-badge.show{display:flex}
 /* ── 코스 애니메이션 팝업 ── */
 .course-anim-overlay{position:fixed;inset:0;bottom:52px;z-index:800;background:transparent;display:none;align-items:flex-end;justify-content:center;pointer-events:none}
@@ -4393,7 +4393,7 @@ window.confirmMCourse = function() {
     badge.className = 'm-course-map-badge';
     document.body.appendChild(badge);
   }
-  badge.innerHTML = `<i class="ti ti-route"></i> 코스 ${places.length}곳 · <span style="cursor:pointer;text-decoration:underline" onclick="clearMCourseFromMap()">지우기</span>`;
+  badge.innerHTML = `<i class="ti ti-route"></i> <span style="cursor:pointer;font-weight:700" onclick="reopenCourseAnim()" title="코스 길 안내 다시 보기">코스 ${places.length}곳 ▶</span> · <span style="cursor:pointer;text-decoration:underline;font-size:11px" onclick="clearMCourseFromMap()">지우기</span>`;
   badge.classList.add('show');
 
   const bounds = new kakao.maps.LatLngBounds();
@@ -4490,7 +4490,7 @@ window.shareMCourse = async function() {
         badge: p.badge||'', badgeText: p.badgeText||'', type: p.type||''
       })),
       createdBy: currentUser?.uid || 'anonymous',
-      createdByName: currentUser?.displayName || '익명',
+      createdByName: currentUser?.displayName || (currentUser ? '스타스푼 사용자' : '익명'),
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 30*24*60*60*1000).toISOString() // 30일
     });
@@ -4676,7 +4676,7 @@ window.replayCourse = function(idx) {
     });
     let badge = document.querySelector('.m-course-map-badge');
     if (!badge) { badge = document.createElement('div'); badge.className = 'm-course-map-badge'; document.body.appendChild(badge); }
-    badge.innerHTML = `<i class="ti ti-route"></i> ${c.baseName} 코스 ${c.places.length}곳 · <span style="cursor:pointer;text-decoration:underline" onclick="clearMCourseFromMap()">지우기</span>`;
+    badge.innerHTML = `<i class="ti ti-route"></i> <span style="cursor:pointer;font-weight:700" onclick="reopenCourseAnim()" title="코스 길 안내 다시 보기">${c.baseName} 코스 ${c.places.length}곳 ▶</span> · <span style="cursor:pointer;text-decoration:underline;font-size:11px" onclick="clearMCourseFromMap()">지우기</span>`;
     badge.classList.add('show');
     const bounds = new kakao.maps.LatLngBounds();
     points.forEach(p => bounds.extend(p));
@@ -4792,7 +4792,7 @@ window.setMCourseCurrentLocation = function() {
 };
 
 // ── 팝업 열기 (거리 정보 포함) ──
-function openCourseAnimPopup(places, basePlace) {
+window.openCourseAnimPopup = function openCourseAnimPopup(places, basePlace) {
   _animPlaces = places;
   _animBase = basePlace;
   _animIdx = 0;
@@ -4886,7 +4886,7 @@ window.shareCourseKakao = async function() {
         badge: p.badge||'', badgeText: p.badgeText||'', type: p.type||''
       })),
       createdBy: currentUser?.uid || 'anonymous',
-      createdByName: currentUser?.displayName || '익명',
+      createdByName: currentUser?.displayName || (currentUser ? '스타스푼 사용자' : '익명'),
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 30*24*60*60*1000).toISOString()
     });
@@ -4918,6 +4918,21 @@ window.shareCourseKakao = async function() {
       },
       buttons: [{title: '스타스푼 열기', link: {mobileWebUrl: shareUrl, webUrl: shareUrl}}]
     });
+  }
+};
+
+
+// ── 코스 배지 탭 → 애니메이션 팝업 재열기 ──
+window.reopenCourseAnim = function() {
+  if (_animPlaces && _animPlaces.length && _animBase) {
+    // 이미 _animPlaces가 있으면 바로 팝업 열기
+    openCourseAnimPopup(_animPlaces, _animBase);
+  } else if (mCourseBasePlace && Object.keys(mCourseSelected||{}).length) {
+    // 코스짜기에서 만든 코스
+    const places = Object.values(mCourseSelected).sort((a,b)=>(a.dist||0)-(b.dist||0));
+    openCourseAnimPopup(places, mCourseBasePlace);
+  } else {
+    showToast('코스 정보가 없어요. 코스짜기를 다시 해주세요.');
   }
 };
 
@@ -5288,7 +5303,7 @@ async function loadSharedCourse(courseId) {
       badge.className = 'm-course-map-badge';
       document.body.appendChild(badge);
     }
-    badge.innerHTML = `<i class="ti ti-route"></i> ${c.createdByName}의 코스 · ${c.places.length}곳 · <span style="cursor:pointer;text-decoration:underline" onclick="clearMCourseFromMap()">닫기</span>`;
+    badge.innerHTML = `<i class="ti ti-route"></i> <span style="cursor:pointer;text-decoration:underline;font-weight:700" onclick="reopenCourseAnim()" title="탭해서 코스 길 안내 다시 보기">${c.createdByName||'공유'}의 코스 ${c.places.length}곳 ▶</span> · <span style="cursor:pointer;text-decoration:underline" onclick="clearMCourseFromMap()">닫기</span>`;
     badge.classList.add('show');
 
     const bounds = new kakao.maps.LatLngBounds();
@@ -5300,10 +5315,14 @@ async function loadSharedCourse(courseId) {
     // URL에서 courseId 파라미터 제거 (뒤로가기 방지)
     window.history.replaceState({}, '', window.location.pathname);
 
-    // 공유받은 코스를 내 저장 코스에도 추가 제안
+    // ★ 핵심: 애니메이션 팝업 자동 열기
     setTimeout(() => {
-      showToast('📍 ' + c.createdByName + '의 ' + c.baseName + ' 코스예요! 저장 탭에서 보관할 수 있어요');
-    }, 1000);
+      // _animPlaces, _animBase 설정 (shareCourseKakao에서도 사용)
+      _animPlaces = c.places;
+      _animBase = {name: c.baseName, lat: c.baseLat, lng: c.baseLng};
+      openCourseAnimPopup(c.places, {name: c.baseName, lat: c.baseLat, lng: c.baseLng});
+      showToast('📍 ' + (c.createdByName||'누군가') + '의 코스가 도착했어요! ▶ 시작 버튼을 눌러보세요');
+    }, 800);
 
   } catch(e) {
     console.log('코스 로드 오류:', e);
@@ -5362,7 +5381,8 @@ window.closeIntro = function() {
 };
 
 const lastSeen = localStorage.getItem('starspoon_intro');
-if (lastSeen !== new Date().toDateString()) {
+const _hasCourseId = new URLSearchParams(window.location.search).get('courseId');
+if (lastSeen !== new Date().toDateString() && !_hasCourseId) {
   document.getElementById('introOverlay').classList.add('show');
 }
 
