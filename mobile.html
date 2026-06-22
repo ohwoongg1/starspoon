@@ -783,8 +783,10 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     </div>
     <div class="course-anim-status" id="courseAnimStatus">출발 준비 중...</div>
     <div class="course-anim-places" id="courseAnimPlaces"></div>
+    <!-- 거리/소요시간 -->
+    <div id="courseAnimDist" style="display:none;text-align:center;padding:6px 0 2px;border-top:1px solid var(--border);margin-top:6px"></div>
     <button class="course-anim-btn" id="courseAnimBtn" onclick="startCourseAnim()">
-      <i class="ti ti-player-play"></i> 코스 길 보기 시작
+      ▶ 코스 길 보기 시작
     </button>
   </div>
 </div>
@@ -800,10 +802,16 @@ input::placeholder{color:var(--text3) !important;opacity:1}
       <!-- 검색창 -->
       <div class="m-course-search-row">
         <div style="flex:1;display:flex;align-items:center;border:1.5px solid var(--border2);border-radius:8px;overflow:hidden;background:var(--white)" id="mCourseInputWrap">
+          <!-- 현위치 버튼 -->
+          <button onclick="setMCourseCurrentLocation()"
+            style="background:none;border:none;padding:6px 10px;cursor:pointer;color:var(--gold);flex-shrink:0;display:flex;align-items:center"
+            title="현위치로 설정">
+            <i class="ti ti-current-location" style="font-size:16px"></i>
+          </button>
           <input type="text" class="m-course-input"
             id="mCourseInput"
-            placeholder="기준 장소 입력 예: 경복궁, 강남역"
-            style="border:none;border-radius:0;flex:1;min-width:0;padding:9px 8px 9px 12px;font-size:16px"
+            placeholder="기준 장소 또는 📍현위치"
+            style="border:none;border-radius:0;flex:1;min-width:0;padding:9px 4px 9px 0;font-size:16px"
             oninput="document.getElementById('mCourseInputClear').style.display=this.value?'flex':'none'"
             onkeydown="if(event.key==='Enter')searchMCourseBase()">
           <button id="mCourseInputClear"
@@ -3682,7 +3690,14 @@ window.submitRestReport = async function() {
 window.shareKakaoPC = function(id) {
   const d = DATA.find(x => x.id === id);
   if (!d) return;
-  if (!window.Kakao?.isInitialized()) window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
+  try {
+    if (!window.Kakao) { showToast('카카오 SDK 로딩 중...'); return; }
+    if (!window.Kakao.isInitialized()) {
+      window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
+    }
+  } catch(e) {
+    try { window.Kakao.init('25b433faf5d746c938cbcc7658f650b0'); } catch(e2) {}
+  }
   const rating = d.avgRating ? `⭐ ${d.avgRating.toFixed(1)}점` : '';
   const desc = [d.cat, d.area, rating].filter(Boolean).join(' · ');
   const shareUrl = `https://www.starspoon.co.kr/mobile.html?name=${encodeURIComponent(d.name)}&celeb=${encodeURIComponent(d.celeb)}`;
@@ -4268,59 +4283,118 @@ let _animTimer = null;
 let _animPolylines = [];
 let _animMarker = null;
 let _animRunning = false;
+let _animAudioCtx = null;
 
-// 효과음 (Web Audio API)
-function playBeep(freq, dur, type) {
+// ── 오디오 컨텍스트 재사용 ──
+function getAudioCtx() {
+  if (!_animAudioCtx || _animAudioCtx.state === 'closed') {
+    _animAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (_animAudioCtx.state === 'suspended') _animAudioCtx.resume();
+  return _animAudioCtx;
+}
+
+function playBeep(freq, dur, type, vol) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
+    osc.connect(gain); gain.connect(ctx.destination);
     osc.type = type || 'sine';
     osc.frequency.setValueAtTime(freq, ctx.currentTime);
-    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+    gain.gain.setValueAtTime(vol || 0.15, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + dur);
   } catch(e) {}
 }
 
-function playArriveSound() {
-  // 도착 효과음: 경쾌한 상승음
-  playBeep(523, 0.12); // C
-  setTimeout(() => playBeep(659, 0.12), 120); // E
-  setTimeout(() => playBeep(784, 0.22), 240); // G
-}
-
 function playMoveSound() {
-  // 이동 효과음: 부드러운 틱
-  playBeep(400, 0.08, 'triangle');
+  // 이동 중 부드러운 엔진 소리 (매 스텝)
+  playBeep(180 + Math.random()*40, 0.06, 'sawtooth', 0.06);
 }
-
 function playStartSound() {
-  // 출발 효과음
-  playBeep(440, 0.1);
-  setTimeout(() => playBeep(550, 0.1), 110);
-  setTimeout(() => playBeep(660, 0.18), 220);
+  playBeep(440, 0.1); setTimeout(() => playBeep(550, 0.1), 110); setTimeout(() => playBeep(660, 0.2), 220);
 }
-
+function playArriveSound() {
+  playBeep(523, 0.1); setTimeout(() => playBeep(659, 0.1), 120); setTimeout(() => playBeep(784, 0.25), 240);
+}
 function playFinishSound() {
-  // 완료 팡파레
-  playBeep(523, 0.12);
-  setTimeout(() => playBeep(659, 0.12), 130);
-  setTimeout(() => playBeep(784, 0.12), 260);
-  setTimeout(() => playBeep(1047, 0.35), 390);
+  playBeep(523, 0.1); setTimeout(() => playBeep(659, 0.1), 130);
+  setTimeout(() => playBeep(784, 0.1), 260); setTimeout(() => playBeep(1047, 0.4), 390);
 }
 
-// 팝업 열기
+// ── 거리 계산 (미터) ──
+function calcDistM(lat1, lng1, lat2, lng2) {
+  const R = 6371000;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLng = (lng2-lng1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function formatDist(m) {
+  return m < 1000 ? Math.round(m) + 'm' : (m/1000).toFixed(1) + 'km';
+}
+
+function formatTime(seconds) {
+  if (seconds < 60) return Math.round(seconds) + '초';
+  if (seconds < 3600) return Math.round(seconds/60) + '분';
+  return Math.floor(seconds/3600) + '시간 ' + Math.round((seconds%3600)/60) + '분';
+}
+
+// ── 현위치를 기준장소로 설정 ──
+window.setMCourseCurrentLocation = function() {
+  if (!navigator.geolocation) { showToast('위치 서비스를 사용할 수 없어요'); return; }
+  showToast('📍 현위치 가져오는 중...');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+    // 카카오 역지오코딩으로 주소명 가져오기
+    const geocoder = new kakao.maps.services.Geocoder();
+    geocoder.coord2RegionCode(lng, lat, (result, status) => {
+      let name = '현재 위치';
+      if (status === kakao.maps.services.Status.OK) {
+        const region = result.find(r => r.region_type === 'H') || result[0];
+        if (region) {
+          // "서울특별시 종로구 삼청동" → "삼청동"처럼 마지막 부분만
+          const parts = region.address_name.split(' ');
+          name = parts.slice(-2).join(' ') || region.address_name;
+        }
+      }
+      mCourseBasePlace = {name, lat, lng};
+      const inp = document.getElementById('mCourseInput');
+      if (inp) {
+        inp.value = name;
+        const clearBtn = document.getElementById('mCourseInputClear');
+        if (clearBtn) clearBtn.style.display = 'flex';
+      }
+      showToast('📍 ' + name + ' 기준으로 검색해요');
+      loadMCourseData();
+    });
+  }, () => showToast('위치를 가져올 수 없어요. 위치 권한을 확인해주세요'), {timeout:8000});
+};
+
+// ── 팝업 열기 (거리 정보 포함) ──
 function openCourseAnimPopup(places, basePlace) {
   _animPlaces = places;
   _animBase = basePlace;
   _animIdx = 0;
   _animRunning = false;
 
-  // 장소 스텝 렌더
+  // 구간 거리 계산
+  const allLatlng = [
+    {lat: basePlace.lat, lng: basePlace.lng},
+    ...places.map(p => ({lat: p.lat, lng: p.lng}))
+  ];
+  const segDists = [];
+  let totalDist = 0;
+  for (let i = 0; i < allLatlng.length - 1; i++) {
+    const d = calcDistM(allLatlng[i].lat, allLatlng[i].lng, allLatlng[i+1].lat, allLatlng[i+1].lng);
+    segDists.push(d);
+    totalDist += d;
+  }
+
+  // 스텝 바 렌더 (구간 거리 포함)
   const container = document.getElementById('courseAnimPlaces');
   const allStops = [
     {name: basePlace.name, isBase: true},
@@ -4333,16 +4407,34 @@ function openCourseAnimPopup(places, basePlace) {
       </div>
       <div class="course-anim-name" id="animName${i}">${s.name}</div>
     </div>
-    ${i < allStops.length - 1 ? `<div class="course-anim-line" id="animLine${i}"></div>` : ''}
+    ${i < allStops.length - 1 ? `
+      <div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0">
+        <div class="course-anim-line" id="animLine${i}"></div>
+        <div style="font-size:8px;color:var(--text3);margin-bottom:12px;white-space:nowrap" id="animDist${i}">${formatDist(segDists[i])}</div>
+      </div>` : ''}
   `).join('');
+
+  // 총거리 + 소요시간 표시
+  const walkMin = Math.round(totalDist / 4000 * 60);
+  const carMin  = Math.round(totalDist / 30000 * 60);
+  const busMin  = Math.round(totalDist / 20000 * 60);
+  const distEl = document.getElementById('courseAnimDist');
+  if (distEl) {
+    distEl.innerHTML = `
+      <div style="font-size:11px;color:var(--text3);margin-bottom:4px">총 거리 <strong style="color:var(--text)">${formatDist(totalDist)}</strong></div>
+      <div style="display:flex;gap:10px;justify-content:center;font-size:11px">
+        <span>🚶 ${walkMin < 60 ? walkMin+'분' : Math.floor(walkMin/60)+'시간 '+walkMin%60+'분'}</span>
+        <span>🚗 ${carMin < 1 ? '1분 미만' : carMin+'분'}</span>
+        <span>🚇 ${busMin < 1 ? '1분 미만' : busMin+'분'}</span>
+      </div>`;
+    distEl.style.display = 'block';
+  }
 
   document.getElementById('courseAnimStatus').textContent = '출발 준비 완료! 시작 버튼을 눌러주세요';
   const btn = document.getElementById('courseAnimBtn');
-  btn.textContent = '';
-  btn.innerHTML = '<i class="ti ti-player-play"></i> 코스 길 보기 시작';
+  btn.innerHTML = '▶ 코스 길 보기 시작';
   btn.disabled = false;
   btn.onclick = startCourseAnim;
-
   document.getElementById('courseAnimOverlay').classList.add('show');
 }
 
@@ -4352,8 +4444,10 @@ window.stopCourseAnim = function() {
   if (_animMarker) { _animMarker.setMap(null); _animMarker = null; }
   _animPolylines.forEach(p => p.setMap(null));
   _animPolylines = [];
+  // 도착 말풍선 제거
+  const bubble = document.getElementById('animBubble');
+  if (bubble) bubble.remove();
   document.getElementById('courseAnimOverlay').classList.remove('show');
-  // ★ 숨겼던 맛집 핀 복원
   renderPins();
   showToast('코스 길 보기 종료');
 };
@@ -4361,140 +4455,160 @@ window.stopCourseAnim = function() {
 window.startCourseAnim = async function() {
   if (_animRunning) return;
   _animRunning = true;
-
   const btn = document.getElementById('courseAnimBtn');
   btn.disabled = true;
-  btn.innerHTML = '<i class="ti ti-loader"></i> 이동 중...';
+  btn.innerHTML = '⟳ 이동 중...';
 
-  // 기존 코스 라인/마커 제거
+  // 기존 제거
   if (mCoursePolyline) { mCoursePolyline.setMap(null); mCoursePolyline = null; }
-  mCourseMarkers.forEach(m => m.setMap(null));
-  mCourseMarkers = [];
-  _animPolylines.forEach(p => p.setMap(null));
-  _animPolylines = [];
+  mCourseMarkers.forEach(m => m.setMap(null)); mCourseMarkers = [];
+  _animPolylines.forEach(p => p.setMap(null)); _animPolylines = [];
   if (_animMarker) { _animMarker.setMap(null); _animMarker = null; }
-
-  // ★ 기존 맛집 핀(markers) 숨기기 → 자동차가 잘 보이게
   markers.forEach(m => m.setMap(null));
   overlays.forEach(o => o.setMap(null));
 
-  // 모든 목적지 리스트
   const allPoints = [
     new kakao.maps.LatLng(_animBase.lat, _animBase.lng),
     ..._animPlaces.map(p => new kakao.maps.LatLng(p.lat, p.lng))
   ];
 
-  // 출발지 마커 고정
+  // 출발지 핀
   const baseSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="38" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#1A1A18"/><text x="18" y="25" text-anchor="middle" font-size="13" fill="white">📍</text></svg>`;
-  new kakao.maps.Marker({
-    map,
-    position: allPoints[0],
-    image: new kakao.maps.MarkerImage(
-      'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(baseSvg),
-      new kakao.maps.Size(32,38), {offset: new kakao.maps.Point(16,38)}
-    ),
-    zIndex: 5
-  });
+  new kakao.maps.Marker({map, position:allPoints[0], image:new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(baseSvg), new kakao.maps.Size(32,38),{offset:new kakao.maps.Point(16,38)}), zIndex:5});
 
-  // 이동 마커 (자동차 이모지)
-  // 자동차 마커 - 크고 눈에 잘 띄게
-  const carSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="25" fill="#fff" stroke="#F59E0B" stroke-width="3"/><circle cx="26" cy="26" r="20" fill="#FFF9E6"/><text x="26" y="34" text-anchor="middle" font-size="22">🚗</text></svg>`;
+  // 🥄 스푼 캐릭터 마커 (스타스푼 브랜드!)
+  const spoonSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 56 56">
+    <circle cx="28" cy="28" r="27" fill="#F59E0B" stroke="#fff" stroke-width="2.5"/>
+    <circle cx="28" cy="28" r="22" fill="#FFF9E6"/>
+    <text x="28" y="36" text-anchor="middle" font-size="24">🥄</text>
+  </svg>`;
   _animMarker = new kakao.maps.Marker({
-    map,
-    position: allPoints[0],
-    image: new kakao.maps.MarkerImage(
-      'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(carSvg),
-      new kakao.maps.Size(52,52), {offset: new kakao.maps.Point(26,26)}
-    ),
-    zIndex: 30
+    map, position:allPoints[0],
+    image:new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(spoonSvg), new kakao.maps.Size(56,56),{offset:new kakao.maps.Point(28,28)}),
+    zIndex:30
   });
 
-  // ★ 코스 목적지 전체가 화면에 꽉 차게
-  const _allPts = [
-    new kakao.maps.LatLng(_animBase.lat, _animBase.lng),
-    ..._animPlaces.map(p => new kakao.maps.LatLng(p.lat, p.lng))
-  ];
-  const _fitBounds = new kakao.maps.LatLngBounds();
-  _allPts.forEach(p => _fitBounds.extend(p));
-  // 패딩 최소 (핀이 화면 꽉 차도록)
-  map.setBounds(_fitBounds, 60);
-  // 팝업 높이만큼 지도 위로 살짝 올리기 (목적지가 팝업에 안 가리게)
-  setTimeout(() => { try { map.panBy(0, -80); } catch(e){} }, 300);
+  // 전체 뷰
+  const bounds = new kakao.maps.LatLngBounds();
+  allPoints.forEach(p => bounds.extend(p));
+  map.setBounds(bounds, 60);
+  setTimeout(() => { try { map.panBy(0, -90); } catch(e){} }, 350);
 
   playStartSound();
-  updateAnimStep(0, '출발합니다! 🚗');
+  updateAnimStep(0, '출발합니다! 🥄');
 
-  // 구간별 순차 애니메이션
   for (let i = 0; i < allPoints.length - 1; i++) {
     if (!_animRunning) break;
     await animateSegment(allPoints[i], allPoints[i+1], i);
     if (!_animRunning) break;
 
-    // 목적지 도착
     const destIdx = i + 1;
     const destName = _animPlaces[i]?.name || '';
     playArriveSound();
-    updateAnimStep(destIdx, `${destIdx}번 도착! ⭐ ${destName}`);
+    updateAnimStep(destIdx, destIdx + '번 도착! ⭐ ' + destName);
 
-    // 도착 마커 표시
-    const numSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="38" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><text x="18" y="24" text-anchor="middle" font-size="14" fill="white">${destIdx}</text></svg>`;
+    // 도착 말풍선
+    showArrivalBubble(allPoints[destIdx], destIdx, destName);
+
+    // 도착 핀 (bounce 효과는 CSS로)
+    const numSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><text x="18" y="24" text-anchor="middle" font-size="14" fill="white">${destIdx}</text></svg>`;
     mCourseMarkers.push(new kakao.maps.Marker({
-      map,
-      position: allPoints[destIdx],
-      image: new kakao.maps.MarkerImage(
-        'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(numSvg),
-        new kakao.maps.Size(32,38), {offset: new kakao.maps.Point(16,38)}
-      ),
-      zIndex: 10
+      map, position:allPoints[destIdx],
+      image:new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(numSvg), new kakao.maps.Size(36,44),{offset:new kakao.maps.Point(18,44)}),
+      zIndex:10
     }));
 
-    // 마지막 목적지가 아니면 잠깐 대기
-    if (i < allPoints.length - 2) {
-      await sleep(1000);
-    }
+    if (i < allPoints.length - 2) await sleep(1200);
+    // 말풍선 숨기기
+    hideBubble();
   }
 
   if (_animRunning) {
     playFinishSound();
     updateAnimStep(allPoints.length - 1, '🎉 코스 완주! 수고했어요!');
-    btn.innerHTML = '<i class="ti ti-check"></i> 완료! 닫기';
+
+    // 완주 요약 카드
+    showFinishSummary();
+
+    btn.innerHTML = '✓ 완료! 닫기';
     btn.disabled = false;
     btn.onclick = stopCourseAnim;
-    // 완주 후 전체 코스 뷰
-    const bounds = new kakao.maps.LatLngBounds();
-    allPoints.forEach(p => bounds.extend(p));
-    map.setBounds(bounds, 60);
-    setTimeout(() => { try { map.panBy(0, -80); } catch(e){} }, 300);
+    const bounds2 = new kakao.maps.LatLngBounds();
+    allPoints.forEach(p => bounds2.extend(p));
+    map.setBounds(bounds2, 60);
+    setTimeout(() => { try { map.panBy(0, -90); } catch(e){} }, 300);
   }
 };
 
-// 두 점 사이 선 애니메이션
+// ── 도착 말풍선 ──
+function showArrivalBubble(pos, num, name) {
+  let bubble = document.getElementById('animBubble');
+  if (!bubble) {
+    bubble = document.createElement('div');
+    bubble.id = 'animBubble';
+    bubble.style.cssText = 'position:fixed;z-index:900;background:#1A1A18;color:#fff;padding:6px 12px;border-radius:20px;font-size:12px;font-weight:700;pointer-events:none;transition:opacity .3s;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,0.3)';
+    document.body.appendChild(bubble);
+  }
+  bubble.textContent = num + '번 📍 ' + name;
+  bubble.style.opacity = '1';
+  bubble.style.left = '50%';
+  bubble.style.transform = 'translateX(-50%)';
+  bubble.style.top = '80px';
+}
+
+function hideBubble() {
+  const bubble = document.getElementById('animBubble');
+  if (bubble) bubble.style.opacity = '0';
+}
+
+// ── 완주 요약 카드 ──
+function showFinishSummary() {
+  const allLatlng = [
+    {lat: _animBase.lat, lng: _animBase.lng},
+    ..._animPlaces.map(p => ({lat: p.lat, lng: p.lng}))
+  ];
+  let totalDist = 0;
+  for (let i = 0; i < allLatlng.length - 1; i++) {
+    totalDist += calcDistM(allLatlng[i].lat, allLatlng[i].lng, allLatlng[i+1].lat, allLatlng[i+1].lng);
+  }
+  const walkMin = Math.round(totalDist / 4000 * 60);
+  const carMin  = Math.max(1, Math.round(totalDist / 30000 * 60));
+  const busMin  = Math.max(1, Math.round(totalDist / 20000 * 60));
+
+  const distEl = document.getElementById('courseAnimDist');
+  if (distEl) {
+    distEl.innerHTML = `
+      <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px">🎉 코스 완주!</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">총 ${_animPlaces.length}곳 · 총 거리 <strong style="color:var(--text)">${formatDist(totalDist)}</strong></div>
+      <div style="display:flex;gap:6px;justify-content:center;font-size:11px;flex-wrap:wrap">
+        <span style="background:#F0FDF4;color:#166534;padding:3px 8px;border-radius:8px">🚶 도보 ${walkMin}분</span>
+        <span style="background:#EFF6FF;color:#1D4ED8;padding:3px 8px;border-radius:8px">🚗 자동차 ${carMin}분</span>
+        <span style="background:#FFF7ED;color:#C2410C;padding:3px 8px;border-radius:8px">🚇 지하철 ${busMin}분</span>
+      </div>`;
+    distEl.style.display = 'block';
+  }
+}
+
+// ── 구간 애니메이션 (지도가 스푼 따라 실시간 이동) ──
 function animateSegment(from, to, segIdx) {
   return new Promise(resolve => {
-    const STEPS = 30; // 애니메이션 단계 수
-    const STEP_MS = 60; // 각 단계 간격
-    let step = 0;
-
     const fromLat = from.getLat(), fromLng = from.getLng();
     const toLat = to.getLat(), toLng = to.getLng();
 
-    // 이동 구간이 화면에 보이도록 (팝업 공간 고려)
-    const midLat = (fromLat + toLat) / 2;
-    const midLng = (fromLng + toLng) / 2;
-    map.panTo(new kakao.maps.LatLng(midLat, midLng));
+    // 거리 비례 스텝 수 (최소 20, 최대 60)
+    const distM = calcDistM(fromLat, fromLng, toLat, toLng);
+    const STEPS = Math.min(60, Math.max(20, Math.round(distM / 30)));
+    const STEP_MS = 65;
 
-    // 구간 폴리라인 (회색으로 먼저 표시)
+    let step = 0;
+
+    // 배경 선 (회색)
     const bgLine = new kakao.maps.Polyline({
-      path: [from, to],
-      strokeWeight: 6,
-      strokeColor: '#D4D3CF',
-      strokeOpacity: 0.7,
-      strokeStyle: 'solid'
+      path:[from,to], strokeWeight:6, strokeColor:'#D4D3CF', strokeOpacity:0.6, strokeStyle:'solid'
     });
     bgLine.setMap(map);
     _animPolylines.push(bgLine);
 
-    // 진행 폴리라인 (골드색으로 채워짐)
     let progressLine = null;
 
     function tick() {
@@ -4505,35 +4619,29 @@ function animateSegment(from, to, segIdx) {
       const curLng = fromLng + (toLng - fromLng) * t;
       const curPos = new kakao.maps.LatLng(curLat, curLng);
 
-      // 진행 선 업데이트
+      // 진행 선
       if (progressLine) progressLine.setMap(null);
       progressLine = new kakao.maps.Polyline({
-        path: [from, curPos],
-        strokeWeight: 6,
-        strokeColor: '#F59E0B',
-        strokeOpacity: 1,
-        strokeStyle: 'solid'
+        path:[from, curPos], strokeWeight:6, strokeColor:'#F59E0B', strokeOpacity:1, strokeStyle:'solid'
       });
       progressLine.setMap(map);
       _animPolylines.push(progressLine);
 
-      // 자동차 마커 이동
+      // 🥄 스푼 이동
       if (_animMarker) _animMarker.setPosition(curPos);
 
-      // 이동 소리 (5스텝마다)
-      if (step % 5 === 0) playMoveSound();
+      // ★ 지도가 스푼을 따라 실시간으로 이동!
+      map.panTo(curPos);
+
+      // 이동 소리 (매 3스텝)
+      if (step % 3 === 0) playMoveSound();
 
       if (step < STEPS) {
         _animTimer = setTimeout(tick, STEP_MS);
       } else {
-        // 도착 - 완성 선으로 교체
         if (progressLine) progressLine.setMap(null);
         const doneLine = new kakao.maps.Polyline({
-          path: [from, to],
-          strokeWeight: 6,
-          strokeColor: '#F59E0B',
-          strokeOpacity: 1,
-          strokeStyle: 'solid'
+          path:[from,to], strokeWeight:6, strokeColor:'#F59E0B', strokeOpacity:1, strokeStyle:'solid'
         });
         doneLine.setMap(map);
         _animPolylines.push(doneLine);
@@ -4545,34 +4653,31 @@ function animateSegment(from, to, segIdx) {
   });
 }
 
-// 스텝 UI 업데이트
+// ── 스텝 UI 업데이트 ──
 function updateAnimStep(activeIdx, statusMsg) {
   document.getElementById('courseAnimStatus').textContent = statusMsg;
-  const total = _animPlaces.length + 1; // base + places
+  const total = _animPlaces.length + 1;
   for (let i = 0; i < total; i++) {
-    const dot = document.getElementById('animDot' + i);
+    const dot  = document.getElementById('animDot' + i);
     const name = document.getElementById('animName' + i);
     const line = document.getElementById('animLine' + i);
     if (!dot) continue;
     if (i < activeIdx) {
-      dot.classList.add('done');
-      dot.classList.remove('active');
-      if (name) name.classList.remove('active');
+      dot.className = 'course-anim-dot done' + (i===0?' base':'');
+      if (name) name.className = 'course-anim-name';
     } else if (i === activeIdx) {
-      dot.classList.add('active');
-      if (name) name.classList.add('active');
-      // 스크롤로 현재 스텝 보이게
+      dot.className = 'course-anim-dot active' + (i===0?' base':'');
+      if (name) name.className = 'course-anim-name active';
       dot.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
     } else {
-      dot.classList.remove('done', 'active');
-      if (name) name.classList.remove('active');
+      dot.className = 'course-anim-dot' + (i===0?' base':'');
+      if (name) name.className = 'course-anim-name';
     }
-    if (line) {
-      line.classList.toggle('done', i < activeIdx);
-    }
+    if (line) line.classList.toggle('done', i < activeIdx);
   }
 }
 
+// ── 현위치 현재 위치 ──
 function sleep(ms) {
   return new Promise(resolve => { _animTimer = setTimeout(resolve, ms); });
 }
