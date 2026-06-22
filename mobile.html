@@ -402,6 +402,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .course-anim-name.active{color:var(--gold);font-weight:700}
 .course-anim-btn{width:100%;padding:11px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:8px}
 .course-anim-btn:disabled{background:var(--border2);cursor:not-allowed}
+
+/* 피드백 */
+.feedback-type-btn{padding:6px 12px;border-radius:16px;border:1.5px solid var(--border2);background:var(--white);font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s}
+.feedback-type-btn.on{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700}
+
 /* 토스트 ── */
 .toast{position:fixed;bottom:20px;right:20px;background:#1A1A18;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;box-shadow:var(--shadow-lg);max-width:320px}
 .toast.show{display:flex}
@@ -732,9 +737,12 @@ input::placeholder{color:var(--text3) !important;opacity:1}
           <i class="ti ti-x" style="font-size:15px"></i>
         </button>
       </div>
-      <!-- 내 스푼 -->
-      <div class="m-my-btn" id="mMyBtn" style="background:var(--white)">
-        <i class="ti ti-spoon" style="font-size:20px;color:var(--gold)"></i>
+      <!-- 내 계정 / 로그인 버튼 -->
+      <div class="m-my-btn" id="mMyBtn" style="background:var(--white);position:relative" onclick="mMyBtnClick()">
+        <i class="ti ti-user" id="mMyBtnIcon" style="font-size:20px;color:var(--gold)"></i>
+        <div id="mMyBtnAvatar" style="display:none;width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid var(--gold)">
+          <img id="mMyBtnImg" style="width:100%;height:100%;object-fit:cover" src="" alt="">
+        </div>
       </div>
     </div>
 
@@ -1398,6 +1406,42 @@ function renderAuthArea() {
         <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path fill="#000" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
         카카오
       </button>`;
+  }
+  updateMMyBtn();
+}
+
+
+// ── 상단 우측 버튼 클릭 ──
+window.mMyBtnClick = function() {
+  if (currentUser) {
+    // 로그인 상태 → 저장한 장소 탭으로
+    setPage('saved', document.querySelector('.pnav:nth-child(3)'));
+  } else {
+    // 비로그인 → 구글 로그인
+    loginWithGoogle();
+  }
+};
+
+// ── 상단 우측 버튼 상태 업데이트 ──
+function updateMMyBtn() {
+  const icon = document.getElementById('mMyBtnIcon');
+  const avatar = document.getElementById('mMyBtnAvatar');
+  const img = document.getElementById('mMyBtnImg');
+  if (!icon || !avatar) return;
+  if (currentUser && currentUser.photoURL) {
+    icon.style.display = 'none';
+    avatar.style.display = 'block';
+    img.src = currentUser.photoURL;
+  } else if (currentUser) {
+    icon.style.display = 'block';
+    icon.className = 'ti ti-user-check';
+    icon.style.color = 'var(--gold)';
+    avatar.style.display = 'none';
+  } else {
+    icon.style.display = 'block';
+    icon.className = 'ti ti-user';
+    icon.style.color = 'var(--text3)';
+    avatar.style.display = 'none';
   }
 }
 
@@ -4782,10 +4826,13 @@ function openCourseAnimPopup(places, basePlace) {
   if (distEl) {
     distEl.innerHTML = `
       <div style="font-size:11px;color:var(--text3);margin-bottom:4px">총 거리 <strong style="color:var(--text)">${formatDist(totalDist)}</strong></div>
-      <div style="display:flex;gap:10px;justify-content:center;font-size:11px">
+      <div style="display:flex;gap:8px;justify-content:center;font-size:11px;flex-wrap:wrap">
         <span>🚶 ${walkMin < 60 ? walkMin+'분' : Math.floor(walkMin/60)+'시간 '+walkMin%60+'분'}</span>
         <span>🚗 ${carMin < 1 ? '1분 미만' : carMin+'분'}</span>
-        <span>🚇 ${busMin < 1 ? '1분 미만' : busMin+'분'}</span>
+        <button onclick="shareCourseKakao()" style="background:#FEE500;border:none;border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;color:#3A1D1D;display:flex;align-items:center;gap:3px">
+          <svg width="11" height="11" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
+          카톡 공유
+        </button>
       </div>`;
     distEl.style.display = 'block';
   }
@@ -4797,6 +4844,63 @@ function openCourseAnimPopup(places, basePlace) {
   btn.onclick = startCourseAnim;
   document.getElementById('courseAnimOverlay').classList.add('show');
 }
+
+
+// ── 코스 길 안내 중 카톡 공유 ──
+window.shareCourseKakao = async function() {
+  if (!_animPlaces || !_animPlaces.length || !_animBase) {
+    showToast('공유할 코스가 없어요');
+    return;
+  }
+  showToast('코스 링크 생성 중...');
+  try {
+    // Firebase sharedCourses에 저장
+    const { addDoc, collection } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+    const courseRef = await addDoc(collection(db, 'sharedCourses'), {
+      baseName: _animBase.name,
+      baseLat: _animBase.lat,
+      baseLng: _animBase.lng,
+      radius: mCourseRadius || 1000,
+      places: _animPlaces.map(p => ({
+        id: p.id||'', name: p.name, sub: p.sub||'',
+        lat: p.lat, lng: p.lng, dist: p.dist||0,
+        badge: p.badge||'', badgeText: p.badgeText||'', type: p.type||''
+      })),
+      createdBy: currentUser?.uid || 'anonymous',
+      createdByName: currentUser?.displayName || '익명',
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 30*24*60*60*1000).toISOString()
+    });
+    const shareUrl = 'https://www.starspoon.co.kr/mobile.html?courseId=' + courseRef.id;
+    const placeNames = _animPlaces.slice(0,3).map((p,i) => (i+1)+'. '+p.name).join('\n');
+    const desc = placeNames + (_animPlaces.length > 3 ? '\n외 '+(_animPlaces.length-3)+'곳' : '')
+               + '\n\n지도에서 코스 길 안내 바로 실행!';
+    safeKakaoShare({
+      objectType: 'feed',
+      content: {
+        title: '🗺️ ' + _animBase.name + ' 코스 (' + _animPlaces.length + '곳)',
+        description: desc,
+        imageUrl: 'https://www.starspoon.co.kr/og-image.png',
+        link: {mobileWebUrl: shareUrl, webUrl: shareUrl}
+      },
+      buttons: [{title: '코스 지도에서 보기 🗺️', link: {mobileWebUrl: shareUrl, webUrl: shareUrl}}]
+    });
+  } catch(e) {
+    // Firebase 없이 현재 코스 정보만 공유
+    const shareUrl = 'https://www.starspoon.co.kr/mobile.html';
+    const title = '🗺️ ' + (_animBase?.name||'') + ' 코스 (' + (_animPlaces?.length||0) + '곳)';
+    safeKakaoShare({
+      objectType: 'feed',
+      content: {
+        title,
+        description: '스타스푼에서 코스 길 안내를 받아보세요!',
+        imageUrl: 'https://www.starspoon.co.kr/og-image.png',
+        link: {mobileWebUrl: shareUrl, webUrl: shareUrl}
+      },
+      buttons: [{title: '스타스푼 열기', link: {mobileWebUrl: shareUrl, webUrl: shareUrl}}]
+    });
+  }
+};
 
 window.stopCourseAnim = function() {
   _animRunning = false;
@@ -4948,7 +5052,10 @@ function showFinishSummary() {
       <div style="display:flex;gap:6px;justify-content:center;font-size:11px;flex-wrap:wrap">
         <span style="background:#F0FDF4;color:#166534;padding:3px 8px;border-radius:8px">🚶 도보 ${walkMin}분</span>
         <span style="background:#EFF6FF;color:#1D4ED8;padding:3px 8px;border-radius:8px">🚗 자동차 ${carMin}분</span>
-        <span style="background:#FFF7ED;color:#C2410C;padding:3px 8px;border-radius:8px">🚇 지하철 ${busMin}분</span>
+        <button onclick="shareCourseKakao()" style="background:#FEE500;border:none;border-radius:8px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;color:#3A1D1D;display:flex;align-items:center;gap:4px">
+          <svg width="12" height="12" viewBox="0 0 18 18" fill="none"><path fill="#3A1D1D" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
+          이 코스 카톡 공유
+        </button>
       </div>`;
     distEl.style.display = 'block';
   }
@@ -5185,6 +5292,47 @@ async function loadSharedCourse(courseId) {
     await loadRests('성시경');
   }
 }
+
+
+// ── 피드백 ──
+let _feedbackType = '기능 건의';
+
+window.setFeedbackType = function(el, type) {
+  _feedbackType = type;
+  document.querySelectorAll('.feedback-type-btn').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+};
+
+window.openFeedbackModal = function() {
+  document.getElementById('feedbackOverlay').classList.add('show');
+};
+
+window.closeFeedbackModal = function(e) {
+  if (!e || e.target === document.getElementById('feedbackOverlay'))
+    document.getElementById('feedbackOverlay').classList.remove('show');
+};
+
+window.submitFeedback = async function() {
+  const text = document.getElementById('feedbackText')?.value?.trim();
+  if (!text) { showToast('내용을 입력해주세요'); return; }
+  const contact = document.getElementById('feedbackContact')?.value?.trim() || '';
+  try {
+    await addDoc(collection(db, 'feedbacks'), {
+      type: _feedbackType,
+      text,
+      contact,
+      uid: currentUser?.uid || 'anonymous',
+      userName: currentUser?.displayName || '익명',
+      createdAt: new Date().toISOString()
+    });
+    document.getElementById('feedbackOverlay').classList.remove('show');
+    document.getElementById('feedbackText').value = '';
+    document.getElementById('feedbackContact').value = '';
+    showToast('소중한 의견 감사해요! 💌 꼭 검토할게요');
+  } catch(e) {
+    showToast('전송 실패: ' + e.message);
+  }
+};
 
 // 처음 방문자 팝업
 window.closeIntro = function() {
@@ -5558,8 +5706,40 @@ window.switchResultTab = switchResultTab;
 
 <!-- 모바일 플로팅 버튼 -->
 <div class="mobile-fab">
-  <button class="fab-btn fab-my" onclick="openMySavedPanel()"><i class="ti ti-heart"></i> 내 맛집</button>
+  <button class="fab-btn" onclick="openFeedbackModal()" style="background:var(--white);color:var(--text2);border:1.5px solid var(--border2);font-size:12px;padding:8px 12px"><i class="ti ti-message"></i> 건의</button>
   <button class="fab-btn fab-star" onclick="openReportModal()"><i class="ti ti-star"></i> 스타 맛집 등록</button>
+</div>
+
+
+<!-- ── 피드백 모달 ── -->
+<div class="overlay" id="feedbackOverlay" onclick="closeFeedbackModal(event)">
+  <div class="modal" style="width:440px">
+    <div class="modal-hd">
+      <span class="modal-title">💌 개발자에게 건의하기</span>
+      <button class="modal-close" onclick="closeFeedbackModal()">✕</button>
+    </div>
+    <div class="modal-bd">
+      <p style="font-size:13px;color:var(--text3);margin-bottom:14px">불편한 점, 원하는 기능, 버그 신고 뭐든 환영해요! 😊</p>
+      <div class="form-group">
+        <label class="form-label">📋 유형</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="feedback-type-btn on" onclick="setFeedbackType(this,'기능 건의')">💡 기능 건의</button>
+          <button class="feedback-type-btn" onclick="setFeedbackType(this,'버그 신고')">🐛 버그 신고</button>
+          <button class="feedback-type-btn" onclick="setFeedbackType(this,'맛집 추가 요청')">🍽️ 맛집 추가 요청</button>
+          <button class="feedback-type-btn" onclick="setFeedbackType(this,'기타')">✏️ 기타</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">💬 내용</label>
+        <textarea class="form-input" id="feedbackText" placeholder="자유롭게 써주세요. 작은 의견도 모두 소중해요!" style="height:120px;resize:none;font-family:inherit"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">📞 연락처 (선택 · 답장 원하시면)</label>
+        <input type="text" class="form-input" id="feedbackContact" placeholder="카카오 아이디 또는 이메일">
+      </div>
+      <button onclick="submitFeedback()" class="btn-primary">보내기 💌</button>
+    </div>
+  </div>
 </div>
 
 </body>
