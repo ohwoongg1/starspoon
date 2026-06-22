@@ -52,7 +52,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .header-reg-btns{display:flex;gap:6px;align-items:center}
 .mobile-fab{display:none;position:fixed;bottom:20px;right:16px;z-index:300;flex-direction:column;gap:8px;align-items:flex-end}
 /* 모바일 전체화면 검색 패널 */
-.m-search-panel{display:none;position:fixed;inset:0;z-index:500;background:var(--white);flex-direction:column}
+.m-search-panel{display:none;position:fixed;inset:0;bottom:52px;z-index:500;background:var(--white);flex-direction:column}
 .m-search-panel.open{display:flex}
 .m-search-panel-top{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)}
 .m-search-back{background:none;border:none;padding:6px;cursor:pointer;color:var(--text);font-size:22px;flex-shrink:0;line-height:1}
@@ -78,7 +78,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .msp-result-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)}
 .msp-rtab{flex:1;padding:10px 4px;font-size:12px;font-weight:600;color:var(--text3);border:none;background:none;border-bottom:2.5px solid transparent;cursor:pointer;white-space:nowrap}
 .msp-rtab.on{color:var(--gold);border-bottom-color:var(--gold)}
-.msp-result-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.msp-result-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .msp-result-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
 .msp-result-item:active{background:var(--bg2)}
 .msp-result-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
@@ -94,14 +94,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .msp-add-btn{padding:5px 10px;background:var(--gold);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap}
 .msp-added-btn{padding:5px 10px;background:var(--white);color:var(--gold);border:1.5px solid var(--gold);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap}
 /* 담기함 */
-.msp-basket{background:var(--white);border-top:2px solid var(--gold);padding:8px 14px;flex-shrink:0;display:none}
-.msp-basket.show{display:block}
-.msp-basket-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.msp-basket-title{font-size:12px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:5px}
-.msp-basket-go{font-size:11px;color:var(--white);background:var(--gold);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:700}
-.msp-basket-chips{display:flex;gap:5px;flex-wrap:wrap}
-.msp-basket-chip{font-size:11px;padding:3px 8px;border-radius:10px;background:var(--gold-bg);color:#B45309;border:1px solid var(--gold);display:flex;align-items:center;gap:3px}
+.msp-basket{background:var(--white);border-top:3px solid var(--gold);padding:12px 14px 16px;flex-shrink:0;display:none;box-shadow:0 -4px 16px rgba(245,158,11,0.15)}
+.msp-basket.show{display:block;animation:slideUp .2s ease}
+.msp-basket-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.msp-basket-title{font-size:13px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:5px}
+.msp-basket-go{font-size:12px;color:var(--gold);background:var(--gold-bg);border:1.5px solid var(--gold);border-radius:8px;padding:5px 12px;cursor:pointer;font-weight:700}
+.msp-basket-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;max-height:60px;overflow-y:auto}
+.msp-basket-chip{font-size:11px;padding:4px 9px;border-radius:10px;background:var(--gold-bg);color:#B45309;border:1px solid var(--gold);display:flex;align-items:center;gap:3px;flex-shrink:0}
 .msp-basket-chip button{background:none;border:none;color:#B45309;cursor:pointer;font-size:13px;line-height:1;padding:0}
+.msp-basket-count{background:var(--gold);color:#fff;font-size:11px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:4px}
 /* 인기검색 */
 .msp-hot-tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px}
 .msp-hot-tag{font-size:12px;padding:5px 12px;border-radius:16px;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);cursor:pointer}
@@ -440,6 +441,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 .pnav.on{color:var(--gold);border-bottom-color:var(--gold)}
 
 /* ── 모바일 카카오맵 스타일 ── */
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
 @media(max-width:768px){
   /* 전체 레이아웃: 지도가 전체화면 */
   .layout{flex-direction:column;height:calc(100vh - 44px);position:relative}
@@ -3660,12 +3662,16 @@ function renderMspBasket() {
     return;
   }
   basket.classList.add('show');
-  if (cnt) cnt.textContent = mspBasket.length + '곳';
+  if (cnt) cnt.textContent = mspBasket.length;
   if (chips) {
     chips.innerHTML = mspBasket.map(b =>
       `<span class="msp-basket-chip">${b.icon||'📍'} ${b.name} <button onclick="mspRemoveBasket('${b.id}')">×</button></span>`
     ).join('');
   }
+  // 담기함이 보이도록 스크롤
+  setTimeout(() => {
+    basket.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 100);
 }
 
 // 담기함 → 코스짜기로 이동
@@ -3973,21 +3979,91 @@ window.submitRestReport = async function() {
     showToast('신고가 접수됐어요. 검토 후 처리될게요 🙏');
   } catch(e) { showToast('신고 실패: ' + e.message); }
 };
-window.shareKakaoPC = function(id) {
-  const d = DATA.find(x => x.id === id);
-  if (!d) return;
+
+// ── 안전한 카카오 공유 헬퍼 ──
+function safeKakaoShare(params) {
   try {
-    if (!window.Kakao) { showToast('카카오 SDK 로딩 중...'); return; }
+    // SDK 초기화 확인
+    if (!window.Kakao) {
+      showToast('카카오 SDK가 로드되지 않았어요');
+      return;
+    }
     if (!window.Kakao.isInitialized()) {
       window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
     }
+    // Kakao.Share (최신 SDK)
+    if (window.Kakao.Share && window.Kakao.Share.sendDefault) {
+      window.Kakao.Share.sendDefault(params);
+      return;
+    }
+    // Kakao.Link (구 SDK fallback)
+    if (window.Kakao.Link && window.Kakao.Link.sendDefault) {
+      window.Kakao.Link.sendDefault(params);
+      return;
+    }
+    // 모두 실패 시 URL 방식
+    const shareUrl = params.content?.link?.mobileWebUrl || params.content?.link?.webUrl || '';
+    const title = params.content?.title || '스타스푼';
+    fallbackShare(title, shareUrl);
   } catch(e) {
-    try { window.Kakao.init('25b433faf5d746c938cbcc7658f650b0'); } catch(e2) {}
+    console.log('카카오 공유 오류:', e);
+    // fallback: 링크 복사
+    const shareUrl = params.content?.link?.mobileWebUrl || params.content?.link?.webUrl || '';
+    const title = params.content?.title || '스타스푼';
+    fallbackShare(title, shareUrl);
   }
+}
+
+// fallback: 클립보드 복사 또는 Web Share API
+function fallbackShare(title, url) {
+  // Web Share API (iOS Safari 지원)
+  if (navigator.share) {
+    navigator.share({
+      title: title,
+      text: title + '\n스타스푼에서 확인해보세요!',
+      url: url
+    }).then(() => {
+      showToast('공유됐어요! 📤');
+    }).catch(() => {
+      copyToClipboard(url);
+    });
+    return;
+  }
+  // 클립보드 복사
+  copyToClipboard(url);
+}
+
+function copyToClipboard(text) {
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('링크가 복사됐어요! 📋 카카오톡에 붙여넣기 하세요');
+      });
+    } else {
+      const el = document.createElement('textarea');
+      el.value = text;
+      el.style.position = 'fixed';
+      el.style.opacity = '0';
+      document.body.appendChild(el);
+      el.focus();
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      showToast('링크가 복사됐어요! 📋 카카오톡에 붙여넣기 하세요');
+    }
+  } catch(e) {
+    showToast('링크: ' + text);
+  }
+}
+
+window.shareKakaoPC = function(id) {
+  const d = DATA.find(x => x.id === id);
+  if (!d) return;
+  // safeKakaoShare handles initialization
   const rating = d.avgRating ? `⭐ ${d.avgRating.toFixed(1)}점` : '';
   const desc = [d.cat, d.area, rating].filter(Boolean).join(' · ');
   const shareUrl = `https://www.starspoon.co.kr/mobile.html?name=${encodeURIComponent(d.name)}&celeb=${encodeURIComponent(d.celeb)}`;
-  window.Kakao.Share.sendDefault({
+  safeKakaoShare({
     objectType: 'feed',
     content: {
       title: `🥄 [${d.celeb}] ${d.name}`,
@@ -4365,13 +4441,11 @@ window.shareMCourse = async function() {
     const courseId = courseRef.id;
     const shareUrl = 'https://www.starspoon.co.kr/mobile.html?courseId=' + courseId;
 
-    if (!window.Kakao?.isInitialized()) window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
-
     const placeNames = places.slice(0,3).map((p,i) => (i+1) + '. ' + p.name).join('\n');
     const desc = placeNames + (places.length > 3 ? '\n외 ' + (places.length-3) + '곳' : '')
                + '\n\n링크를 열면 지도에서 바로 코스를 확인할 수 있어요!';
 
-    window.Kakao.Share.sendDefault({
+    safeKakaoShare({
       objectType: 'feed',
       content: {
         title: '🗺️ ' + mCourseBasePlace.name + ' 코스 (' + places.length + '곳)',
@@ -5453,7 +5527,7 @@ window.switchResultTab = switchResultTab;
   </div>
 
   <!-- 통합검색 결과 화면 (검색어 있을 때) -->
-  <div id="mspResultView" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+  <div id="mspResultView" style="flex:1;display:none;flex-direction:column;overflow:hidden;min-height:0">
     <!-- 탭 -->
     <div class="msp-result-tabs" id="mspResultTabs">
       <button class="msp-rtab on" id="rtab-all" onclick="switchResultTab('all')">전체 <span id="rtabCnt-all"></span></button>
@@ -5466,12 +5540,17 @@ window.switchResultTab = switchResultTab;
     <div class="msp-basket" id="mspBasket">
       <div class="msp-basket-hd">
         <span class="msp-basket-title">
-          <i class="ti ti-route" style="font-size:14px"></i>
-          코스 담기함 <span id="mspBasketCnt" style="font-size:11px;font-weight:400;color:var(--text3)"></span>
+          <i class="ti ti-route" style="font-size:15px"></i>
+          코스 담기함 <span class="msp-basket-count" id="mspBasketCnt">0</span>
         </span>
-        <button class="msp-basket-go" onclick="mspGoToCourse()">코스짜기 →</button>
+        <button class="msp-basket-go" onclick="mspGoToCourse()">
+          🗺️ 코스짜기로 →
+        </button>
       </div>
       <div class="msp-basket-chips" id="mspBasketChips"></div>
+      <button onclick="mspGoToCourse()" style="width:100%;margin-top:10px;padding:12px;background:var(--gold);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <i class="ti ti-route" style="font-size:16px"></i> 위 장소들로 코스짜기 시작하기
+      </button>
     </div>
   </div>
 
