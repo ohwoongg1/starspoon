@@ -5124,6 +5124,15 @@ const lastSeen = localStorage.getItem('starspoon_intro');
 if (lastSeen !== new Date().toDateString()) {
   document.getElementById('introOverlay').classList.add('show');
 }
+
+// ── 검색패널 함수들 window 노출 (HTML onclick에서 접근용) ──
+window.renderMspCuratorGrid = renderMspCuratorGrid;
+window.renderMspRecentList = renderMspRecentList;
+window.updateMspSelectedInfo = updateMspSelectedInfo;
+window.renderMspBasket = renderMspBasket;
+window.applyMspFilters = applyMspFilters;
+window.switchResultTab = switchResultTab;
+
 </script>
 
 <!-- ── 내 맛집 등록 모달 ── -->
