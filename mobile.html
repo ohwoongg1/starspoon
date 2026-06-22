@@ -4444,11 +4444,17 @@ window.stopCourseAnim = function() {
   if (_animMarker) { _animMarker.setMap(null); _animMarker = null; }
   _animPolylines.forEach(p => p.setMap(null));
   _animPolylines = [];
-  // 도착 말풍선 제거
+  // 말풍선 제거
   const bubble = document.getElementById('animBubble');
   if (bubble) bubble.remove();
   document.getElementById('courseAnimOverlay').classList.remove('show');
+  // 맛집 핀 복원
   renderPins();
+  // ★ 지도를 처음 위치(내 위치 기준)로 복원
+  if (map) {
+    map.setCenter(new kakao.maps.LatLng(myLat, myLng));
+    map.setLevel(8);
+  }
   showToast('코스 길 보기 종료');
 };
 
@@ -4533,10 +4539,9 @@ window.startCourseAnim = async function() {
     btn.innerHTML = '✓ 완료! 닫기';
     btn.disabled = false;
     btn.onclick = stopCourseAnim;
-    const bounds2 = new kakao.maps.LatLngBounds();
-    allPoints.forEach(p => bounds2.extend(p));
-    map.setBounds(bounds2, 60);
-    setTimeout(() => { try { map.panBy(0, -90); } catch(e){} }, 300);
+    // 마지막 장소를 중심으로 유지 (전체 뷰로 날아가지 않게)
+    const lastPt = allPoints[allPoints.length - 1];
+    map.panTo(lastPt);
   }
 };
 
