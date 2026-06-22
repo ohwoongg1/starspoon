@@ -74,6 +74,38 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .msp-recent-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
 .msp-recent-item:last-child{border-bottom:none}
 .msp-footer{flex-shrink:0;padding:12px 16px;background:var(--white);border-top:1px solid var(--border);display:flex;align-items:center;gap:12px;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+/* ── 통합검색 결과 ── */
+.msp-result-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--white)}
+.msp-rtab{flex:1;padding:10px 4px;font-size:12px;font-weight:600;color:var(--text3);border:none;background:none;border-bottom:2.5px solid transparent;cursor:pointer;white-space:nowrap}
+.msp-rtab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.msp-result-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.msp-result-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s}
+.msp-result-item:active{background:var(--bg2)}
+.msp-result-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.ri-star{background:var(--gold-bg)}
+.ri-tour{background:#FFF7ED}
+.ri-cafe{background:#F0FDF4}
+.ri-hotel{background:#EFF6FF}
+.ri-shop{background:#FDF2F8}
+.ri-general{background:var(--bg2)}
+.msp-result-info{flex:1;min-width:0}
+.msp-result-name{font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msp-result-sub{font-size:11px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msp-add-btn{padding:5px 10px;background:var(--gold);color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap}
+.msp-added-btn{padding:5px 10px;background:var(--white);color:var(--gold);border:1.5px solid var(--gold);border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap}
+/* 담기함 */
+.msp-basket{background:var(--white);border-top:2px solid var(--gold);padding:8px 14px;flex-shrink:0;display:none}
+.msp-basket.show{display:block}
+.msp-basket-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.msp-basket-title{font-size:12px;font-weight:700;color:var(--gold);display:flex;align-items:center;gap:5px}
+.msp-basket-go{font-size:11px;color:var(--white);background:var(--gold);border:none;border-radius:6px;padding:4px 10px;cursor:pointer;font-weight:700}
+.msp-basket-chips{display:flex;gap:5px;flex-wrap:wrap}
+.msp-basket-chip{font-size:11px;padding:3px 8px;border-radius:10px;background:var(--gold-bg);color:#B45309;border:1px solid var(--gold);display:flex;align-items:center;gap:3px}
+.msp-basket-chip button{background:none;border:none;color:#B45309;cursor:pointer;font-size:13px;line-height:1;padding:0}
+/* 인기검색 */
+.msp-hot-tags{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 10px}
+.msp-hot-tag{font-size:12px;padding:5px 12px;border-radius:16px;border:1.5px solid var(--border2);background:var(--white);color:var(--text2);cursor:pointer}
+.msp-hot-tag:active{background:var(--gold-bg);border-color:var(--gold)}
 .msp-selected-info{flex:1;font-size:12px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .msp-search-btn{background:var(--gold);color:#fff;border:none;border-radius:10px;padding:12px 24px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;flex-shrink:0}
 .fab-btn{display:flex;align-items:center;gap:6px;padding:10px 16px;border-radius:24px;border:none;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.2);white-space:nowrap}
@@ -3323,11 +3355,17 @@ function moveToRegion(q) {
 // 검색 초기화
 // ── 모바일 전체화면 검색 패널 ──
 let mRecentSearches = JSON.parse(localStorage.getItem('starspoon_recent') || '[]');
-let mspSelCurator = ''; // 패널 내 선택한 큐레이터
-let mspSelCat = '전체'; // 패널 내 선택한 카테고리
-let mspSelRegion = ''; // 패널 내 선택한 지역
+let mspSelCurator = '';
+let mspSelCat = '전체';
+let mspSelRegion = '';
+// 통합검색 담기함
+let mspBasket = []; // [{id, name, lat, lng, type, icon}]
+let mspCurResultTab = 'all';
+let _mspStarResults = [];
+let _mspPlaceResults = [];
 
 function saveMRecentSearch(q) {
+  if (!q.trim()) return;
   mRecentSearches = [q, ...mRecentSearches.filter(r => r !== q)].slice(0, 8);
   localStorage.setItem('starspoon_recent', JSON.stringify(mRecentSearches));
 }
@@ -3340,7 +3378,7 @@ function renderMspRecentList() {
     return;
   }
   el.innerHTML = mRecentSearches.map((r,i) => `
-    <div class="msp-recent-item" onclick="mspApplyRecent('${r.replace(/'/g,"\'")}')" >
+    <div class="msp-recent-item" onclick="mspQuickSearch('${r.replace(/'/g,"\'")}')">
       <i class="ti ti-clock" style="font-size:16px;color:var(--text3);flex-shrink:0"></i>
       <span style="flex:1;font-size:14px;color:var(--text)">${r}</span>
       <button onclick="event.stopPropagation();deleteMRecent(${i})" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:4px;line-height:1">×</button>
@@ -3392,72 +3430,325 @@ window.mspSetRegion = function(el, region) {
 };
 
 window.mspApplyRecent = function(q) {
-  // 최근검색 항목 탭하면 검색창에 넣고 바로 검색
   document.getElementById('mobileSearch').value = q;
   onMobileSearchInput(q);
 };
 
+// 인기태그/최근검색 빠른검색
+window.mspQuickSearch = function(q) {
+  const inp = document.getElementById('mobileSearch');
+  if (inp) { inp.value = q; }
+  onMobileSearchInput(q);
+  mspDoSearch();
+};
+
 window.openMobileSearch = function() {
   if (window.innerWidth > 768) return;
-  // 현재 상태 패널에 반영
   mspSelCurator = selCurator === '전체' ? '' : selCurator;
   mspSelCat = selCat || '전체';
   mspSelRegion = regionFilter || '';
+  // 결과화면 숨기고 기본화면 보이기
+  document.getElementById('mspDefaultView').style.display = 'flex';
+  document.getElementById('mspResultView').style.display = 'none';
   document.getElementById('mSearchPanel').classList.add('open');
   renderMspCuratorGrid();
   renderMspRecentList();
   updateMspSelectedInfo();
-  // 지역 버튼 상태 반영
   document.querySelectorAll('.msp-region-btn').forEach(b => {
     b.classList.toggle('on', b.textContent === mspSelRegion);
   });
-  // 카테고리 버튼 상태 반영
   document.querySelectorAll('.msp-cat-btn').forEach(b => {
     b.classList.toggle('on', b.textContent.replace(/[🍚🍲🥩🍜🥡🍣🍢🦞🍝🥐☕ ]/g,'').trim() === mspSelCat || (mspSelCat==='전체' && b.textContent==='전체'));
   });
+  renderMspBasket();
   setTimeout(() => document.getElementById('mobileSearch')?.focus(), 150);
 };
 
 window.closeMobileSearch = function() {
   document.getElementById('mSearchPanel').classList.remove('open');
   document.getElementById('mobileSearch').value = '';
-  if (document.getElementById('mClearBtn')) document.getElementById('mClearBtn').style.display = 'none';
+  const cb = document.getElementById('mClearBtn');
+  if (cb) cb.style.display = 'none';
 };
 
 window.onMobileSearchInput = function(v) {
   const clearBtn = document.getElementById('mClearBtn');
   if (clearBtn) clearBtn.style.display = v ? 'block' : 'none';
-  // 텍스트 입력 시 큐레이터/지역 선택 해제하고 텍스트 검색 모드
-  if (v) {
-    updateMspSelectedInfo();
-  }
 };
 
+// ── 통합검색 실행 ──
 window.mspDoSearch = async function() {
   const textQ = document.getElementById('mobileSearch')?.value?.trim() || '';
-  saveMRecentSearch(textQ || (mspSelCurator || '') + (mspSelRegion ? ' ' + mspSelRegion : '') || '검색');
 
-  // 검색 표시 업데이트
-  const display = document.getElementById('mSearchDisplay');
-
-  closeMobileSearch();
-
-  if (textQ) {
-    // 텍스트 직접 입력한 경우
-    if (display) { display.textContent = textQ; display.style.color = 'var(--text)'; }
-    document.getElementById('mainSearch').value = textQ;
-    await doSearch(textQ);
+  // 검색어 없으면 기존 필터 검색
+  if (!textQ && !mspSelCurator && !mspSelRegion) {
+    saveMRecentSearch('전체 맛집');
+    applyMspFilters();
     return;
   }
 
-  // 큐레이터 + 카테고리 + 지역 조합 검색
+  if (textQ) {
+    saveMRecentSearch(textQ);
+    // 통합검색 결과 화면으로 전환
+    document.getElementById('mspDefaultView').style.display = 'none';
+    document.getElementById('mspResultView').style.display = 'flex';
+    mspCurResultTab = 'all';
+    document.getElementById('mspResultBody').innerHTML =
+      '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">검색 중...<br><i class="ti ti-loader" style="font-size:24px;display:block;margin:10px auto;opacity:0.4"></i></div>';
+
+    // 1. 스타스푼 DB 검색
+    const qn = textQ.replace(/\s/g,'');
+    _mspStarResults = DATA.filter(d => {
+      if (d.hidden) return false;
+      return d.name.includes(textQ) || d.name.replace(/\s/g,'').includes(qn) ||
+             d.celeb.includes(textQ) || d.area.includes(textQ) ||
+             d.comment.includes(textQ) || (d.cat && d.cat.includes(textQ));
+    }).slice(0, 20);
+
+    // 거리 계산
+    _mspStarResults.forEach(d => {
+      if (!d.dist) {
+        const dlat = d.lat - myLat, dlng = d.lng - myLng;
+        d.dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+      }
+    });
+    _mspStarResults.sort((a,b) => (a.dist||999999)-(b.dist||999999));
+
+    // 2. 카카오맵 장소 검색
+    _mspPlaceResults = await new Promise(resolve => {
+      const ps = new kakao.maps.services.Places();
+      ps.keywordSearch(textQ, (data, status) => {
+        if (status !== kakao.maps.services.Status.OK) { resolve([]); return; }
+        resolve(data.slice(0, 15).map(p => {
+          const lat = parseFloat(p.y), lng = parseFloat(p.x);
+          const dlat = lat - myLat, dlng = lng - myLng;
+          const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+          const cat = p.category_name || '';
+          let icon = '🗺️', iconClass = 'ri-general';
+          if (cat.includes('음식') || cat.includes('식당') || cat.includes('맛집')) { icon='🍽️'; iconClass='ri-star'; }
+          else if (cat.includes('카페') || cat.includes('커피')) { icon='☕'; iconClass='ri-cafe'; }
+          else if (cat.includes('숙박') || cat.includes('호텔') || cat.includes('펜션')) { icon='🏨'; iconClass='ri-hotel'; }
+          else if (cat.includes('관광') || cat.includes('명소') || cat.includes('문화')) { icon='🏛️'; iconClass='ri-tour'; }
+          else if (cat.includes('쇼핑')) { icon='🛍️'; iconClass='ri-shop'; }
+          return {
+            id: 'kakao_' + p.id,
+            name: p.place_name,
+            sub: (p.road_address_name || p.address_name),
+            lat, lng, dist,
+            icon, iconClass,
+            type: 'place',
+            url: p.place_url
+          };
+        }));
+      }, {
+        location: new kakao.maps.LatLng(myLat, myLng),
+        sort: kakao.maps.services.SortBy.DISTANCE,
+        size: 15
+      });
+    });
+
+    // 탭 카운트 업데이트
+    const total = _mspStarResults.length + _mspPlaceResults.length;
+    document.getElementById('rtabCnt-all').textContent = total ? `(${total})` : '';
+    document.getElementById('rtabCnt-star').textContent = _mspStarResults.length ? `(${_mspStarResults.length})` : '';
+    document.getElementById('rtabCnt-place').textContent = _mspPlaceResults.length ? `(${_mspPlaceResults.length})` : '';
+
+    switchResultTab('all');
+    renderMspBasket();
+  } else {
+    saveMRecentSearch((mspSelCurator||'') + (mspSelRegion?' '+mspSelRegion:''));
+    applyMspFilters();
+  }
+};
+
+// ── 탭 전환 ──
+window.switchResultTab = function(tab) {
+  mspCurResultTab = tab;
+  ['all','star','place'].forEach(t => {
+    document.getElementById('rtab-'+t)?.classList.toggle('on', t===tab);
+  });
+  renderMspResultList();
+};
+
+function renderMspResultList() {
+  const body = document.getElementById('mspResultBody');
+  if (!body) return;
+  let items = [];
+  if (mspCurResultTab === 'all') {
+    // 스타맛집 먼저, 그 다음 일반장소
+    items = [
+      ..._mspStarResults.map(d => ({...d, _type:'star'})),
+      ..._mspPlaceResults.map(p => ({...p, _type:'place'}))
+    ];
+  } else if (mspCurResultTab === 'star') {
+    items = _mspStarResults.map(d => ({...d, _type:'star'}));
+  } else {
+    items = _mspPlaceResults.map(p => ({...p, _type:'place'}));
+  }
+
+  if (!items.length) {
+    body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">검색 결과가 없어요<br><i class="ti ti-mood-empty" style="font-size:28px;display:block;margin:10px auto;opacity:0.3"></i></div>';
+    return;
+  }
+
+  let html = '';
+  let lastType = null;
+  items.forEach(item => {
+    // 구분선
+    if (mspCurResultTab === 'all' && lastType && lastType !== item._type) {
+      html += '<div style="height:6px;background:var(--bg2)"></div>';
+    }
+    lastType = item._type;
+
+    const inBasket = mspBasket.some(b => b.id === (item._type==='star'?item.id:item.id));
+    const distStr = item.dist != null && item.dist < 50000
+      ? (item.dist < 1000 ? Math.round(item.dist)+'m' : (item.dist/1000).toFixed(1)+'km')
+      : '';
+
+    if (item._type === 'star') {
+      const badge = `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--gold-bg);color:#B45309;flex-shrink:0">⭐스타맛집</span>`;
+      html += `<div class="msp-result-item">
+        <div class="msp-result-icon ri-star">${STAR_CURATORS.find(c=>c.name===item.celeb)?.icon||'⭐'}</div>
+        <div class="msp-result-info">
+          <div class="msp-result-name">${item.name}</div>
+          <div class="msp-result-sub">${item.celeb} · ${item.cat||''}${item.area?' · '+item.area:''}${distStr?' · '+distStr:''}</div>
+        </div>
+        ${inBasket
+          ? `<button class="msp-added-btn" onclick="mspRemoveBasket('${item.id}')">✓ 담김</button>`
+          : `<button class="msp-add-btn" onclick="mspAddBasket({id:'${item.id}',name:'${item.name.replace(/'/g,"\'")}',lat:${item.lat},lng:${item.lng},type:'star',icon:'${STAR_CURATORS.find(c=>c.name===item.celeb)?.icon||'⭐'}',celeb:'${item.celeb}'})">+ 코스</button>`
+        }
+      </div>`;
+    } else {
+      html += `<div class="msp-result-item" onclick="mspPlaceDetail('${item.id}')">
+        <div class="msp-result-icon ${item.iconClass||'ri-general'}">${item.icon||'🗺️'}</div>
+        <div class="msp-result-info">
+          <div class="msp-result-name">${item.name}</div>
+          <div class="msp-result-sub">${item.sub||''}${distStr?' · '+distStr:''}</div>
+        </div>
+        ${inBasket
+          ? `<button class="msp-added-btn" onclick="event.stopPropagation();mspRemoveBasket('${item.id}')">✓ 담김</button>`
+          : `<button class="msp-add-btn" onclick="event.stopPropagation();mspAddBasket({id:'${item.id}',name:'${item.name.replace(/'/g,"\'")}',lat:${item.lat},lng:${item.lng},type:'place',icon:'${item.icon||'🗺️'}'})">+ 코스</button>`
+        }
+      </div>`;
+    }
+  });
+  body.innerHTML = html;
+}
+
+// ── 담기함 ──
+window.mspAddBasket = function(item) {
+  if (mspBasket.some(b => b.id === item.id)) return;
+  mspBasket.push(item);
+  renderMspBasket();
+  renderMspResultList();
+  showToast('📍 ' + item.name + ' 코스에 담겼어요!');
+};
+
+window.mspRemoveBasket = function(id) {
+  mspBasket = mspBasket.filter(b => b.id !== id);
+  renderMspBasket();
+  renderMspResultList();
+};
+
+function renderMspBasket() {
+  const basket = document.getElementById('mspBasket');
+  const chips = document.getElementById('mspBasketChips');
+  const cnt = document.getElementById('mspBasketCnt');
+  if (!basket) return;
+  if (!mspBasket.length) {
+    basket.classList.remove('show');
+    return;
+  }
+  basket.classList.add('show');
+  if (cnt) cnt.textContent = mspBasket.length + '곳';
+  if (chips) {
+    chips.innerHTML = mspBasket.map(b =>
+      `<span class="msp-basket-chip">${b.icon||'📍'} ${b.name} <button onclick="mspRemoveBasket('${b.id}')">×</button></span>`
+    ).join('');
+  }
+}
+
+// 담기함 → 코스짜기로 이동
+window.mspGoToCourse = function() {
+  if (!mspBasket.length) { showToast('담긴 장소가 없어요'); return; }
+  closeMobileSearch();
+
+  // 코스짜기 패널에 담기함 내용 주입
+  // 첫 번째 항목을 기준장소로, 나머지를 선택 장소로
+  const base = mspBasket[0];
+  const rest = mspBasket.slice(1);
+
+  mCourseBasePlace = {name: base.name, lat: base.lat, lng: base.lng};
+  mCourseSelected = {};
+  window._mCoursePlaces = window._mCoursePlaces || {};
+
+  rest.forEach((item, i) => {
+    const key = 'basket_' + i;
+    const place = {
+      id: key, name: item.name, sub: item.sub || '',
+      lat: item.lat, lng: item.lng, dist: 0,
+      badge: item.type==='star' ? 'badge-star' : 'badge-tour',
+      badgeText: item.type==='star' ? '스타맛집' : '장소',
+      type: item.type
+    };
+    window._mCoursePlaces[key] = place;
+    mCourseSelected[key] = place;
+  });
+
+  // 코스짜기 패널 열기
+  setTimeout(() => {
+    document.getElementById('mCourseOverlay').classList.add('show');
+    // input에 기준장소 표시
+    const inp = document.getElementById('mCourseInput');
+    if (inp) {
+      inp.value = base.name;
+      const cb = document.getElementById('mCourseInputClear');
+      if (cb) cb.style.display = 'flex';
+    }
+    // 선택된 장소 렌더
+    if (rest.length) {
+      updateMCourseFooter();
+      // 기존 mCourseBody에 선택된 장소 표시
+      const body = document.getElementById('mCourseBody');
+      if (body) {
+        body.innerHTML = `<div style="padding:14px 16px;font-size:13px;color:var(--text3)">
+          <strong style="color:var(--text)">검색에서 담은 장소 ${rest.length}곳</strong><br>
+          <span style="font-size:11px">아래 코스 표시 버튼을 눌러주세요</span>
+        </div>` + rest.map(item => `
+          <div class="m-course-place-item">
+            <div class="m-course-place-cb on"><i class="ti ti-check" style="font-size:12px;color:#fff"></i></div>
+            <div class="m-course-place-info">
+              <div class="m-course-place-name">${item.name}</div>
+              <div class="m-course-place-sub">${item.type==='star'?'⭐스타맛집':'🗺️장소'}</div>
+            </div>
+          </div>`).join('');
+      }
+    }
+    showToast('🗺️ 담기함 ' + mspBasket.length + '곳이 코스짜기로 이동했어요!');
+    mspBasket = []; // 담기함 초기화
+  }, 300);
+};
+
+// 장소 지도에서 보기
+window.mspPlaceDetail = function(id) {
+  const item = _mspPlaceResults.find(p => p.id === id);
+  if (!item || !map) return;
+  closeMobileSearch();
+  setTimeout(() => {
+    map.setCenter(new kakao.maps.LatLng(item.lat, item.lng));
+    map.setLevel(4);
+    showToast('📍 ' + item.name);
+  }, 300);
+};
+
+// 기존 필터 적용 (검색어 없을 때)
+async function applyMspFilters() {
+  const display = document.getElementById('mSearchDisplay');
+  closeMobileSearch();
+
   selCat = mspSelCat || '전체';
-  // 카테고리 바 동기화
   document.querySelectorAll('.cat').forEach(b => {
     b.classList.toggle('on', b.textContent.trim() === selCat || (selCat==='전체' && b.textContent.trim()==='전체'));
-  });
-  document.querySelectorAll('.m-cat-pill').forEach(b => {
-    b.classList.toggle('on', b.textContent.trim().includes(selCat) || (selCat==='전체' && b.textContent.trim()==='전체'));
   });
 
   const label = [];
@@ -3466,31 +3757,26 @@ window.mspDoSearch = async function() {
   if (mspSelCat && mspSelCat !== '전체') label.push(mspSelCat);
   const displayText = label.join(' · ') || '전체 맛집';
   if (display) { display.textContent = displayText; display.style.color = 'var(--text)'; }
+  const topClearBtn = document.getElementById('mTopClearBtn');
+  if (topClearBtn) topClearBtn.style.display = displayText !== '전체 맛집' ? 'block' : 'none';
 
   if (mspSelRegion) {
-    // 지역 검색
     document.getElementById('mainSearch').value = mspSelRegion;
     await doSearch(mspSelRegion);
-    // 지역 로드 후 큐레이터 필터 추가
-    if (mspSelCurator) {
-      await selectCurator(mspSelCurator);
-    }
+    if (mspSelCurator) await selectCurator(mspSelCurator);
   } else if (mspSelCurator) {
-    // 큐레이터만 선택
     selCurator = mspSelCurator;
     renderMobileCuratorStrip();
     renderCuratorList();
     await loadRests(mspSelCurator);
   } else {
-    // 전체
     selCurator = '전체';
     renderMobileCuratorStrip();
     await loadRests('전체');
   }
-
   renderList();
   renderPins();
-};
+}
 
 window.clearMRecent = function() {
   mRecentSearches = [];
@@ -5065,25 +5351,57 @@ if (lastSeen !== new Date().toDateString()) {
 <!-- 모바일 전체화면 검색 패널 -->
 <div class="m-search-panel" id="mSearchPanel">
 
+  <!-- 검색창 -->
   <div class="m-search-panel-top">
     <button class="m-search-back" onclick="closeMobileSearch()">‹</button>
     <div class="m-search-input-wrap">
       <i class="ti ti-search" style="color:var(--text3);font-size:15px;flex-shrink:0"></i>
-      <input type="text" id="mobileSearch" placeholder="맛집, 음식, 큐레이터, 지역 검색"
+      <input type="text" id="mobileSearch"
+        placeholder="맛집, 장소, 큐레이터, 지역 검색"
         oninput="onMobileSearchInput(this.value)"
-        onkeydown="if(event.key==='Escape')closeMobileSearch()"
+        onkeydown="if(event.key==='Enter')mspDoSearch();if(event.key==='Escape')closeMobileSearch()"
         autocomplete="off" autocorrect="off" spellcheck="false">
-      <button id="mClearBtn" onclick="document.getElementById('mobileSearch').value='';onMobileSearchInput('');document.getElementById('mobileSearch').focus()" style="display:none;background:none;border:none;padding:0;cursor:pointer;color:var(--text3);font-size:18px;line-height:1">✕</button>
+      <button id="mClearBtn"
+        onclick="document.getElementById('mobileSearch').value='';onMobileSearchInput('');document.getElementById('mobileSearch').focus()"
+        style="display:none;background:none;border:none;padding:0;cursor:pointer;color:var(--text3);font-size:18px;line-height:1">✕</button>
     </div>
+    <button onclick="mspDoSearch()" style="background:var(--gold);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button>
   </div>
 
-  <div class="m-search-panel-body" id="mSearchBody">
+  <!-- 기본 화면 (검색어 없을 때) -->
+  <div id="mspDefaultView" style="flex:1;overflow-y:auto;display:flex;flex-direction:column">
+    <!-- 인기 검색어 -->
+    <div class="msp-section">
+      <div class="msp-section-title" style="display:flex;align-items:center;gap:5px">
+        🔥 인기 검색
+      </div>
+      <div class="msp-hot-tags">
+        <span class="msp-hot-tag" onclick="mspQuickSearch('성시경 맛집')">성시경 맛집</span>
+        <span class="msp-hot-tag" onclick="mspQuickSearch('풍자 맛집')">풍자 맛집</span>
+        <span class="msp-hot-tag" onclick="mspQuickSearch('경복궁')">경복궁</span>
+        <span class="msp-hot-tag" onclick="mspQuickSearch('이태원')">이태원</span>
+        <span class="msp-hot-tag" onclick="mspQuickSearch('홍대')">홍대</span>
+        <span class="msp-hot-tag" onclick="mspQuickSearch('강남역')">강남역</span>
+        <span class="msp-hot-tag" onclick="mspQuickSearch('냉면')">냉면</span>
+        <span class="msp-hot-tag" onclick="mspQuickSearch('삼청동')">삼청동</span>
+      </div>
+    </div>
+    <!-- 최근 검색 -->
+    <div class="msp-section" id="mspRecentSection">
+      <div class="msp-section-title" style="display:flex;justify-content:space-between;align-items:center">
+        <span>🕐 최근 검색</span>
+        <button onclick="clearMRecent()" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;padding:0">전체 삭제</button>
+      </div>
+      <div id="mspRecentList"></div>
+    </div>
+    <!-- 큐레이터 -->
     <div class="msp-section">
       <div class="msp-section-title">🌟 큐레이터</div>
       <div class="msp-curator-grid" id="mspCuratorGrid"></div>
     </div>
+    <!-- 카테고리 -->
     <div class="msp-section">
-      <div class="msp-section-title">🍽️ 음식 카테고리</div>
+      <div class="msp-section-title">🍽️ 카테고리</div>
       <div class="msp-cat-grid" id="mspCatGrid">
         <button class="msp-cat-btn on" onclick="mspSetCat(this,'전체')">전체</button>
         <button class="msp-cat-btn" onclick="mspSetCat(this,'한식')">🍚 한식</button>
@@ -5099,6 +5417,7 @@ if (lastSeen !== new Date().toDateString()) {
         <button class="msp-cat-btn" onclick="mspSetCat(this,'카페·디저트')">☕ 카페</button>
       </div>
     </div>
+    <!-- 지역 -->
     <div class="msp-section">
       <div class="msp-section-title">📍 지역</div>
       <div class="msp-region-grid">
@@ -5116,20 +5435,35 @@ if (lastSeen !== new Date().toDateString()) {
         <button class="msp-region-btn" onclick="mspSetRegion(this,'제주')">제주</button>
       </div>
     </div>
-    <div class="msp-section" id="mspRecentSection">
-      <div class="msp-section-title" style="display:flex;justify-content:space-between;align-items:center">
-        <span>🕐 최근 검색</span>
-        <button onclick="clearMRecent()" style="background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;padding:0">전체 삭제</button>
-      </div>
-      <div id="mspRecentList"></div>
+    <div class="msp-footer">
+      <div class="msp-selected-info" id="mspSelectedInfo">성시경 · 전체 카테고리</div>
+      <button class="msp-search-btn" onclick="mspDoSearch()">
+        <i class="ti ti-search"></i> 검색하기
+      </button>
     </div>
   </div>
 
-  <div class="msp-footer">
-    <div class="msp-selected-info" id="mspSelectedInfo">성시경 · 전체 카테고리</div>
-    <button class="msp-search-btn" onclick="mspDoSearch()">
-      <i class="ti ti-search"></i> 검색하기
-    </button>
+  <!-- 통합검색 결과 화면 (검색어 있을 때) -->
+  <div id="mspResultView" style="flex:1;display:none;flex-direction:column;overflow:hidden">
+    <!-- 탭 -->
+    <div class="msp-result-tabs" id="mspResultTabs">
+      <button class="msp-rtab on" id="rtab-all" onclick="switchResultTab('all')">전체 <span id="rtabCnt-all"></span></button>
+      <button class="msp-rtab" id="rtab-star" onclick="switchResultTab('star')">⭐ 스타맛집 <span id="rtabCnt-star"></span></button>
+      <button class="msp-rtab" id="rtab-place" onclick="switchResultTab('place')">🗺️ 장소 <span id="rtabCnt-place"></span></button>
+    </div>
+    <!-- 결과 목록 -->
+    <div class="msp-result-body" id="mspResultBody"></div>
+    <!-- 담기함 -->
+    <div class="msp-basket" id="mspBasket">
+      <div class="msp-basket-hd">
+        <span class="msp-basket-title">
+          <i class="ti ti-route" style="font-size:14px"></i>
+          코스 담기함 <span id="mspBasketCnt" style="font-size:11px;font-weight:400;color:var(--text3)"></span>
+        </span>
+        <button class="msp-basket-go" onclick="mspGoToCourse()">코스짜기 →</button>
+      </div>
+      <div class="msp-basket-chips" id="mspBasketChips"></div>
+    </div>
   </div>
 
 </div>
