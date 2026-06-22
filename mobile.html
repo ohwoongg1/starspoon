@@ -4026,35 +4026,48 @@ window.submitRestReport = async function() {
 
 // ── 안전한 카카오 공유 헬퍼 ──
 function safeKakaoShare(params) {
+  const shareUrl = params.content?.link?.mobileWebUrl || params.content?.link?.webUrl || '';
+  const title = params.content?.title || '스타스푼';
+  const text = (params.content?.description || '') + '\n스타스푼에서 확인해보세요!';
+
+  // iOS는 Web Share API 우선 (카카오톡 포함 모든 앱으로 공유 가능)
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isIOS) {
+    // iOS: 무조건 Web Share API → 카카오톡 선택 가능
+    if (navigator.share) {
+      navigator.share({ title, text, url: shareUrl })
+        .then(() => showToast('공유됐어요! 📤'))
+        .catch(err => {
+          if (err.name !== 'AbortError') copyToClipboard(shareUrl);
+        });
+    } else {
+      copyToClipboard(shareUrl);
+    }
+    return;
+  }
+
+  // Android/PC: Kakao.Share 시도 후 fallback
   try {
-    // SDK 초기화 확인
-    if (!window.Kakao) {
-      showToast('카카오 SDK가 로드되지 않았어요');
-      return;
+    if (window.Kakao && window.Kakao.isInitialized()) {
+      if (window.Kakao.Share?.sendDefault) {
+        window.Kakao.Share.sendDefault(params);
+        return;
+      }
+      if (window.Kakao.Link?.sendDefault) {
+        window.Kakao.Link.sendDefault(params);
+        return;
+      }
     }
-    if (!window.Kakao.isInitialized()) {
-      window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
-    }
-    // Kakao.Share (최신 SDK)
-    if (window.Kakao.Share && window.Kakao.Share.sendDefault) {
-      window.Kakao.Share.sendDefault(params);
-      return;
-    }
-    // Kakao.Link (구 SDK fallback)
-    if (window.Kakao.Link && window.Kakao.Link.sendDefault) {
-      window.Kakao.Link.sendDefault(params);
-      return;
-    }
-    // 모두 실패 시 URL 방식
-    const shareUrl = params.content?.link?.mobileWebUrl || params.content?.link?.webUrl || '';
-    const title = params.content?.title || '스타스푼';
-    fallbackShare(title, shareUrl);
-  } catch(e) {
-    console.log('카카오 공유 오류:', e);
-    // fallback: 링크 복사
-    const shareUrl = params.content?.link?.mobileWebUrl || params.content?.link?.webUrl || '';
-    const title = params.content?.title || '스타스푼';
-    fallbackShare(title, shareUrl);
+  } catch(e) { console.log('Kakao share err:', e); }
+
+  // Android Web Share 또는 클립보드
+  if (navigator.share) {
+    navigator.share({ title, text, url: shareUrl })
+      .then(() => showToast('공유됐어요! 📤'))
+      .catch(() => copyToClipboard(shareUrl));
+  } else {
+    copyToClipboard(shareUrl);
   }
 }
 
@@ -4848,10 +4861,16 @@ function openCourseAnimPopup(places, basePlace) {
 
 // ── 코스 길 안내 중 카톡 공유 ──
 window.shareCourseKakao = async function() {
-  if (!_animPlaces || !_animPlaces.length || !_animBase) {
+  // _animPlaces (애니메이션 중) 또는 mCourseSelected (코스짜기 패널) 모두 지원
+  const places = (_animPlaces && _animPlaces.length) ? _animPlaces : Object.values(mCourseSelected || {});
+  const base = _animBase || mCourseBasePlace;
+  if (!places.length || !base) {
     showToast('공유할 코스가 없어요');
     return;
   }
+  // 임시로 _animPlaces, _animBase 설정
+  const origPlaces = _animPlaces, origBase = _animBase;
+  _animPlaces = places; _animBase = base;
   showToast('코스 링크 생성 중...');
   try {
     // Firebase sharedCourses에 저장
