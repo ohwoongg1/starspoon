@@ -5208,6 +5208,9 @@ window.openCourseAnimPopup = function openCourseAnimPopup(places, basePlace) {
   btn.disabled = false;
   btn.onclick = startCourseAnim;
   document.getElementById('courseAnimOverlay').classList.add('show');
+  // ★ 애니메이션 중 배경 스크롤 비활성화
+  document.body.style.overflow = 'hidden';
+  document.documentElement.style.overflow = 'hidden';
 }
 
 
@@ -5624,6 +5627,9 @@ window.stopCourseAnim = function() {
   const bubble = document.getElementById('animBubble');
   if (bubble) bubble.remove();
   document.getElementById('courseAnimOverlay').classList.remove('show');
+  // ★ 스크롤 복원
+  document.body.style.overflow = '';
+  document.documentElement.style.overflow = '';
   // 맛집 핀 복원
   renderPins();
   // ★ 지도를 처음 위치(내 위치 기준)로 복원
