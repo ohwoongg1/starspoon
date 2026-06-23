@@ -378,11 +378,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
   width:100%;
   background:rgba(255,255,255,0.97);
   border-radius:20px 20px 0 0;
-  padding:12px 16px 16px;
+  padding:10px 16px 14px;
   box-shadow:0 -4px 24px rgba(0,0,0,0.18);
   pointer-events:all;
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
+  max-height:42vh;
+  overflow-y:auto;
 }
 .course-anim-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
 .course-anim-title{font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px}
@@ -406,6 +408,69 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 /* 피드백 */
 .feedback-type-btn{padding:6px 12px;border-radius:16px;border:1.5px solid var(--border2);background:var(--white);font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s}
 .feedback-type-btn.on{background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700}
+
+
+/* ── 반경 슬라이더 ── */
+.m-radius-bar{
+  display:none;position:fixed;
+  top:110px;left:12px;right:12px;z-index:198;
+  background:var(--white);border-radius:12px;
+  padding:8px 14px 10px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.13);
+  border:1px solid var(--border);
+}
+.m-radius-bar.show{display:block}
+.m-radius-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.m-radius-label{font-size:12px;font-weight:700;color:var(--text2)}
+.m-radius-val{font-size:13px;font-weight:700;color:var(--gold)}
+.m-radius-close{background:none;border:none;font-size:16px;color:var(--text3);cursor:pointer;padding:0;line-height:1}
+input[type=range].m-radius-input{width:100%;height:4px;accent-color:var(--gold);cursor:pointer}
+.m-radius-ticks{display:flex;justify-content:space-between;margin-top:4px}
+.m-radius-tick{font-size:10px;color:var(--text3)}
+/* ── 햄버거 메뉴 ── */
+.hamburger-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:44px;height:44px;border-radius:12px;
+  background:var(--white);border:1px solid var(--border);
+  box-shadow:0 2px 12px rgba(0,0,0,0.18);
+  cursor:pointer;flex-shrink:0;
+}
+.hamburger-drawer{
+  position:fixed;top:0;right:-280px;width:280px;height:100%;
+  background:var(--white);z-index:900;
+  box-shadow:-4px 0 20px rgba(0,0,0,0.15);
+  transition:right .3s cubic-bezier(.25,.46,.45,.94);
+  display:flex;flex-direction:column;
+  overflow-y:auto;
+}
+.hamburger-drawer.open{right:0}
+.hamburger-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.4);
+  z-index:899;display:none;
+}
+.hamburger-overlay.show{display:block}
+.hamburger-hd{
+  padding:20px 18px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.hamburger-logo{display:flex;align-items:center;gap:8px}
+.hamburger-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);padding:0;line-height:1}
+.hamburger-item{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 18px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .12s;
+}
+.hamburger-item:hover{background:var(--bg2)}
+.hamburger-item-icon{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+.hamburger-item-text{font-size:14px;font-weight:500;color:var(--text)}
+.hamburger-item-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.hamburger-section-title{
+  padding:12px 18px 6px;
+  font-size:11px;font-weight:700;color:var(--text3);
+  letter-spacing:0.5px;text-transform:uppercase;
+}
 
 /* 토스트 ── */
 .toast{position:fixed;bottom:20px;right:20px;background:#1A1A18;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;box-shadow:var(--shadow-lg);max-width:320px}
@@ -737,17 +802,35 @@ input::placeholder{color:var(--text3) !important;opacity:1}
           <i class="ti ti-x" style="font-size:15px"></i>
         </button>
       </div>
-      <!-- 내 계정 / 로그인 버튼 -->
-      <div class="m-my-btn" id="mMyBtn" style="background:var(--white);position:relative" onclick="mMyBtnClick()">
-        <i class="ti ti-user" id="mMyBtnIcon" style="font-size:20px;color:var(--gold)"></i>
-        <div id="mMyBtnAvatar" style="display:none;width:28px;height:28px;border-radius:50%;overflow:hidden;border:2px solid var(--gold)">
-          <img id="mMyBtnImg" style="width:100%;height:100%;object-fit:cover" src="" alt="">
-        </div>
+      <!-- 햄버거 메뉴 버튼 -->
+      <div class="hamburger-btn" onclick="openHamburger()">
+        <i class="ti ti-menu-2" style="font-size:20px;color:var(--text2)"></i>
       </div>
     </div>
 
     <!-- 모바일 큐레이터 pill strip -->
     <div class="m-curator-strip" id="mCuratorStrip"></div>
+
+    <!-- 반경 필터 슬라이더 -->
+    <div class="m-radius-bar" id="mRadiusBar">
+      <div class="m-radius-top">
+        <span class="m-radius-label"><i class="ti ti-current-location" style="font-size:12px;vertical-align:-1px"></i> 내 주변 반경</span>
+        <span class="m-radius-val" id="mRadiusVal">전체</span>
+        <button class="m-radius-close" onclick="closeRadiusBar()">✕</button>
+      </div>
+      <input type="range" class="m-radius-input" id="mRadiusSlider"
+        min="0" max="6" step="1" value="0"
+        oninput="onRadiusChange(this.value)">
+      <div class="m-radius-ticks">
+        <span class="m-radius-tick">전체</span>
+        <span class="m-radius-tick">500m</span>
+        <span class="m-radius-tick">1km</span>
+        <span class="m-radius-tick">2km</span>
+        <span class="m-radius-tick">5km</span>
+        <span class="m-radius-tick">10km</span>
+        <span class="m-radius-tick">20km</span>
+      </div>
+    </div>
 
     <!-- 모바일 카테고리 pill strip -->
     <div class="m-cat-strip" id="mCatStrip">
@@ -1407,6 +1490,7 @@ function renderAuthArea() {
         카카오
       </button>`;
   }
+  if (document.getElementById("hamburgerDrawer")?.classList.contains("open")) renderHamburgerAuth();
   updateMMyBtn();
 }
 
@@ -1422,8 +1506,9 @@ window.mMyBtnClick = function() {
   }
 };
 
-// ── 상단 우측 버튼 상태 업데이트 ──
-function updateMMyBtn() {
+// ── 상단 우측 버튼 상태 업데이트 (햄버거 메뉴로 대체됨) ──
+function updateMMyBtn() { return; // 햄버거 메뉴로 대체
+  void 0;
   const icon = document.getElementById('mMyBtnIcon');
   const avatar = document.getElementById('mMyBtnAvatar');
   const img = document.getElementById('mMyBtnImg');
@@ -1679,7 +1764,11 @@ window.selectCurator = async function(name, uid) {
 function renderMobileCuratorStrip() {
   const strip = document.getElementById('mCuratorStrip');
   if (strip && STAR_CURATORS.length) {
-    const allPill = `<div class="m-cpill${selCurator==='전체'||!selCurator?' on':''}" onclick="mSelectAll()">
+    const isRadiusOn = _nearbyRadiusM > 0;
+    const nearbyPill = `<div class="m-cpill${isRadiusOn?' on':''}" onclick="toggleRadiusBar()" style="${isRadiusOn?'background:var(--blue,#3B82F6);border-color:var(--blue,#3B82F6);color:#fff':''}">
+      <span class="m-cpill-icon" style="font-size:13px">📍</span>${isRadiusOn ? formatRadiusLabel(_nearbyRadiusM) : '내 주변'}
+    </div>`;
+    const allPill = `<div class="m-cpill${(selCurator==='전체'||!selCurator)&&!isRadiusOn?' on':''}" onclick="mSelectAll()">
       <span class="m-cpill-icon">🍽️</span>전체
     </div>`;
     const curatorPills = STAR_CURATORS.map(c =>
@@ -1687,7 +1776,7 @@ function renderMobileCuratorStrip() {
         <span class="m-cpill-icon">${c.icon}</span>${c.name}
       </div>`
     ).join('');
-    strip.innerHTML = allPill + curatorPills;
+    strip.innerHTML = nearbyPill + allPill + curatorPills;
   }
   // 검색바에 현재 큐레이터 표시 + X버튼 제어
   const display = document.getElementById('mSearchDisplay');
@@ -2040,9 +2129,18 @@ function filtered() {
     }
     return true;
   });
-  if (selSort === 'rating') items.sort((a,b) => (b.avgRating||0)-(a.avgRating||0));
-  else if (selSort === 'saves') items.sort((a,b) => (b.saves||0)-(a.saves||0));
-  else items.sort((a,b) => (b.visits||0)-(a.visits||0));
+  // 반경 필터 적용
+  if (_nearbyRadiusM > 0) {
+    items = items.filter(d => {
+      const dist = d.dist || calcDistForFilter(d.lat, d.lng);
+      return dist <= _nearbyRadiusM;
+    });
+    items.sort((a,b) => (a.dist||0) - (b.dist||0));
+  } else {
+    if (selSort === 'rating') items.sort((a,b) => (b.avgRating||0)-(a.avgRating||0));
+    else if (selSort === 'saves') items.sort((a,b) => (b.saves||0)-(a.saves||0));
+    else items.sort((a,b) => (b.visits||0)-(a.visits||0));
+  }
   return items;
 }
 
@@ -3843,6 +3941,12 @@ window.deleteMRecent = function(i) {
 window.clearSearch = async function() {
   searchQ = '';
   regionFilter = '';
+  _nearbyRadiusM = 0;
+  const _rs = document.getElementById('mRadiusSlider');
+  if (_rs) _rs.value = 0;
+  const _rv = document.getElementById('mRadiusVal');
+  if (_rv) _rv.textContent = '전체';
+  document.getElementById('mRadiusBar')?.classList.remove('show');
   document.getElementById('mainSearch').value = '';
   const mSearch = document.getElementById('mobileSearch');
   if (mSearch) mSearch.value = '';
@@ -4975,6 +5079,136 @@ window.reopenCourseAnim = function() {
   }
 };
 
+
+// ── 햄버거 메뉴 ──
+window.openHamburger = function() {
+  document.getElementById('hamburgerDrawer').classList.add('open');
+  document.getElementById('hamburgerOverlay').classList.add('show');
+  renderHamburgerAuth();
+};
+window.closeHamburger = function() {
+  document.getElementById('hamburgerDrawer').classList.remove('open');
+  document.getElementById('hamburgerOverlay').classList.remove('show');
+};
+function renderHamburgerAuth() {
+  const area = document.getElementById('hamburgerAuthArea');
+  if (!area) return;
+  if (currentUser) {
+    const pts = currentUserData?.points || 0;
+    const grade = getGrade(pts);
+    const photo = currentUser.photoURL || '';
+    area.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid var(--gold);flex-shrink:0;background:var(--gold-bg);display:flex;align-items:center;justify-content:center;font-size:20px">
+          ${photo ? `<img src="${photo}" style="width:100%;height:100%;object-fit:cover">` : grade.icon}
+        </div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:var(--text)">${currentUser.displayName||'사용자'}</div>
+          <div style="font-size:12px;color:var(--gold);font-weight:600">${grade.icon} ${grade.name} · ${pts}pt</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="closeHamburger();setPage('saved',document.querySelector('.pnav:nth-child(3)'))" 
+          style="flex:1;padding:7px;background:var(--gold-bg);border:1px solid var(--gold);border-radius:8px;font-size:12px;font-weight:600;color:var(--gold);cursor:pointer">❤️ 저장 맛집</button>
+        <button onclick="logoutUser();closeHamburger()" 
+          style="flex:1;padding:7px;background:none;border:1px solid var(--border2);border-radius:8px;font-size:12px;color:var(--text3);cursor:pointer">로그아웃</button>
+      </div>`;
+  } else {
+    area.innerHTML = `
+      <div style="font-size:13px;color:var(--text2);margin-bottom:10px">로그인하면 맛집 저장·포인트 적립이 가능해요!</div>
+      <div style="display:flex;gap:8px">
+        <button onclick="loginWithGoogle();closeHamburger()" 
+          style="flex:1;padding:9px;background:var(--white);border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">
+          <i class="ti ti-brand-google" style="font-size:15px"></i> 구글
+        </button>
+        <button onclick="loginWithKakao();closeHamburger()" 
+          style="flex:1;padding:9px;background:#FEE500;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">
+          <svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path fill="#000" d="M9 1.5C4.86 1.5 1.5 4.14 1.5 7.41c0 2.1 1.38 3.93 3.45 4.98L4.2 15l3.27-2.16c.48.06.99.09 1.53.09 4.14 0 7.5-2.64 7.5-5.91S13.14 1.5 9 1.5z"/></svg>
+          카카오
+        </button>
+      </div>`;
+  }
+}
+
+window.showGuideModal = function() {
+  document.getElementById('guideOverlay').classList.add('show');
+};
+window.closeGuideModal = function(e) {
+  if (!e || e.target === document.getElementById('guideOverlay'))
+    document.getElementById('guideOverlay').classList.remove('show');
+};
+
+// ── 반경 필터 ──
+let _nearbyRadiusM = 0;
+const RADIUS_STEPS = [0, 500, 1000, 2000, 5000, 10000, 20000];
+
+function formatRadiusLabel(m) {
+  if (!m) return '전체';
+  return m < 1000 ? m + 'm' : (m/1000).toFixed(0) + 'km';
+}
+
+window.toggleRadiusBar = function() {
+  const bar = document.getElementById('mRadiusBar');
+  if (!bar) return;
+  if (bar.classList.contains('show')) {
+    bar.classList.remove('show');
+  } else {
+    bar.classList.add('show');
+    const strip = document.getElementById('mCuratorStrip');
+    if (strip) {
+      const rect = strip.getBoundingClientRect();
+      bar.style.top = (rect.bottom + 4) + 'px';
+    }
+  }
+};
+
+window.closeRadiusBar = function() {
+  document.getElementById('mRadiusBar')?.classList.remove('show');
+};
+
+window.onRadiusChange = function(val) {
+  const m = RADIUS_STEPS[parseInt(val)];
+  _nearbyRadiusM = m;
+  const valEl = document.getElementById('mRadiusVal');
+  if (valEl) valEl.textContent = m === 0 ? '전체' : formatRadiusLabel(m) + ' 이내';
+  applyRadiusFilter();
+  renderMobileCuratorStrip();
+};
+
+function calcDistForFilter(lat, lng) {
+  const dlat = lat - myLat, dlng = lng - myLng;
+  return Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+}
+
+function applyRadiusFilter() {
+  if (!_nearbyRadiusM) {
+    renderList(); renderPins();
+    document.getElementById('listCount').textContent = filtered().length + '곳';
+    return;
+  }
+  const allItems = DATA.filter(d => {
+    if (d.hidden) return false;
+    const dist = d.dist || calcDistForFilter(d.lat, d.lng);
+    return dist <= _nearbyRadiusM;
+  }).sort((a,b) => (a.dist||0) - (b.dist||0));
+
+  const cnt = allItems.length;
+  document.getElementById('listCount').textContent = cnt + '곳';
+  if (cnt === 0) showToast(formatRadiusLabel(_nearbyRadiusM) + ' 내 맛집이 없어요. 반경을 늘려보세요!');
+  else showToast('📍 ' + formatRadiusLabel(_nearbyRadiusM) + ' 이내 맛집 ' + cnt + '곳');
+
+  const origData = DATA;
+  DATA = allItems;
+  renderList(); renderPins();
+  DATA = origData;
+
+  if (map && myLat && myLng) {
+    const level = _nearbyRadiusM<=500?5:_nearbyRadiusM<=1000?6:_nearbyRadiusM<=2000?7:_nearbyRadiusM<=5000?8:_nearbyRadiusM<=10000?9:10;
+    map.setCenter(new kakao.maps.LatLng(myLat, myLng));
+    map.setLevel(level, {animate:{duration:300}});
+  }
+}
+
 window.stopCourseAnim = function() {
   _animRunning = false;
   if (_animTimer) { clearTimeout(_animTimer); _animTimer = null; }
@@ -5483,19 +5717,8 @@ window.submitFeedback = async function() {
   }
 };
 
-// 처음 방문자 팝업
-window.closeIntro = function() {
-  document.getElementById('introOverlay').classList.remove('show');
-  if (document.getElementById('noShowAgain')?.checked) {
-    localStorage.setItem('starspoon_intro', new Date().toDateString());
-  }
-};
-
-const lastSeen = localStorage.getItem('starspoon_intro');
+// courseId 파라미터 체크 (공유 코스 수신 시 팝업 차단)
 const _hasCourseId = new URLSearchParams(window.location.search).get('courseId');
-if (lastSeen !== new Date().toDateString() && !_hasCourseId) {
-  document.getElementById('introOverlay').classList.add('show');
-}
 
 // ── 검색패널 함수들 window 노출 (HTML onclick에서 접근용) ──
 window.renderMspCuratorGrid = renderMspCuratorGrid;
@@ -5668,66 +5891,6 @@ window.switchResultTab = switchResultTab;
   </div>
 </div>
 
-<!-- ── 서비스 안내 팝업 ── -->
-<div class="overlay" id="introOverlay" style="z-index:1000">
-  <div class="modal" style="width:520px;max-width:92vw">
-    <div class="modal-hd" style="background:var(--gold);border-radius:16px 16px 0 0">
-      <span class="modal-title" style="color:#fff;font-size:16px;display:flex;align-items:center;gap:8px;"><img src="/icon-192.png" style="width:24px;height:24px;border-radius:6px;" alt=""> 스타스푼에 오신걸 환영해요!</span>
-      <button class="modal-close" onclick="closeIntro()" style="color:#fff">✕</button>
-    </div>
-    <div class="modal-bd">
-      <p style="font-size:15px;color:var(--gold);font-weight:700;margin-bottom:4px;line-height:1.6">
-        어디에 있든, 내 근처 스타들이 간 맛집을 거리순으로 알려드려요.
-      </p>
-      <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
-        성시경·풍자·이영자·히밥·최자로드 등 연예인이 직접 방문한 맛집만 모았어요.
-      </p>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
-          <span style="font-size:20px;flex-shrink:0">🌟</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">큐레이터 버튼으로 스타 맛집만 골라보세요</div>
-            <div style="font-size:12px;color:var(--text3)">성시경·풍자·이영자·히밥·최자로드 등</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
-          <span style="font-size:20px;flex-shrink:0">📍</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">지역·식당 이름으로 검색하면 지도에서 바로 찾아요</div>
-            <div style="font-size:12px;color:var(--text3)">예: 강남, 냉면, 을지로 ...</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
-          <span style="font-size:20px;flex-shrink:0">▶️</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">영상 버튼으로 실제 방문 영상을 바로 봐요</div>
-            <div style="font-size:12px;color:var(--text3)">유튜브 영상으로 바로 연결</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
-          <span style="font-size:20px;flex-shrink:0">🧭</span>
-          <div>
-            <div style="font-size:13px;font-weight:700;margin-bottom:2px">길찾기 버튼으로 네이버·카카오 지도로 바로 출발</div>
-            <div style="font-size:12px;color:var(--text3)">클릭 한 번으로 바로 출발</div>
-          </div>
-        </div>
-      </div>
-      <div style="background:var(--bg2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-        <span style="font-size:16px;flex-shrink:0;">📱</span>
-        <div style="font-size:12px;color:var(--text2);line-height:1.5;">
-          모바일에서 검색하면 바로 사용 가능 · <span style="color:var(--gold);font-weight:700;">홈화면에 추가</span>하면 앱처럼 더 빠르게!
-        </div>
-      </div>
-      <button onclick="closeIntro()" class="btn-primary">시작하기 🚀</button>
-      <p style="text-align:center;margin-top:10px">
-        <label style="font-size:12px;color:var(--text3);cursor:pointer">
-          <input type="checkbox" id="noShowAgain" style="margin-right:4px">
-          오늘 하루 다시 보지 않기
-        </label>
-      </p>
-    </div>
-  </div>
-</div>
 
 <!-- 모바일 전체화면 검색 패널 -->
 <div class="m-search-panel" id="mSearchPanel">
@@ -5888,6 +6051,117 @@ window.switchResultTab = switchResultTab;
         <input type="text" class="form-input" id="feedbackContact" placeholder="카카오 아이디 또는 이메일">
       </div>
       <button onclick="submitFeedback()" class="btn-primary">보내기 💌</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── 햄버거 드로어 오버레이 ── -->
+<div class="hamburger-overlay" id="hamburgerOverlay" onclick="closeHamburger()"></div>
+
+<!-- ── 햄버거 드로어 ── -->
+<div class="hamburger-drawer" id="hamburgerDrawer">
+  <div class="hamburger-hd">
+    <div class="hamburger-logo">
+      <img src="/icon-192.png" style="width:28px;height:28px;border-radius:7px" alt="">
+      <span style="font-size:15px;font-weight:800;color:var(--text)">Star<span style="color:var(--gold)">spoon</span></span>
+    </div>
+    <button class="hamburger-close" onclick="closeHamburger()">✕</button>
+  </div>
+
+  <!-- 로그인/계정 -->
+  <div id="hamburgerAuthArea" style="padding:14px 18px;border-bottom:1px solid var(--border)"></div>
+
+  <div class="hamburger-section-title">기능</div>
+
+  <div class="hamburger-item" onclick="closeHamburger();openFeedbackModal()">
+    <span class="hamburger-item-icon">💌</span>
+    <div>
+      <div class="hamburger-item-text">개발자에게 건의하기</div>
+      <div class="hamburger-item-sub">불편한 점, 원하는 기능 알려주세요</div>
+    </div>
+  </div>
+
+  <div class="hamburger-item" onclick="closeHamburger();openReportModal()">
+    <span class="hamburger-item-icon">⭐</span>
+    <div>
+      <div class="hamburger-item-text">스타 맛집 등록</div>
+      <div class="hamburger-item-sub">연예인 맛집 제보하고 포인트 적립</div>
+    </div>
+  </div>
+
+  <div class="hamburger-section-title">안내</div>
+
+  <div class="hamburger-item" onclick="closeHamburger();showGuideModal()">
+    <span class="hamburger-item-icon">📖</span>
+    <div>
+      <div class="hamburger-item-text">사용 설명서</div>
+      <div class="hamburger-item-sub">스타스푼 100% 활용하기</div>
+    </div>
+  </div>
+
+  <div class="hamburger-item" onclick="window.open('https://starspoon.co.kr','_blank');closeHamburger()">
+    <span class="hamburger-item-icon">🌐</span>
+    <div>
+      <div class="hamburger-item-text">PC 버전으로 보기</div>
+      <div class="hamburger-item-sub">더 넓은 화면으로 즐기기</div>
+    </div>
+  </div>
+
+  <div style="padding:24px 18px;margin-top:auto">
+    <div style="font-size:11px;color:var(--text3);line-height:1.6">
+      Starspoon v1.0 · 연예인 맛집 큐레이터 플랫폼<br>
+      문의: <a href="mailto:ohwoongg1@gmail.com" style="color:var(--gold)">ohwoongg1@gmail.com</a>
+    </div>
+  </div>
+</div>
+
+<!-- ── 사용 설명서 모달 ── -->
+<div class="overlay" id="guideOverlay" onclick="closeGuideModal(event)">
+  <div class="modal" style="width:520px">
+    <div class="modal-hd" style="background:var(--gold);border-radius:16px 16px 0 0">
+      <span class="modal-title" style="color:#fff;font-size:16px">📖 스타스푼 사용법</span>
+      <button class="modal-close" onclick="closeGuideModal()" style="color:#fff">✕</button>
+    </div>
+    <div class="modal-bd">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
+          <span style="font-size:22px;flex-shrink:0">🌟</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">큐레이터 pill로 스타 맛집 골라보기</div>
+            <div style="font-size:12px;color:var(--text3)">상단 가로 스크롤 바에서 성시경·풍자 등 큐레이터 선택</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
+          <span style="font-size:22px;flex-shrink:0">📍</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">내 주변 반경 필터</div>
+            <div style="font-size:12px;color:var(--text3)">큐레이터 바 맨 앞 "📍 내 주변" 탭하면 슬라이더로 반경 설정</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
+          <span style="font-size:22px;flex-shrink:0">🗺️</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">코스짜기로 맛집 투어</div>
+            <div style="font-size:12px;color:var(--text3)">하단 "코스짜기" 탭 → 기준 장소 검색 → 장소 선택 → 🥄 애니메이션 길 안내</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
+          <span style="font-size:22px;flex-shrink:0">💬</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">카카오톡으로 코스 공유</div>
+            <div style="font-size:12px;color:var(--text3)">코스 완료 후 "이 코스 카톡 공유" → 친구도 같은 길 안내 받기</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:12px;background:var(--bg2);border-radius:10px;padding:12px 14px">
+          <span style="font-size:22px;flex-shrink:0">⭐</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:3px">스타 맛집 직접 등록</div>
+            <div style="font-size:12px;color:var(--text3)">FAB 버튼 → 스타 맛집 등록 → 포인트 적립 + 큐레이터 등극</div>
+          </div>
+        </div>
+      </div>
+      <button onclick="closeGuideModal()" class="btn-primary" style="margin-top:16px">확인 ✓</button>
     </div>
   </div>
 </div>
