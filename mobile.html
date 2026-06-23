@@ -512,6 +512,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
 /* ── 모바일 카카오맵 스타일 ── */
 @keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
 @media(max-width:768px){
   /* 전체 레이아웃: 지도가 전체화면 */
   .layout{flex-direction:column;height:calc(100vh - 44px);position:relative}
@@ -2369,32 +2370,73 @@ function renderPins() {
     kakao.maps.event.addListener(marker, 'mouseover', () => overlay.setMap(map));
     kakao.maps.event.addListener(marker, 'mouseout', () => overlay.setMap(null));
     kakao.maps.event.addListener(marker, 'click', () => {
+      // ★ 기존 팝업 오버레이 모두 닫기
+      if (window._openPinPopup) { window._openPinPopup.setMap(null); window._openPinPopup = null; }
+
       map.setCenter(pos); map.setLevel(4);
       const isSaved = savedList.includes(d.id);
-      const infoContent = `<div style="padding:12px 14px;min-width:180px;max-width:240px;font-family:-apple-system,sans-serif">
-        <div style="font-weight:700;font-size:14px;color:#1A1A18;margin-bottom:3px">⭐ ${d.name}</div>
+      const escapedId = d.id.replace(/'/g,"\\'");
+      const escapedName = d.name.replace(/'/g,"\\'");
+      const icon = STAR_CURATORS.find(c=>c.name===d.celeb)?.icon||'⭐';
+
+      // ★ CustomOverlay로 팝업 만들기 (InfoWindow 대신 → 버튼이 박스 안에 제대로 들어감)
+      const popupDiv = document.createElement('div');
+      popupDiv.style.cssText = [
+        'background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.18)',
+        'padding:14px 14px 12px;min-width:220px;max-width:260px',
+        'font-family:-apple-system,sans-serif;position:relative'
+      ].join(';');
+      popupDiv.innerHTML = `
+        <button onclick="if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;}"
+          style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:18px;color:#9A9A96;cursor:pointer;line-height:1">✕</button>
+        <div style="font-weight:700;font-size:14px;color:#1A1A18;margin-bottom:3px;padding-right:20px">${icon} ${d.name}</div>
         <div style="font-size:11px;color:#B45309;font-weight:600;margin-bottom:2px">${d.celeb} 방문</div>
         <div style="font-size:11px;color:#9A9A96;margin-bottom:10px">${d.cat} · ${d.area}</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" style="font-size:12px;color:#F59E0B;border:1px solid #F59E0B;border-radius:6px;padding:5px 10px;text-decoration:none;font-weight:600">🗺️ 길찾기</a>
-          <a href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" target="_blank" style="font-size:12px;color:#FF0000;border:1px solid #FF0000;border-radius:6px;padding:5px 10px;text-decoration:none;font-weight:600">▶️ 영상</a>
-          <a href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" style="font-size:12px;color:#03C75A;border:1px solid #03C75A;border-radius:6px;padding:5px 10px;text-decoration:none;font-weight:600">📅 예약</a>
-          <button onclick="toggleSave('${d.id}')" style="font-size:12px;color:${isSaved?'#F59E0B':'#6B6B67'};border:1px solid ${isSaved?'#F59E0B':'#D4D3CF'};border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">${isSaved?'❤️ 저장됨':'🤍 저장'}</button>
-          <button onclick="shareKakaoPC('${d.id}')" style="font-size:12px;color:#3A1D1D;border:1px solid #F0D000;border-radius:6px;padding:5px 10px;background:#FEE500;cursor:pointer;font-weight:600">💬 카카오공유</button>
-          <button onclick="openCommentModal('${d.id}','${d.name}')" style="font-size:12px;color:#6B6B67;border:1px solid #D4D3CF;border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">💬 댓글·평점</button>
-          <button onclick="addToGlobalBasket({id:'${d.id}',name:'${d.name}',lat:${d.lat},lng:${d.lng},type:'star',icon:STAR_CURATORS.find(c=>c.name==='${d.celeb}')?.icon||'⭐',celeb:'${d.celeb}'})" style="font-size:12px;color:#fff;border:none;border-radius:6px;padding:5px 10px;background:#F59E0B;cursor:pointer;font-weight:600">🗺️ 코스담기</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+          <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank"
+            style="font-size:12px;color:#F59E0B;border:1.5px solid #F59E0B;border-radius:8px;padding:7px 6px;text-decoration:none;font-weight:600;text-align:center">🗺️ 길찾기</a>
+          <a href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" target="_blank"
+            style="font-size:12px;color:#FF0000;border:1.5px solid #FF0000;border-radius:8px;padding:7px 6px;text-decoration:none;font-weight:600;text-align:center">▶️ 영상</a>
+          <a href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank"
+            style="font-size:12px;color:#03C75A;border:1.5px solid #03C75A;border-radius:8px;padding:7px 6px;text-decoration:none;font-weight:600;text-align:center">📅 예약</a>
+          <button onclick="toggleSave('${escapedId}');this.innerHTML=savedList.includes('${escapedId}')?'❤️ 저장됨':'🤍 저장'"
+            style="font-size:12px;color:${isSaved?'#F59E0B':'#6B6B67'};border:1.5px solid ${isSaved?'#F59E0B':'#D4D3CF'};border-radius:8px;padding:7px 6px;background:none;cursor:pointer;font-weight:600">${isSaved?'❤️ 저장됨':'🤍 저장'}</button>
         </div>
-      </div>`;
-      const iw = new kakao.maps.InfoWindow({content: infoContent, removable: true});
-      iw.open(map, marker);
+        <button onclick="addToGlobalBasket({id:'${escapedId}',name:'${escapedName}',lat:${d.lat},lng:${d.lng},type:'star',icon:'${icon}',celeb:'${escapedName}'});if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;}"
+          style="width:100%;padding:9px;background:#F59E0B;border:none;border-radius:9px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:6px">
+          🗺️ 코스담기
+        </button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+          <button onclick="shareKakaoPC('${escapedId}')"
+            style="font-size:11px;color:#3A1D1D;border:1px solid #F0D000;border-radius:8px;padding:6px;background:#FEE500;cursor:pointer;font-weight:600">💛 카카오공유</button>
+          <button onclick="openCommentModal('${escapedId}','${escapedName}')"
+            style="font-size:11px;color:#6B6B67;border:1px solid #D4D3CF;border-radius:8px;padding:6px;background:none;cursor:pointer;font-weight:600">💬 댓글·평점</button>
+        </div>`;
+
+      const pinPopup = new kakao.maps.CustomOverlay({
+        position: pos,
+        content: popupDiv,
+        yAnchor: 1.45,
+        zIndex: 10
+      });
+      pinPopup.setMap(map);
+      window._openPinPopup = pinPopup;
+
+      // 지도 탭 → 팝업 닫기
+      kakao.maps.event.addListener(map, 'click', function closePopup() {
+        if (window._openPinPopup) { window._openPinPopup.setMap(null); window._openPinPopup = null; }
+        kakao.maps.event.removeListener(map, 'click', closePopup);
+      });
+
       // 모바일: 팝업이 검색바에 가리지 않도록 지도 중심을 살짝 위로
       if (window.innerWidth <= 768) {
         setTimeout(() => {
-          const proj = map.getProjection();
-          const point = proj.pointFromCoords(pos);
-          point.y -= 80; // 검색바+pill 높이만큼 위로
-          const newCenter = proj.coordsFromPoint(point);
-          map.panTo(newCenter);
+          try {
+            const proj = map.getProjection();
+            const point = proj.pointFromCoords(pos);
+            point.y -= 100;
+            map.panTo(proj.coordsFromPoint(point));
+          } catch(e) {}
         }, 50);
       }
     });
@@ -4488,8 +4530,19 @@ function updateMCourseFooter() {
   const info = document.getElementById('mCourseSelectedInfo');
   const btn = document.getElementById('mCourseConfirmBtn');
   if (!info || !btn) return;
-  if (cnt === 0) { info.textContent = '장소를 선택해주세요'; btn.disabled = true; }
-  else { info.textContent = cnt + '곳 선택 · 최적 경로로 코스 생성'; btn.disabled = false; }
+  if (cnt === 0) {
+    info.innerHTML = '장소를 선택해주세요';
+    btn.disabled = true;
+  } else if (!mCourseBasePlace) {
+    // 장소는 있는데 출발지 없음 → 버튼은 활성화하되 안내 표시
+    info.innerHTML = `<span style="color:#F59E0B;font-weight:700">⚠️ 출발지를 설정해주세요</span> · ${cnt}곳 선택됨`;
+    btn.disabled = false;
+    btn.style.background = 'var(--gold)';
+  } else {
+    info.innerHTML = `<span style="color:#166534">✅ ${mCourseBasePlace.name}</span> 출발 · ${cnt}곳 선택`;
+    btn.disabled = false;
+    btn.style.background = '';
+  }
 }
 
 
@@ -4528,12 +4581,25 @@ function nearestNeighborSort(places, baseLat, baseLng) {
 }
 
 window.confirmMCourse = function() {
+  // ★ 출발지 체크 - 없으면 안내 토스트 + 내 위치 버튼 강조
+  if (!mCourseBasePlace) {
+    showToast('📍 출발지를 먼저 설정해주세요!');
+    // 내 위치 버튼 강조 애니메이션
+    const baseSelector = document.getElementById('mCourseBaseSelector');
+    if (baseSelector) {
+      baseSelector.style.animation = 'none';
+      baseSelector.offsetHeight; // reflow
+      baseSelector.style.animation = 'shake 0.4s ease';
+      baseSelector.style.boxShadow = '0 0 0 2px var(--gold)';
+      baseSelector.style.borderRadius = '10px';
+      setTimeout(() => { baseSelector.style.boxShadow = ''; baseSelector.style.borderRadius = ''; }, 1200);
+    }
+    return;
+  }
   // Nearest Neighbor TSP - 거리순보다 효율적인 경로
   const _rawPlaces = Object.values(mCourseSelected);
-  const places = mCourseBasePlace
-    ? nearestNeighborSort(_rawPlaces, mCourseBasePlace.lat, mCourseBasePlace.lng)
-    : _rawPlaces.sort((a, b) => (a.dist||0) - (b.dist||0));
-  if (!places.length) return;
+  const places = nearestNeighborSort(_rawPlaces, mCourseBasePlace.lat, mCourseBasePlace.lng);
+  if (!places.length) { showToast('장소를 먼저 선택해주세요'); return; }
   document.getElementById('mCourseOverlay').classList.remove('show');
 
   // 기존 코스 제거
@@ -4576,7 +4642,7 @@ window.confirmMCourse = function() {
     badge.className = 'm-course-map-badge';
     document.body.appendChild(badge);
   }
-  badge.innerHTML = `<i class="ti ti-route"></i> 코스 ${places.length}곳 · <span style="cursor:pointer;text-decoration:underline" onclick="clearMCourseFromMap()">지우기</span>`;
+  badge.innerHTML = `<i class="ti ti-route"></i> <span onclick="reopenCourseAnim()" style="cursor:pointer;font-weight:700">코스 ${places.length}곳 ▶ 실행</span> · <span style="cursor:pointer;opacity:0.8;font-size:11px" onclick="clearMCourseFromMap()">지우기</span>`;
   badge.classList.add('show');
 
   const bounds = new kakao.maps.LatLngBounds();
@@ -4859,7 +4925,7 @@ window.replayCourse = function(idx) {
     });
     let badge = document.querySelector('.m-course-map-badge');
     if (!badge) { badge = document.createElement('div'); badge.className = 'm-course-map-badge'; document.body.appendChild(badge); }
-    badge.innerHTML = `<i class="ti ti-route"></i> ${c.baseName} 코스 ${c.places.length}곳 · <span style="cursor:pointer;text-decoration:underline" onclick="clearMCourseFromMap()">지우기</span>`;
+    badge.innerHTML = `<i class="ti ti-route"></i> <span onclick="reopenCourseAnim()" style="cursor:pointer;font-weight:700">${c.baseName} 코스 ${c.places.length}곳 ▶ 실행</span> · <span style="cursor:pointer;opacity:0.8;font-size:11px" onclick="clearMCourseFromMap()">지우기</span>`;
     badge.classList.add('show');
     const bounds = new kakao.maps.LatLngBounds();
     points.forEach(p => bounds.extend(p));
@@ -5422,7 +5488,7 @@ window.openCourseFromBasket = function() {
       <div style="padding:10px 14px;background:var(--gold-bg);border-bottom:1px solid var(--gold);display:flex;align-items:center;justify-content:space-between">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--gold)">🗺️ 담은 장소 ${basket.length}곳</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">출발지를 설정하면 최적 경로로 코스를 만들어드려요</div>
+          <div style="font-size:11px;color:#B45309;font-weight:600;margin-top:2px">⬆️ 위의 [📍 내 위치] 또는 [🔍 직접 검색]으로 출발지를 설정해주세요</div>
         </div>
         <button onclick="clearGlobalBasket();document.getElementById('mCourseBody').innerHTML='<div class=m-course-empty>장소를 다시 담아주세요</div>'" 
           style="background:none;border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text3);cursor:pointer">전체삭제</button>
