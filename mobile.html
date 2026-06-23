@@ -2213,19 +2213,12 @@ function renderList() {
           </button>
           <a class="btn-sm" href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);if(window.innerWidth<=768){event.preventDefault();location.href=this.href;}" style="text-decoration:none;color:#FF0000;border-color:#FF0000">▶️ 영상</a>
           <a class="btn-sm" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()" style="text-decoration:none;color:#03C75A;border-color:#03C75A">📅 예약</a>
+          <button class="btn-sm" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng},'${d.celeb}')" style="color:var(--gold);border-color:var(--gold);font-weight:700">🗺️ 코스</button>
         </div>
       </div>
       <div class="rest-link">
-        ${d.yt
-          ? `<a class="link-btn link-yt" href="${d.yt}" target="_blank" onclick="event.stopPropagation()">
-              ${d.yt.includes('youtube.com')||d.yt.includes('youtu.be') ? '<i class="ti ti-brand-youtube"></i> 영상 보기' :
-                d.yt.includes('instagram.com') ? '📸 인스타 보기' :
-                d.yt.includes('naver.com') ? '📰 블로그 보기' :
-                d.yt.includes('tiktok.com') ? '🎵 틱톡 보기' :
-                '🔗 링크 보기'}
-             </a>`
-          : `<button class="link-btn link-add" onclick="event.stopPropagation();openYtModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><i class="ti ti-plus"></i> 링크 추가</button>`
-        }
+        <button class="link-btn" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')" style="background:var(--gold);border:1px solid var(--gold);color:#fff;font-weight:700">🗺️ 코스담기</button>
+        ${d.yt ? `<a class="link-btn link-yt" href="${d.yt}" target="_blank" onclick="event.stopPropagation()">${d.yt.includes('youtube.com')||d.yt.includes('youtu.be') ? '<i class="ti ti-brand-youtube"></i> 영상' : '🔗 링크'}</a>` : ''}
         <button class="link-btn" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:600">💬 댓글·평점</button>
         <button class="link-btn" onclick="event.stopPropagation();shareKakaoPC('${d.id}')" style="background:#FEE500;border:1px solid #F0D000;border-radius:8px;padding:6px 12px;font-size:12px;color:#3A1D1D;cursor:pointer;font-weight:600">💛 카카오공유</button>
         <button class="link-btn" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')" style="background:none;border:1px solid #FECACA;border-radius:8px;padding:6px 10px;font-size:11px;color:#EF4444;cursor:pointer;font-weight:600">🚨 신고</button>
@@ -2389,7 +2382,7 @@ function renderPins() {
           <button onclick="toggleSave('${d.id}')" style="font-size:12px;color:${isSaved?'#F59E0B':'#6B6B67'};border:1px solid ${isSaved?'#F59E0B':'#D4D3CF'};border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">${isSaved?'❤️ 저장됨':'🤍 저장'}</button>
           <button onclick="shareKakaoPC('${d.id}')" style="font-size:12px;color:#3A1D1D;border:1px solid #F0D000;border-radius:6px;padding:5px 10px;background:#FEE500;cursor:pointer;font-weight:600">💬 카카오공유</button>
           <button onclick="openCommentModal('${d.id}','${d.name}')" style="font-size:12px;color:#6B6B67;border:1px solid #D4D3CF;border-radius:6px;padding:5px 10px;background:none;cursor:pointer;font-weight:600">💬 댓글·평점</button>
-          <button onclick="addCardToCourse('${d.id}','${d.name}',${d.lat},${d.lng},'${d.celeb}')" style="font-size:12px;color:#fff;border:none;border-radius:6px;padding:5px 10px;background:#F59E0B;cursor:pointer;font-weight:600">🗺️ 코스담기</button>
+          <button onclick="addToGlobalBasket({id:'${d.id}',name:'${d.name}',lat:${d.lat},lng:${d.lng},type:'star',icon:STAR_CURATORS.find(c=>c.name==='${d.celeb}')?.icon||'⭐',celeb:'${d.celeb}'})" style="font-size:12px;color:#fff;border:none;border-radius:6px;padding:5px 10px;background:#F59E0B;cursor:pointer;font-weight:600">🗺️ 코스담기</button>
         </div>
       </div>`;
       const iw = new kakao.maps.InfoWindow({content: infoContent, removable: true});
@@ -3791,13 +3784,22 @@ window.mspAddBasket = function(item) {
   mspBasket.push(item);
   renderMspBasket();
   renderMspResultList();
-  showToast('📍 ' + item.name + ' 코스에 담겼어요!');
+  // 전역 담기함에도 동기화
+  addToGlobalBasket({
+    id: item.id, name: item.name,
+    lat: item.lat, lng: item.lng,
+    type: item.type || 'place',
+    icon: item.icon || '📍',
+    celeb: item.celeb || ''
+  });
 };
 
 window.mspRemoveBasket = function(id) {
   mspBasket = mspBasket.filter(b => b.id !== id);
   renderMspBasket();
   renderMspResultList();
+  // 전역 담기함에서도 제거
+  removeFromGlobalBasket(id);
 };
 
 function renderMspBasket() {
@@ -3826,6 +3828,21 @@ function renderMspBasket() {
 window.mspGoToCourse = function() {
   if (!mspBasket.length) { showToast('담긴 장소가 없어요'); return; }
   closeMobileSearch();
+  // 검색패널 담기함을 전역 담기함과 동기화 후 코스짜기
+  mspBasket.forEach(item => {
+    if (!window._globalBasket.some(b => b.id === item.id)) {
+      window._globalBasket.push({
+        id: item.id, name: item.name,
+        lat: item.lat, lng: item.lng,
+        type: item.type || 'place',
+        icon: item.icon || '📍',
+        celeb: item.celeb || ''
+      });
+    }
+  });
+  mspBasket = [];
+  setTimeout(() => openCourseFromBasket(), 300);
+  return;
 
   // 코스짜기 패널에 담기함 내용 주입
   // 첫 번째 항목을 기준장소로, 나머지를 선택 장소로
@@ -4260,6 +4277,11 @@ let mCoursePolyline = null;
 let mCourseMarkers = [];
 
 window.openMCourse = function() {
+  // 담기함에 장소가 있으면 담기함 기반으로 열기
+  if (window._globalBasket && window._globalBasket.length > 0) {
+    openCourseFromBasket();
+    return;
+  }
   document.getElementById('mCourseOverlay').classList.add('show');
   // 기준장소 선택 UI 초기화
   const row = document.getElementById('mCourseSearchRow');
@@ -5233,48 +5255,11 @@ function applyRadiusFilter() {
 
 // ── 맛집 카드에서 직접 코스 담기 ──
 window.addCardToCourse = function(id, name, lat, lng, celeb) {
-  // mspBasket에 추가 (통합검색 담기함과 동일)
-  const item = {id, name, lat, lng, type:'star', icon: STAR_CURATORS.find(c=>c.name===celeb)?.icon||'⭐', celeb};
-
-  // 이미 담겼는지 확인
-  if (window._courseCardBasket && window._courseCardBasket.some(b => b.id === id)) {
-    showToast('이미 코스에 담겼어요!');
-    return;
-  }
-  if (!window._courseCardBasket) window._courseCardBasket = [];
-  window._courseCardBasket.push(item);
-
-  const cnt = window._courseCardBasket.length;
-  showToast('🗺️ ' + name + ' 코스에 담겼어요! (' + cnt + '곳)');
-
-  // 담긴 게 있으면 하단에 코스 바 표시
-  showCourseCardBar();
+  const icon = STAR_CURATORS.find(c => c.name === celeb)?.icon || '⭐';
+  addToGlobalBasket({id, name, lat, lng, type:'star', icon, celeb});
 };
 
-// ── 코스담기 하단 바 ──
-function showCourseCardBar() {
-  let bar = document.getElementById('courseCardBar');
-  if (!bar) {
-    bar = document.createElement('div');
-    bar.id = 'courseCardBar';
-    bar.style.cssText = 'position:fixed;bottom:52px;left:0;right:0;z-index:300;background:var(--gold);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -2px 12px rgba(245,158,11,0.4)';
-    document.body.appendChild(bar);
-  }
-  const cnt = (window._courseCardBasket||[]).length;
-  bar.innerHTML = `
-    <span style="font-size:13px;font-weight:700">🗺️ 코스 ${cnt}곳 담김</span>
-    <div style="display:flex;gap:8px">
-      <button onclick="clearCourseCardBasket()" style="background:rgba(255,255,255,0.25);border:none;border-radius:6px;padding:5px 10px;font-size:12px;color:#fff;cursor:pointer">취소</button>
-      <button onclick="goToCourseFromCard()" style="background:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--gold);cursor:pointer">코스짜기 →</button>
-    </div>`;
-  bar.style.display = 'flex';
-}
-
-window.clearCourseCardBasket = function() {
-  window._courseCardBasket = [];
-  const bar = document.getElementById('courseCardBar');
-  if (bar) bar.style.display = 'none';
-};
+// (코스담기 바는 전역 담기함으로 통합됨)
 
 window.goToCourseFromCard = function() {
   const basket = window._courseCardBasket || [];
@@ -5327,6 +5312,140 @@ window.goToCourseFromCard = function() {
   const bar = document.getElementById('courseCardBar');
   if (bar) bar.style.display = 'none';
   showToast('기준 장소를 선택해주세요!');
+};
+
+
+// ════════════════════════════════════════
+// ── 전역 통합 담기함 ──
+// 카드 / 검색 / 지도 핀 어디서든 담기
+// ════════════════════════════════════════
+window._globalBasket = []; // {id, name, lat, lng, type, icon, celeb, sub}
+
+// 담기 (어디서든 호출)
+window.addToGlobalBasket = function(item) {
+  if (window._globalBasket.some(b => b.id === item.id)) {
+    showToast('이미 담긴 장소예요!');
+    return;
+  }
+  window._globalBasket.push(item);
+  renderGlobalBasketBar();
+  showToast('🗺️ ' + item.name + ' 담겼어요! (' + window._globalBasket.length + '곳)');
+};
+
+// 제거
+window.removeFromGlobalBasket = function(id) {
+  window._globalBasket = window._globalBasket.filter(b => b.id !== id);
+  renderGlobalBasketBar();
+};
+
+// 전체 비우기
+window.clearGlobalBasket = function() {
+  window._globalBasket = [];
+  renderGlobalBasketBar();
+};
+
+// ── 하단 담기함 바 렌더 ──
+function renderGlobalBasketBar() {
+  let bar = document.getElementById('globalBasketBar');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'globalBasketBar';
+    bar.style.cssText = [
+      'position:fixed;bottom:52px;left:0;right:0;z-index:400',
+      'background:var(--gold);color:#fff',
+      'padding:0;display:none',
+      'box-shadow:0 -3px 16px rgba(245,158,11,0.5)',
+      'transition:transform .25s cubic-bezier(.25,.46,.45,.94)',
+    ].join(';');
+    document.body.appendChild(bar);
+  }
+
+  const cnt = window._globalBasket.length;
+
+  if (cnt === 0) {
+    bar.style.display = 'none';
+    return;
+  }
+
+  bar.style.display = 'block';
+
+  // 담긴 장소 칩
+  const chips = window._globalBasket.map(b =>
+    `<span style="display:inline-flex;align-items:center;gap:3px;background:rgba(255,255,255,0.2);border-radius:10px;padding:2px 7px;font-size:11px;white-space:nowrap;flex-shrink:0">
+      ${b.icon||'⭐'} ${b.name}
+      <button onclick="removeFromGlobalBasket('${b.id}')" style="background:none;border:none;color:#fff;font-size:13px;cursor:pointer;padding:0;line-height:1;opacity:.8">×</button>
+    </span>`
+  ).join('');
+
+  bar.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid rgba(255,255,255,0.2);overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none">
+      ${chips}
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 14px">
+      <span style="font-size:13px;font-weight:700">📍 ${cnt}곳 담김</span>
+      <div style="display:flex;gap:8px">
+        <button onclick="clearGlobalBasket()" style="background:rgba(255,255,255,0.2);border:none;border-radius:7px;padding:6px 12px;font-size:12px;color:#fff;cursor:pointer;font-weight:600">전체삭제</button>
+        <button onclick="openCourseFromBasket()" style="background:#fff;border:none;border-radius:7px;padding:6px 14px;font-size:13px;font-weight:700;color:var(--gold);cursor:pointer">코스짜기 →</button>
+      </div>
+    </div>`;
+}
+
+// ── 담기함에서 코스짜기 열기 ──
+window.openCourseFromBasket = function() {
+  const basket = window._globalBasket;
+  if (!basket.length) { showToast('장소를 먼저 담아주세요'); return; }
+
+  // 코스짜기 패널 열기
+  document.getElementById('mCourseOverlay').classList.add('show');
+
+  // mCourseSelected에 담기
+  mCourseSelected = {};
+  window._mCoursePlaces = window._mCoursePlaces || {};
+  basket.forEach(item => {
+    const key = 'basket_' + item.id;
+    const place = {
+      id: key, name: item.name,
+      sub: item.celeb ? (item.celeb + (item.sub ? ' · ' + item.sub : '')) : (item.sub || ''),
+      lat: item.lat, lng: item.lng, dist: 0,
+      badge: item.type === 'star' ? 'badge-star' : 'badge-tour',
+      badgeText: item.celeb || item.type || '장소',
+      type: item.type || 'place'
+    };
+    window._mCoursePlaces[key] = place;
+    mCourseSelected[key] = place;
+  });
+
+  // body에 담긴 장소 목록 표시
+  const body = document.getElementById('mCourseBody');
+  if (body) {
+    body.innerHTML = `
+      <div style="padding:10px 14px;background:var(--gold-bg);border-bottom:1px solid var(--gold);display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--gold)">🗺️ 담은 장소 ${basket.length}곳</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">출발지를 설정하면 최적 경로로 코스를 만들어드려요</div>
+        </div>
+        <button onclick="clearGlobalBasket();document.getElementById('mCourseBody').innerHTML='<div class=m-course-empty>장소를 다시 담아주세요</div>'" 
+          style="background:none;border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text3);cursor:pointer">전체삭제</button>
+      </div>
+      ${basket.map((item, i) => `
+        <div class="m-course-place-item" style="cursor:default">
+          <div class="m-course-place-cb on"><i class="ti ti-check" style="font-size:12px;color:#fff"></i></div>
+          <div class="m-course-place-info">
+            <div class="m-course-place-name">${item.name}</div>
+            <div class="m-course-place-sub">${item.celeb ? '⭐ ' + item.celeb : '📍 장소'}</div>
+          </div>
+          <button onclick="removeFromGlobalBasket('${item.id}');openCourseFromBasket()" 
+            style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:4px">×</button>
+        </div>`).join('')}`;
+  }
+
+  // 기준장소 선택 UI 초기화
+  const row = document.getElementById('mCourseSearchRow');
+  if (row) row.style.display = 'none';
+  const inp = document.getElementById('mCourseInput');
+  if (inp) inp.value = '';
+
+  updateMCourseFooter();
 };
 
 window.stopCourseAnim = function() {
