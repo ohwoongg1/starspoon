@@ -1089,6 +1089,20 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   </div>
 </div>
 
+<script>
+// ★ 전역 담기함 - module script보다 먼저 초기화 (핀 팝업 addToGlobalBasket 호출 시 undefined 방지)
+if (!window._globalBasket) window._globalBasket = [];
+window.addToGlobalBasket = window.addToGlobalBasket || function(item) {
+  if (!window._globalBasket) window._globalBasket = [];
+  if (window._globalBasket.some(b => b.id === item.id)) {
+    if (window.showToast) showToast('이미 담긴 장소예요!');
+    return;
+  }
+  window._globalBasket.push(item);
+  if (window.renderGlobalBasketBar) renderGlobalBasketBar();
+  if (window.showToast) showToast('🗺️ ' + item.name + ' 담겼어요! (' + window._globalBasket.length + '곳)');
+};
+</script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
@@ -2381,13 +2395,19 @@ function renderPins() {
 
       // ★ CustomOverlay + addEventListener 방식 (onclick 문자열 이스케이프 문제 완전 해결)
       const popupDiv = document.createElement('div');
-      popupDiv.style.cssText = 'background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.18);padding:14px 14px 12px;min-width:220px;max-width:260px;font-family:-apple-system,sans-serif;position:relative';
+      popupDiv.style.cssText = 'background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.18);padding:14px 14px 12px;min-width:220px;max-width:260px;font-family:-apple-system,sans-serif;position:relative;pointer-events:all';
+      // 팝업 안 터치/클릭이 지도로 전파되지 않게 차단
+      popupDiv.addEventListener('click', e => e.stopPropagation());
+      popupDiv.addEventListener('touchstart', e => e.stopPropagation(), {passive:true});
+      popupDiv.addEventListener('touchend', e => e.stopPropagation(), {passive:true});
 
       // 닫기 버튼
       const closeBtn = document.createElement('button');
       closeBtn.textContent = '✕';
-      closeBtn.style.cssText = 'position:absolute;top:8px;right:10px;background:none;border:none;font-size:18px;color:#9A9A96;cursor:pointer;line-height:1';
-      closeBtn.addEventListener('click', () => { if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;} });
+      closeBtn.style.cssText = 'position:absolute;top:8px;right:10px;background:none;border:none;font-size:18px;color:#9A9A96;cursor:pointer;line-height:1;-webkit-tap-highlight-color:rgba(0,0,0,0.1)';
+      const doClose = (e) => { e.preventDefault(); e.stopPropagation(); if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;} };
+      closeBtn.addEventListener('click', doClose);
+      closeBtn.addEventListener('touchend', doClose, {passive:false});
 
       // 제목/정보
       const title = document.createElement('div');
@@ -2404,7 +2424,7 @@ function renderPins() {
       const grid = document.createElement('div');
       grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px';
 
-      const btnStyle2 = 'font-size:12px;border-radius:8px;padding:7px 6px;font-weight:600;text-align:center;text-decoration:none;display:block';
+      const btnStyle2 = 'font-size:12px;border-radius:8px;padding:7px 6px;font-weight:600;text-align:center;text-decoration:none;display:block;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0.1)';
       const aKakao = document.createElement('a');
       aKakao.href = 'https://map.kakao.com/link/search/' + encodeURIComponent(d.name);
       aKakao.target = '_blank'; aKakao.textContent = '🗺️ 길찾기';
@@ -2424,31 +2444,41 @@ function renderPins() {
       const saveBtn = document.createElement('button');
       saveBtn.style.cssText = btnStyle2 + ';background:none;cursor:pointer;border:1.5px solid ' + (isSaved?'#F59E0B':'#D4D3CF') + ';color:' + (isSaved?'#F59E0B':'#6B6B67');
       saveBtn.textContent = isSaved ? '❤️ 저장됨' : '🤍 저장';
-      saveBtn.addEventListener('click', () => { toggleSave(d.id); saveBtn.textContent = savedList.includes(d.id)?'❤️ 저장됨':'🤍 저장'; });
+      const doSave = (e) => { e.preventDefault(); e.stopPropagation(); toggleSave(d.id); saveBtn.textContent = savedList.includes(d.id)?'❤️ 저장됨':'🤍 저장'; };
+      saveBtn.addEventListener('click', doSave);
+      saveBtn.addEventListener('touchend', doSave, {passive:false});
 
       grid.appendChild(aKakao); grid.appendChild(aYt);
       grid.appendChild(aNaver); grid.appendChild(saveBtn);
 
       // ★ 코스담기 버튼 (핵심 - 이스케이프 없이 클로저로 직접 참조)
       const courseBtn = document.createElement('button');
-      courseBtn.style.cssText = 'width:100%;padding:9px;background:#F59E0B;border:none;border-radius:9px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:6px';
+      courseBtn.style.cssText = 'width:100%;padding:9px;background:#F59E0B;border:none;border-radius:9px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:6px;-webkit-tap-highlight-color:rgba(0,0,0,0.1)';
       courseBtn.textContent = '🗺️ 코스담기';
-      courseBtn.addEventListener('click', () => {
+      const doCourseAdd = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         addToGlobalBasket({id: d.id, name: d.name, lat: d.lat, lng: d.lng, type: 'star', icon: icon, celeb: d.celeb});
         if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;}
-      });
+      };
+      courseBtn.addEventListener('click', doCourseAdd);
+      courseBtn.addEventListener('touchend', doCourseAdd, {passive:false});
 
       // 하단 2버튼
       const botGrid = document.createElement('div');
       botGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px';
       const kakaoBtn = document.createElement('button');
-      kakaoBtn.style.cssText = 'font-size:11px;color:#3A1D1D;border:1px solid #F0D000;border-radius:8px;padding:6px;background:#FEE500;cursor:pointer;font-weight:600';
+      kakaoBtn.style.cssText = 'font-size:11px;color:#3A1D1D;border:1px solid #F0D000;border-radius:8px;padding:6px;background:#FEE500;cursor:pointer;font-weight:600;-webkit-tap-highlight-color:rgba(0,0,0,0.1)';
       kakaoBtn.textContent = '💛 카카오공유';
-      kakaoBtn.addEventListener('click', () => shareKakaoPC(d.id));
+      const doKakao = (e) => { e.preventDefault(); e.stopPropagation(); shareKakaoPC(d.id); };
+      kakaoBtn.addEventListener('click', doKakao);
+      kakaoBtn.addEventListener('touchend', doKakao, {passive:false});
       const commentBtn = document.createElement('button');
-      commentBtn.style.cssText = 'font-size:11px;color:#6B6B67;border:1px solid #D4D3CF;border-radius:8px;padding:6px;background:none;cursor:pointer;font-weight:600';
+      commentBtn.style.cssText = 'font-size:11px;color:#6B6B67;border:1px solid #D4D3CF;border-radius:8px;padding:6px;background:none;cursor:pointer;font-weight:600;-webkit-tap-highlight-color:rgba(0,0,0,0.1)';
       commentBtn.textContent = '💬 댓글·평점';
-      commentBtn.addEventListener('click', () => openCommentModal(d.id, d.name));
+      const doComment = (e) => { e.preventDefault(); e.stopPropagation(); openCommentModal(d.id, d.name); };
+      commentBtn.addEventListener('click', doComment);
+      commentBtn.addEventListener('touchend', doComment, {passive:false});
       botGrid.appendChild(kakaoBtn); botGrid.appendChild(commentBtn);
 
       popupDiv.appendChild(closeBtn); popupDiv.appendChild(title);
