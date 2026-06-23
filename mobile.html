@@ -5630,9 +5630,14 @@ window.stopCourseAnim = function() {
   // ★ 스크롤 복원
   document.body.style.overflow = '';
   document.documentElement.style.overflow = '';
+  // ★ 탭바 복원
+  const pageNav = document.querySelector('.page-nav');
+  if (pageNav) {
+    pageNav.style.display = '';
+    pageNav.style.transform = 'translateY(0)';
+  }
   // 맛집 핀 복원
   renderPins();
-  // ★ 지도를 처음 위치(내 위치 기준)로 복원
   if (map) {
     map.setCenter(new kakao.maps.LatLng(myLat, myLng));
     map.setLevel(8);
@@ -5646,6 +5651,24 @@ window.startCourseAnim = async function() {
   const btn = document.getElementById('courseAnimBtn');
   btn.disabled = true;
   btn.innerHTML = '⟳ 이동 중...';
+
+  // ★ 애니메이션 시작 → 하단 시트(코스 안내 패널) + 탭바 완전히 숨김
+  const animSheet = document.querySelector('.course-anim-sheet');
+  const pageNav = document.querySelector('.page-nav');
+  const globalBar = document.getElementById('globalBasketBar');
+  if (animSheet) {
+    animSheet.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+    animSheet.style.transform = 'translateY(100%)';
+    animSheet.style.opacity = '0';
+    animSheet.style.pointerEvents = 'none';
+    setTimeout(() => { animSheet.style.display = 'none'; }, 300);
+  }
+  if (pageNav) {
+    pageNav.style.transition = 'transform 0.3s ease';
+    pageNav.style.transform = 'translateY(100%)';
+    setTimeout(() => { pageNav.style.display = 'none'; }, 300);
+  }
+  if (globalBar) globalBar.style.display = 'none';
 
   // 기존 제거
   if (mCoursePolyline) { mCoursePolyline.setMap(null); mCoursePolyline = null; }
@@ -5715,13 +5738,36 @@ window.startCourseAnim = async function() {
     playFinishSound();
     updateAnimStep(allPoints.length - 1, '🎉 코스 완주! 수고했어요!');
 
+    // ★ 궤적(폴리라인)은 지도에 그대로 유지 - setMap(null) 안 함
+    // _animPolylines 그대로 둠
+
+    // ★ 완주 후 하단 시트 슬라이드업으로 복원
+    const animSheet = document.querySelector('.course-anim-sheet');
+    const pageNav = document.querySelector('.page-nav');
+    if (animSheet) {
+      animSheet.style.display = '';
+      animSheet.style.pointerEvents = 'all';
+      requestAnimationFrame(() => {
+        animSheet.style.transition = 'transform 0.4s cubic-bezier(0.16,1,0.3,1), opacity 0.4s ease';
+        animSheet.style.transform = 'translateY(0)';
+        animSheet.style.opacity = '1';
+      });
+    }
+    if (pageNav) {
+      pageNav.style.display = '';
+      requestAnimationFrame(() => {
+        pageNav.style.transition = 'transform 0.4s cubic-bezier(0.16,1,0.3,1)';
+        pageNav.style.transform = 'translateY(0)';
+      });
+    }
+
     // 완주 요약 카드
     showFinishSummary();
 
     btn.innerHTML = '✓ 완료! 닫기';
     btn.disabled = false;
     btn.onclick = stopCourseAnim;
-    // 마지막 장소를 중심으로 유지 (전체 뷰로 날아가지 않게)
+    // 마지막 장소를 중심으로 유지
     const lastPt = allPoints[allPoints.length - 1];
     map.panTo(lastPt);
   }
