@@ -2379,46 +2379,84 @@ function renderPins() {
       const escapedName = d.name.replace(/'/g,"\\'");
       const icon = STAR_CURATORS.find(c=>c.name===d.celeb)?.icon||'⭐';
 
-      // ★ CustomOverlay로 팝업 만들기 (InfoWindow 대신 → 버튼이 박스 안에 제대로 들어감)
+      // ★ CustomOverlay + addEventListener 방식 (onclick 문자열 이스케이프 문제 완전 해결)
       const popupDiv = document.createElement('div');
-      popupDiv.style.cssText = [
-        'background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.18)',
-        'padding:14px 14px 12px;min-width:220px;max-width:260px',
-        'font-family:-apple-system,sans-serif;position:relative'
-      ].join(';');
-      popupDiv.innerHTML = `
-        <button onclick="if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;}"
-          style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:18px;color:#9A9A96;cursor:pointer;line-height:1">✕</button>
-        <div style="font-weight:700;font-size:14px;color:#1A1A18;margin-bottom:3px;padding-right:20px">${icon} ${d.name}</div>
-        <div style="font-size:11px;color:#B45309;font-weight:600;margin-bottom:2px">${d.celeb} 방문</div>
-        <div style="font-size:11px;color:#9A9A96;margin-bottom:10px">${d.cat} · ${d.area}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-          <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank"
-            style="font-size:12px;color:#F59E0B;border:1.5px solid #F59E0B;border-radius:8px;padding:7px 6px;text-decoration:none;font-weight:600;text-align:center">🗺️ 길찾기</a>
-          <a href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" target="_blank"
-            style="font-size:12px;color:#FF0000;border:1.5px solid #FF0000;border-radius:8px;padding:7px 6px;text-decoration:none;font-weight:600;text-align:center">▶️ 영상</a>
-          <a href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank"
-            style="font-size:12px;color:#03C75A;border:1.5px solid #03C75A;border-radius:8px;padding:7px 6px;text-decoration:none;font-weight:600;text-align:center">📅 예약</a>
-          <button onclick="toggleSave('${escapedId}');this.innerHTML=savedList.includes('${escapedId}')?'❤️ 저장됨':'🤍 저장'"
-            style="font-size:12px;color:${isSaved?'#F59E0B':'#6B6B67'};border:1.5px solid ${isSaved?'#F59E0B':'#D4D3CF'};border-radius:8px;padding:7px 6px;background:none;cursor:pointer;font-weight:600">${isSaved?'❤️ 저장됨':'🤍 저장'}</button>
-        </div>
-        <button onclick="addToGlobalBasket({id:'${escapedId}',name:'${escapedName}',lat:${d.lat},lng:${d.lng},type:'star',icon:'${icon}',celeb:'${escapedName}'});if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;}"
-          style="width:100%;padding:9px;background:#F59E0B;border:none;border-radius:9px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:6px">
-          🗺️ 코스담기
-        </button>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-          <button onclick="shareKakaoPC('${escapedId}')"
-            style="font-size:11px;color:#3A1D1D;border:1px solid #F0D000;border-radius:8px;padding:6px;background:#FEE500;cursor:pointer;font-weight:600">💛 카카오공유</button>
-          <button onclick="openCommentModal('${escapedId}','${escapedName}')"
-            style="font-size:11px;color:#6B6B67;border:1px solid #D4D3CF;border-radius:8px;padding:6px;background:none;cursor:pointer;font-weight:600">💬 댓글·평점</button>
-        </div>`;
+      popupDiv.style.cssText = 'background:#fff;border-radius:14px;box-shadow:0 4px 20px rgba(0,0,0,0.18);padding:14px 14px 12px;min-width:220px;max-width:260px;font-family:-apple-system,sans-serif;position:relative';
 
-      const pinPopup = new kakao.maps.CustomOverlay({
-        position: pos,
-        content: popupDiv,
-        yAnchor: 1.45,
-        zIndex: 10
+      // 닫기 버튼
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = '✕';
+      closeBtn.style.cssText = 'position:absolute;top:8px;right:10px;background:none;border:none;font-size:18px;color:#9A9A96;cursor:pointer;line-height:1';
+      closeBtn.addEventListener('click', () => { if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;} });
+
+      // 제목/정보
+      const title = document.createElement('div');
+      title.style.cssText = 'font-weight:700;font-size:14px;color:#1A1A18;margin-bottom:3px;padding-right:20px';
+      title.textContent = icon + ' ' + d.name;
+      const who = document.createElement('div');
+      who.style.cssText = 'font-size:11px;color:#B45309;font-weight:600;margin-bottom:2px';
+      who.textContent = d.celeb + ' 방문';
+      const info = document.createElement('div');
+      info.style.cssText = 'font-size:11px;color:#9A9A96;margin-bottom:10px';
+      info.textContent = d.cat + ' · ' + d.area;
+
+      // 2열 버튼 그리드
+      const grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px';
+
+      const btnStyle2 = 'font-size:12px;border-radius:8px;padding:7px 6px;font-weight:600;text-align:center;text-decoration:none;display:block';
+      const aKakao = document.createElement('a');
+      aKakao.href = 'https://map.kakao.com/link/search/' + encodeURIComponent(d.name);
+      aKakao.target = '_blank'; aKakao.textContent = '🗺️ 길찾기';
+      aKakao.style.cssText = btnStyle2 + ';color:#F59E0B;border:1.5px solid #F59E0B';
+
+      const ytQ = ['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name;
+      const aYt = document.createElement('a');
+      aYt.href = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(ytQ);
+      aYt.target = '_blank'; aYt.textContent = '▶️ 영상';
+      aYt.style.cssText = btnStyle2 + ';color:#FF0000;border:1.5px solid #FF0000';
+
+      const aNaver = document.createElement('a');
+      aNaver.href = 'https://map.naver.com/p/search/' + encodeURIComponent(d.name + ' 예약');
+      aNaver.target = '_blank'; aNaver.textContent = '📅 예약';
+      aNaver.style.cssText = btnStyle2 + ';color:#03C75A;border:1.5px solid #03C75A';
+
+      const saveBtn = document.createElement('button');
+      saveBtn.style.cssText = btnStyle2 + ';background:none;cursor:pointer;border:1.5px solid ' + (isSaved?'#F59E0B':'#D4D3CF') + ';color:' + (isSaved?'#F59E0B':'#6B6B67');
+      saveBtn.textContent = isSaved ? '❤️ 저장됨' : '🤍 저장';
+      saveBtn.addEventListener('click', () => { toggleSave(d.id); saveBtn.textContent = savedList.includes(d.id)?'❤️ 저장됨':'🤍 저장'; });
+
+      grid.appendChild(aKakao); grid.appendChild(aYt);
+      grid.appendChild(aNaver); grid.appendChild(saveBtn);
+
+      // ★ 코스담기 버튼 (핵심 - 이스케이프 없이 클로저로 직접 참조)
+      const courseBtn = document.createElement('button');
+      courseBtn.style.cssText = 'width:100%;padding:9px;background:#F59E0B;border:none;border-radius:9px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;margin-bottom:6px';
+      courseBtn.textContent = '🗺️ 코스담기';
+      courseBtn.addEventListener('click', () => {
+        addToGlobalBasket({id: d.id, name: d.name, lat: d.lat, lng: d.lng, type: 'star', icon: icon, celeb: d.celeb});
+        if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;}
       });
+
+      // 하단 2버튼
+      const botGrid = document.createElement('div');
+      botGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:6px';
+      const kakaoBtn = document.createElement('button');
+      kakaoBtn.style.cssText = 'font-size:11px;color:#3A1D1D;border:1px solid #F0D000;border-radius:8px;padding:6px;background:#FEE500;cursor:pointer;font-weight:600';
+      kakaoBtn.textContent = '💛 카카오공유';
+      kakaoBtn.addEventListener('click', () => shareKakaoPC(d.id));
+      const commentBtn = document.createElement('button');
+      commentBtn.style.cssText = 'font-size:11px;color:#6B6B67;border:1px solid #D4D3CF;border-radius:8px;padding:6px;background:none;cursor:pointer;font-weight:600';
+      commentBtn.textContent = '💬 댓글·평점';
+      commentBtn.addEventListener('click', () => openCommentModal(d.id, d.name));
+      botGrid.appendChild(kakaoBtn); botGrid.appendChild(commentBtn);
+
+      popupDiv.appendChild(closeBtn); popupDiv.appendChild(title);
+      popupDiv.appendChild(who); popupDiv.appendChild(info);
+      popupDiv.appendChild(grid); popupDiv.appendChild(courseBtn);
+      popupDiv.appendChild(botGrid);
+
+      const pinPopup = new kakao.maps.CustomOverlay({position: pos, content: popupDiv, yAnchor: 1.45, zIndex: 10});
       pinPopup.setMap(map);
       window._openPinPopup = pinPopup;
 
@@ -2428,7 +2466,7 @@ function renderPins() {
         kakao.maps.event.removeListener(map, 'click', closePopup);
       });
 
-      // 모바일: 팝업이 검색바에 가리지 않도록 지도 중심을 살짝 위로
+      // 모바일: 팝업이 검색바에 가리지 않도록
       if (window.innerWidth <= 768) {
         setTimeout(() => {
           try {
@@ -4409,15 +4447,34 @@ window.searchMCourseBase = function() {
     }
     const p = data[0];
     mCourseBasePlace = {name: p.place_name, lat: parseFloat(p.y), lng: parseFloat(p.x)};
-    showToast('📍 ' + p.place_name + ' 기준으로 검색해요');
-    loadMCourseData();
+    // 직접 검색 버튼 활성화 표시
+    const baseSelector = document.getElementById('mCourseBaseSelector');
+    if (baseSelector) {
+      const btns = baseSelector.querySelectorAll('button');
+      if (btns[0]) { btns[0].style.background = ''; btns[0].style.color = ''; btns[0].style.borderColor = ''; }
+      if (btns[1]) { btns[1].style.background = 'var(--gold)'; btns[1].style.color = '#fff'; btns[1].style.borderColor = 'var(--gold)'; }
+    }
+    showToast('📍 ' + p.place_name + ' 출발지 설정 완료!');
+    // ★ 담기함 모드면 loadMCourseData 호출 안 함 → 담은 장소 유지
+    const fromBasket = window._globalBasket && window._globalBasket.length > 0 && Object.keys(mCourseSelected).length > 0;
+    if (fromBasket) {
+      const row = document.getElementById('mCourseSearchRow');
+      if (row) row.style.display = 'none';
+      updateMCourseFooter();
+    } else {
+      loadMCourseData();
+    }
   }, {size: 1});
 };
 
 async function loadMCourseData() {
   const body = document.getElementById('mCourseBody');
   body.innerHTML = '<div class="m-course-empty"><i class="ti ti-loader" style="font-size:28px;display:block;margin-bottom:10px;opacity:0.3"></i>주변 장소 검색 중...</div>';
-  mCourseSelected = {};
+  // ★ 담기함 모드(globalBasket에서 온 경우)면 mCourseSelected 유지
+  const fromBasket = window._globalBasket && window._globalBasket.length > 0 && Object.keys(mCourseSelected).length > 0;
+  if (!fromBasket) {
+    mCourseSelected = {};
+  }
   updateMCourseFooter();
 
   const center = new kakao.maps.LatLng(mCourseBasePlace.lat, mCourseBasePlace.lng);
@@ -5034,11 +5091,24 @@ window.setMCourseCurrentLocation = function() {
         const clearBtn = document.getElementById('mCourseInputClear');
         if (clearBtn) clearBtn.style.display = 'flex';
       }
-      showToast('📍 ' + name + ' 기준으로 검색해요');
-      // 검색창 숨기고 선택 UI 복원
+      // 내 위치 버튼 활성화 표시
+      const baseSelector = document.getElementById('mCourseBaseSelector');
+      if (baseSelector) {
+        const btns = baseSelector.querySelectorAll('button');
+        if (btns[0]) { btns[0].style.background = 'var(--gold)'; btns[0].style.color = '#fff'; btns[0].style.borderColor = 'var(--gold)'; }
+        if (btns[1]) { btns[1].style.background = ''; btns[1].style.color = ''; btns[1].style.borderColor = ''; }
+      }
+      showToast('📍 ' + name + ' 출발지 설정 완료!');
+      // 검색창 숨기기
       const row = document.getElementById('mCourseSearchRow');
       if (row) row.style.display = 'none';
-      loadMCourseData();
+      // ★ 담기함 모드(담은 장소가 있는 경우)면 loadMCourseData 호출 안 함 → 담은 장소 유지
+      const fromBasket = window._globalBasket && window._globalBasket.length > 0 && Object.keys(mCourseSelected).length > 0;
+      if (fromBasket) {
+        updateMCourseFooter(); // 출발지 반영해서 하단 안내만 갱신
+      } else {
+        loadMCourseData(); // 일반 모드: 주변 장소 검색
+      }
     });
   }, () => showToast('위치를 가져올 수 없어요. 위치 권한을 확인해주세요'), {timeout:8000});
 };
