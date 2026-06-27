@@ -3484,25 +3484,42 @@ window.setPage = function(page, el) {
   currentPage = page;
   document.querySelectorAll('.pnav').forEach(t => t.classList.remove('on'));
   if (el) el.classList.add('on');
-  // 탭바 항상 보이게 (map-panel이 덮었을 수 있음)
   const nav = document.querySelector('.page-nav');
   if (nav) nav.style.display = '';
   restoreTabBar();
+
   document.getElementById('mainLayout').style.display = page==='main' ? 'flex' : 'none';
+  // ★ 모바일: map-panel이 position:absolute로 화면 전체를 덮으므로 함께 제어
+  const mapPanel = document.querySelector('.map-panel');
+  if (mapPanel && window.innerWidth <= 768) {
+    mapPanel.style.display = page==='main' ? '' : 'none';
+  }
   document.getElementById('rankPage').classList.toggle('show', page==='rank');
   document.getElementById('myPage').classList.toggle('show', page==='my');
+
   const savedPageEl = document.getElementById('savedPage');
   if (savedPageEl) {
-    savedPageEl.style.display = page==='saved' ? 'block' : 'none';
-    if (page==='saved') {
-      // ★ 모든 스크롤 컨테이너 최상단으로
+    if (page === 'saved') {
+      // ★ 모바일: 화면 전체를 덮는 overlay로 표시
+      savedPageEl.style.display = 'block';
+      savedPageEl.style.position = 'fixed';
+      savedPageEl.style.top = '0';
+      savedPageEl.style.left = '0';
+      savedPageEl.style.right = '0';
+      savedPageEl.style.bottom = '52px';
+      savedPageEl.style.zIndex = '300';
+      savedPageEl.style.overflowY = 'auto';
+      savedPageEl.style.background = 'var(--bg)';
+      savedPageEl.style.WebkitOverflowScrolling = 'touch';
+      // 스크롤 강제 최상단
       savedPageEl.scrollTop = 0;
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-      window.scrollTo({top: 0, behavior: 'instant'});
+      setTimeout(() => { savedPageEl.scrollTop = 0; }, 50);
       renderSavedPage();
+    } else {
+      savedPageEl.style.display = 'none';
     }
   }
+
   if (page==='rank') renderRankPage();
   if (page==='my') renderMyPage();
 };
