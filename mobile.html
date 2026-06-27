@@ -2222,7 +2222,7 @@ function renderList() {
         </div>
         <div class="rest-saves"><i class="ti ti-heart" style="font-size:11px"></i> ${d.saves||0}</div>
         <div class="rest-btns">
-          <a class="btn-sm map" href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" onclick="event.stopPropagation()">🗺️ 길찾기</a>
+          <a class="btn-sm map" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})">🗺️ 길찾기</a>
           <button class="btn-sm${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')">
             ${isSaved?'❤️ 저장됨':'🤍 저장'}
           </button>
@@ -2426,9 +2426,11 @@ function renderPins() {
 
       const btnStyle2 = 'font-size:12px;border-radius:8px;padding:7px 6px;font-weight:600;text-align:center;text-decoration:none;display:block;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0.1)';
       const aKakao = document.createElement('a');
-      aKakao.href = 'https://map.kakao.com/link/search/' + encodeURIComponent(d.name);
+      aKakao.href = '#';
       aKakao.target = '_blank'; aKakao.textContent = '🗺️ 길찾기';
       aKakao.style.cssText = btnStyle2 + ';color:#F59E0B;border:1.5px solid #F59E0B';
+      aKakao.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openNavigation(d.name, d.lat, d.lng); });
+      aKakao.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); openNavigation(d.name, d.lat, d.lng); }, {passive:false});
 
       const ytQ = ['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name;
       const aYt = document.createElement('a');
@@ -3237,7 +3239,7 @@ async function renderRankPage() {
                   <span>👁 ${d.visits||0}</span>
                 </div>
               </div>
-              <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" onclick="event.stopPropagation()" style="font-size:12px;color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:4px 8px;text-decoration:none;flex-shrink:0">길찾기</a>
+              <a href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,String.fromCharCode(39))}',${d.lat||0},${d.lng||0})" style="font-size:12px;color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:4px 8px;text-decoration:none;flex-shrink:0">🗺️ 길찾기</a>
             </div>`;
           }).join('')}
         </div>`;
@@ -3265,7 +3267,7 @@ async function renderRankPage() {
                     <span>❤️ ${d.saves||0}</span>
                   </div>
                 </div>
-                <a href="https://map.kakao.com/link/search/${encodeURIComponent(d.name)}" target="_blank" style="font-size:12px;color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:4px 8px;text-decoration:none;flex-shrink:0">길찾기</a>
+                <a href="#" onclick="event.preventDefault();openNavigation('${d.name.replace(/'/g,String.fromCharCode(39))}',${d.lat||0},${d.lng||0})" style="font-size:12px;color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:4px 8px;text-decoration:none;flex-shrink:0">🗺️ 길찾기</a>
               </div>`;
             }).join('')}
           </div>`;
@@ -4116,6 +4118,51 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 window.showToast = showToast;
+
+// ★ 현재위치 → 목적지 길찾기
+// 카카오맵: 현재위치 좌표 있으면 출발지 자동 설정
+window.openNavigation = function(destName, destLat, destLng) {
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isAndroid = /Android/i.test(navigator.userAgent);
+
+  if (myLat && myLng) {
+    // ★ 현재위치 있으면 → 카카오맵 길찾기 (출발지+목적지 좌표 직접)
+    const kakaoUrl = `https://map.kakao.com/link/from/현재위치,${myLat},${myLng}/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
+
+    if (isIOS) {
+      // iOS: 카카오맵 앱 → 없으면 웹
+      const appUrl = `kakaomap://route?sp=${myLat},${myLng}&ep=${destLat},${destLng}&by=FOOT`;
+      const webUrl = kakaoUrl;
+      const t = Date.now();
+      window.location.href = appUrl;
+      setTimeout(() => {
+        if (Date.now() - t < 2000) window.open(webUrl, '_blank');
+      }, 1500);
+    } else if (isAndroid) {
+      // Android: 카카오맵 앱 인텐트
+      const appUrl = `kakaomap://route?sp=${myLat},${myLng}&ep=${destLat},${destLng}&by=FOOT`;
+      try { window.location.href = appUrl; } catch(e) {}
+      setTimeout(() => window.open(kakaoUrl, '_blank'), 1200);
+    } else {
+      window.open(kakaoUrl, '_blank');
+    }
+  } else {
+    // 현재위치 없으면 → 목적지 검색만
+    showToast('📍 현재위치를 확인하는 중이에요...');
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        myLat = pos.coords.latitude;
+        myLng = pos.coords.longitude;
+        openNavigation(destName, destLat, destLng); // 재시도
+      }, () => {
+        // GPS 실패 시 이름 검색으로 fallback
+        window.open('https://map.kakao.com/link/search/' + encodeURIComponent(destName), '_blank');
+      });
+    } else {
+      window.open('https://map.kakao.com/link/search/' + encodeURIComponent(destName), '_blank');
+    }
+  }
+};
 
 
 // ── 최근 본 맛집 (로컬스토리지) ──
@@ -5822,8 +5869,7 @@ function showFinishSummary() {
         ${comment ? `<div style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">"${comment}"</div>` : ''}
         ${dist ? `<div style="font-size:10px;color:var(--text3)">다음 장소까지 ${dist}</div>` : ''}
       </div>
-      <a href="https://map.kakao.com/link/search/${encodeURIComponent(p.name)}" target="_blank"
-        style="font-size:10px;color:var(--gold);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;text-decoration:none;flex-shrink:0;white-space:nowrap">길찾기</a>
+      <a href="#" onclick="event.preventDefault();openNavigation('${p.name.replace(/'/g,String.fromCharCode(39))}',${p.lat||0},${p.lng||0})" style="font-size:10px;color:var(--gold);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;text-decoration:none;flex-shrink:0;white-space:nowrap">🗺️ 길찾기</a>
     </div>`;
   }).join('');
 
