@@ -4206,38 +4206,51 @@ window.showToast = showToast;
 // ★ 현재위치 → 목적지 길찾기
 // 카카오맵: 현재위치 좌표 있으면 출발지 자동 설정
 window.openNavigation = function(destName, destLat, destLng) {
-  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const isAndroid = /Android/i.test(navigator.userAgent);
-
   const naverAppUrl = `nmap://route/walk?dlat=${destLat}&dlng=${destLng}&dname=${encodeURIComponent(destName)}&appname=starspoon`;
-  const naverWebUrl = `https://map.naver.com/p/search/${encodeURIComponent(destName)}`;
+  const naverWebUrl = `https://map.naver.com/p/directions/-/-/${destLng},${destLat},${encodeURIComponent(destName)},PLACE_POI/-/walk`;
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-  if (isIOS || isAndroid) {
-    // ★ a 태그 _blank로 새 탭 열기 → 스타스푼 화면 그대로 유지
-    const a = document.createElement('a');
-    a.href = naverAppUrl;
-    a.target = '_blank';
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-    // 앱 없으면 2초 후 네이버 웹을 새 탭으로
-    let fallbackTimer = null;
-    const onHide = () => {
-      if (document.hidden) {
-        clearTimeout(fallbackTimer);
-        document.removeEventListener('visibilitychange', onHide);
-      }
-    };
-    document.addEventListener('visibilitychange', onHide);
-    fallbackTimer = setTimeout(() => {
-      document.removeEventListener('visibilitychange', onHide);
-      window.open(naverWebUrl, '_blank');
-    }, 2000);
+  if (isIOS) {
+    // ★ iOS: 길찾기 바텀시트 표시 (팝업 없음)
+    showNavSheet(destName, naverAppUrl, naverWebUrl);
   } else {
-    window.open(naverWebUrl, '_blank');
+    window.location.href = naverAppUrl;
+    setTimeout(() => { window.location.href = naverWebUrl; }, 2000);
   }
+};
+
+// ★ iOS 길찾기 바텀시트 (팝업 차단 완전 우회)
+function showNavSheet(destName, appUrl, webUrl) {
+  const existing = document.getElementById('navSheet');
+  if (existing) existing.remove();
+
+  const sheet = document.createElement('div');
+  sheet.id = 'navSheet';
+  sheet.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;justify-content:flex-end';
+
+  sheet.innerHTML = `
+    <div onclick="document.getElementById('navSheet').remove()" style="flex:1;background:rgba(0,0,0,0.4)"></div>
+    <div style="background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 40px;font-family:-apple-system,sans-serif">
+      <div style="width:40px;height:4px;background:#D4D3CF;border-radius:2px;margin:0 auto 16px"></div>
+      <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px">🗺️ 길찾기</div>
+      <div style="font-size:13px;color:#9A9A96;margin-bottom:16px">${destName}</div>
+      <a href="${appUrl}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#03C75A;border-radius:12px;text-decoration:none;margin-bottom:10px">
+        <span style="font-size:22px">🟢</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#fff">네이버지도 앱으로 길찾기</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:2px">앱이 설치된 경우</div>
+        </div>
+      </a>
+      <a href="${webUrl}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#F4F3EF;border-radius:12px;text-decoration:none">
+        <span style="font-size:22px">🌐</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#1A1A18">웹에서 길찾기</div>
+          <div style="font-size:11px;color:#9A9A96;margin-top:2px">앱 없이 브라우저에서</div>
+        </div>
+      </a>
+    </div>`;
+
+  document.body.appendChild(sheet);
 };
 
 
