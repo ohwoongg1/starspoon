@@ -3487,7 +3487,11 @@ window.setPage = function(page, el) {
   const savedPageEl = document.getElementById('savedPage');
   if (savedPageEl) {
     savedPageEl.style.display = page==='saved' ? 'block' : 'none';
-    if (page==='saved') renderSavedPage();
+    if (page==='saved') {
+      savedPageEl.scrollTop = 0;
+      window.scrollTo(0, 0);
+      renderSavedPage();
+    }
   }
   if (page==='rank') renderRankPage();
   if (page==='my') renderMyPage();
@@ -3976,19 +3980,25 @@ function renderMspResultList() {
       : '';
 
     if (item._type === 'star') {
-      const badge = `<span style="font-size:10px;padding:2px 6px;border-radius:4px;background:var(--gold-bg);color:#B45309;flex-shrink:0">⭐스타맛집</span>`;
-      html += `<div class="msp-result-item">
-        <div class="msp-result-icon ri-star">${STAR_CURATORS.find(c=>c.name===item.celeb)?.icon||'⭐'}</div>
+      const isSavedStar = savedList.includes(item.id);
+      const starIcon = STAR_CURATORS.find(c=>c.name===item.celeb)?.icon||'⭐';
+      html += `<div class="msp-result-item" onclick="focusCard('${item.id}');closeMobileSearch()">
+        <div class="msp-result-icon ri-star">${starIcon}</div>
         <div class="msp-result-info">
           <div class="msp-result-name">${item.name}</div>
           <div class="msp-result-sub">${item.celeb} · ${item.cat||''}${item.area?' · '+item.area:''}${distStr?' · '+distStr:''}</div>
         </div>
-        ${inBasket
-          ? `<button class="msp-added-btn" onclick="mspRemoveBasket('${item.id}')">✓ 담김</button>`
-          : `<button class="msp-add-btn" onclick="mspAddBasket({id:'${item.id}',name:'${item.name.replace(/'/g,"\'")}',lat:${item.lat},lng:${item.lng},type:'star',icon:'${STAR_CURATORS.find(c=>c.name===item.celeb)?.icon||'⭐'}',celeb:'${item.celeb}'})">+ 코스</button>`
-        }
-      </div>`;
-    } else {
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          ${inBasket
+            ? `<button class="msp-added-btn" onclick="event.stopPropagation();mspRemoveBasket('${item.id}')">✓ 담김</button>`
+            : `<button class="msp-add-btn" onclick="event.stopPropagation();mspAddBasket({id:'${item.id}',name:'${item.name.replace(/'/g,"\'")}',lat:${item.lat},lng:${item.lng},type:'star',icon:'${starIcon}',celeb:'${item.celeb}'})">+ 코스</button>`
+          }
+          <button onclick="event.stopPropagation();toggleSave('${item.id}');this.textContent=savedList.includes('${item.id}')?'❤️ 저장됨':'🤍 저장';this.style.borderColor=savedList.includes('${item.id}')?'var(--gold)':'var(--border2)';this.style.color=savedList.includes('${item.id}')?'var(--gold)':'var(--text3)'"
+            style="padding:4px 8px;background:none;border:1.5px solid ${isSavedStar?'var(--gold)':'var(--border2)'};border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;color:${isSavedStar?'var(--gold)':'var(--text3)'}">
+            ${isSavedStar ? '❤️ 저장됨' : '🤍 저장'}
+          </button>
+        </div>
+      </div>`;    } else {
       const isSavedPlace = isPlaceSaved(item.id);
       html += `<div class="msp-result-item" onclick="mspPlaceDetail('${item.id}')">
         <div class="msp-result-icon ${item.iconClass||'ri-general'}">${item.icon||'🗺️'}</div>
@@ -5086,6 +5096,11 @@ window.setSavedTab = function(tab) {
     if(courseBody) courseBody.style.display='block';
     renderSavedCourses();
   }
+
+  // ★ 항상 최상단으로 스크롤
+  const savedPage = document.getElementById('savedPage');
+  if (savedPage) savedPage.scrollTop = 0;
+  window.scrollTo(0, 0);
 };
 
 async function renderSavedPage() {
