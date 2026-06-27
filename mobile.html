@@ -4130,20 +4130,20 @@ window.openNavigation = function(destName, destLat, destLng) {
     const kakaoUrl = `https://map.kakao.com/link/from/현재위치,${myLat},${myLng}/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
 
     if (isIOS) {
-      // iOS: 카카오맵 앱 → 없으면 웹
+      // iOS: 카카오맵 앱 먼저 시도 → 없으면 같은 탭에서 웹 열기 (팝업차단 우회)
       const appUrl = `kakaomap://route?sp=${myLat},${myLng}&ep=${destLat},${destLng}&by=FOOT`;
-      const webUrl = kakaoUrl;
-      const t = Date.now();
       window.location.href = appUrl;
+      // 앱이 없으면 1.5초 후 웹으로 (같은 탭 - 팝업 아님)
       setTimeout(() => {
-        if (Date.now() - t < 2000) window.open(webUrl, '_blank');
+        window.location.href = kakaoUrl;
       }, 1500);
     } else if (isAndroid) {
-      // Android: 카카오맵 앱 인텐트
+      // Android: 카카오맵 앱 먼저 → 없으면 웹
       const appUrl = `kakaomap://route?sp=${myLat},${myLng}&ep=${destLat},${destLng}&by=FOOT`;
-      try { window.location.href = appUrl; } catch(e) {}
-      setTimeout(() => window.open(kakaoUrl, '_blank'), 1200);
+      window.location.href = appUrl;
+      setTimeout(() => { window.location.href = kakaoUrl; }, 1200);
     } else {
+      // PC: 새 탭으로
       window.open(kakaoUrl, '_blank');
     }
   } else {
@@ -4155,11 +4155,11 @@ window.openNavigation = function(destName, destLat, destLng) {
         myLng = pos.coords.longitude;
         openNavigation(destName, destLat, destLng); // 재시도
       }, () => {
-        // GPS 실패 시 이름 검색으로 fallback
-        window.open('https://map.kakao.com/link/search/' + encodeURIComponent(destName), '_blank');
+        // GPS 실패 시 이름 검색 (같은 탭)
+        window.location.href = 'https://map.kakao.com/link/search/' + encodeURIComponent(destName);
       });
     } else {
-      window.open('https://map.kakao.com/link/search/' + encodeURIComponent(destName), '_blank');
+      window.location.href = 'https://map.kakao.com/link/search/' + encodeURIComponent(destName);
     }
   }
 };
