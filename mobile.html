@@ -4209,11 +4209,20 @@ window.openNavigation = function(destName, destLat, destLng) {
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const isAndroid = /Android/i.test(navigator.userAgent);
 
-  // ★ 네이버지도 앱 딥링크 (카카오맵 연결중 화면 없음)
   const naverAppUrl = `nmap://route/walk?dlat=${destLat}&dlng=${destLng}&dname=${encodeURIComponent(destName)}&appname=starspoon`;
   const naverWebUrl = `https://map.naver.com/p/search/${encodeURIComponent(destName)}`;
 
   if (isIOS || isAndroid) {
+    // ★ a 태그 _blank로 새 탭 열기 → 스타스푼 화면 그대로 유지
+    const a = document.createElement('a');
+    a.href = naverAppUrl;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // 앱 없으면 2초 후 네이버 웹을 새 탭으로
     let fallbackTimer = null;
     const onHide = () => {
       if (document.hidden) {
@@ -4222,10 +4231,9 @@ window.openNavigation = function(destName, destLat, destLng) {
       }
     };
     document.addEventListener('visibilitychange', onHide);
-    window.location.href = naverAppUrl;
     fallbackTimer = setTimeout(() => {
       document.removeEventListener('visibilitychange', onHide);
-      window.location.href = naverWebUrl;
+      window.open(naverWebUrl, '_blank');
     }, 2000);
   } else {
     window.open(naverWebUrl, '_blank');
