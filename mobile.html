@@ -4129,10 +4129,37 @@ window.openNavigation = function(destName, destLat, destLng) {
     // ★ 현재위치 있으면 → 카카오맵 길찾기 (출발지+목적지 좌표 직접)
     const kakaoUrl = `https://map.kakao.com/link/from/현재위치,${myLat},${myLng}/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
 
-    // ★ 딥링크 없이 카카오맵 공식 길찾기 URL 직접 사용
-    // 카카오맵이 설치돼 있으면 자동으로 앱으로 연결됨
-    const kakaoNavUrl = `https://map.kakao.com/link/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
-    window.location.href = kakaoNavUrl;
+    // ★ iOS: 카카오맵 앱 딥링크 (목적지 자동 입력)
+    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isAndroid = /Android/i.test(navigator.userAgent);
+
+    // 카카오맵 앱 딥링크 - 목적지 좌표+이름 자동 입력
+    const kakaoAppUrl = `kakaomap://route?ep=${destLat},${destLng}&ename=${encodeURIComponent(destName)}&by=FOOT`;
+    // 카카오맵 웹 fallback
+    const kakaoWebUrl = `https://map.kakao.com/link/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
+    // 네이버지도 웹 fallback (카카오맵 없을 때)
+    const naverUrl = `https://map.naver.com/p/search/${encodeURIComponent(destName)}`;
+
+    if (isIOS || isAndroid) {
+      // 앱 딥링크 시도 → visibilitychange로 앱 전환 감지 → 타이머 취소
+      let fallbackTimer = null;
+      const onHide = () => {
+        if (document.hidden) {
+          clearTimeout(fallbackTimer);
+          document.removeEventListener('visibilitychange', onHide);
+        }
+      };
+      document.addEventListener('visibilitychange', onHide);
+      // 앱 딥링크 실행
+      window.location.href = kakaoAppUrl;
+      // 2초 후에도 앱 안 열리면 웹으로
+      fallbackTimer = setTimeout(() => {
+        document.removeEventListener('visibilitychange', onHide);
+        window.location.href = kakaoWebUrl;
+      }, 2000);
+    } else {
+      window.open(kakaoWebUrl, '_blank');
+    }
   } else {
     // 현재위치 없으면 → 목적지 검색만
     showToast('📍 현재위치를 확인하는 중이에요...');
