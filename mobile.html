@@ -6549,6 +6549,10 @@ window.submitFeedback = async function() {
 // courseId 파라미터 체크 (공유 코스 수신 시 팝업 차단)
 const _hasCourseId = new URLSearchParams(window.location.search).get('courseId');
 
+window.renderSavedPlaces = renderSavedPlaces;
+window.renderSavedPage = renderSavedPage;
+window.renderSavedRests = renderSavedRests;
+
 // ── 검색패널 함수들 window 노출 (HTML onclick에서 접근용) ──
 window.renderMspCuratorGrid = renderMspCuratorGrid;
 window.renderMspRecentList = renderMspRecentList;
