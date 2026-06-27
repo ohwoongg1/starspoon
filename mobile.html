@@ -3989,7 +3989,6 @@ function renderMspResultList() {
       </div>`;
     } else {
       const isSavedPlace = isPlaceSaved(item.id);
-      const placeItem = {id:item.id,name:item.name,lat:item.lat,lng:item.lng,icon:item.icon||'🗺️',sub:item.sub||'',type:'place'};
       html += `<div class="msp-result-item" onclick="mspPlaceDetail('${item.id}')">
         <div class="msp-result-icon ${item.iconClass||'ri-general'}">${item.icon||'🗺️'}</div>
         <div class="msp-result-info">
@@ -3999,9 +3998,11 @@ function renderMspResultList() {
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
           ${inBasket
             ? `<button class="msp-added-btn" onclick="event.stopPropagation();mspRemoveBasket('${item.id}')">✓ 담김</button>`
-            : `<button class="msp-add-btn" onclick="event.stopPropagation();mspAddBasket({id:'${item.id}',name:'${item.name.replace(/'/g,"\'")}',lat:${item.lat},lng:${item.lng},type:'place',icon:'${item.icon||'🗺️'}'})">+ 코스</button>`
+            : `<button class="msp-add-btn" onclick="event.stopPropagation();mspAddBasket({id:'${item.id}',name:_mspPlaceById('${item.id}').name,lat:${item.lat},lng:${item.lng},type:'place',icon:'${item.icon||'🗺️'}'})">+ 코스</button>`
           }
-          <button onclick="event.stopPropagation();toggleLocalPlace({id:'${item.id}',name:'${item.name.replace(/'/g,"\'")}',lat:${item.lat},lng:${item.lng},icon:'${item.icon||'🗺️'}',sub:'${(item.sub||'').replace(/'/g,"\'")}',type:'place'});renderMspResultList()"
+          <button class="msp-save-place-btn"
+            data-id="${item.id}"
+            onclick="event.stopPropagation();_mspToggleSavePlace('${item.id}',this)"
             style="padding:4px 8px;background:none;border:1.5px solid ${isSavedPlace?'var(--gold)':'var(--border2)'};border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;color:${isSavedPlace?'var(--gold)':'var(--text3)'}">
             ${isSavedPlace ? '❤️ 저장됨' : '🤍 저장'}
           </button>
@@ -4011,6 +4012,28 @@ function renderMspResultList() {
   });
   body.innerHTML = html;
 }
+
+// ★ 검색결과 장소 id로 객체 찾기 (onclick 문자열 이스케이프 우회)
+window._mspPlaceById = function(id) {
+  return _mspPlaceResults.find(p => p.id === id) || {id, name:'', lat:0, lng:0};
+};
+
+// ★ 검색결과 장소 저장 토글 (onclick 문자열 이스케이프 없이 id만 전달)
+window._mspToggleSavePlace = function(id, btn) {
+  const item = _mspPlaceResults.find(p => p.id === id);
+  if (!item) return;
+  toggleLocalPlace({
+    id: item.id, name: item.name,
+    lat: item.lat, lng: item.lng,
+    icon: item.icon || '🗺️',
+    sub: item.sub || '',
+    type: 'place'
+  });
+  const saved = isPlaceSaved(id);
+  btn.textContent = saved ? '❤️ 저장됨' : '🤍 저장';
+  btn.style.borderColor = saved ? 'var(--gold)' : 'var(--border2)';
+  btn.style.color = saved ? 'var(--gold)' : 'var(--text3)';
+};
 
 // ── 담기함 ──
 window.mspAddBasket = function(item) {
