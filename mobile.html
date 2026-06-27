@@ -4130,18 +4130,40 @@ window.openNavigation = function(destName, destLat, destLng) {
     const kakaoUrl = `https://map.kakao.com/link/from/현재위치,${myLat},${myLng}/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
 
     if (isIOS) {
-      // iOS: 카카오맵 앱 먼저 시도 → 없으면 같은 탭에서 웹 열기 (팝업차단 우회)
+      // iOS: 카카오맵 앱 먼저 시도
       const appUrl = `kakaomap://route?sp=${myLat},${myLng}&ep=${destLat},${destLng}&by=FOOT`;
+      // 앱으로 전환되면 페이지가 hidden 상태가 됨 → 타이머 취소
+      let timer = null;
+      const onVisChange = () => {
+        if (document.visibilityState === 'hidden') {
+          // 앱이 열림 → 웹 이동 취소
+          clearTimeout(timer);
+          document.removeEventListener('visibilitychange', onVisChange);
+        }
+      };
+      document.addEventListener('visibilitychange', onVisChange);
       window.location.href = appUrl;
-      // 앱이 없으면 1.5초 후 웹으로 (같은 탭 - 팝업 아님)
-      setTimeout(() => {
+      // 1.8초 후에도 앱 안 열리면 카카오맵 웹으로
+      timer = setTimeout(() => {
+        document.removeEventListener('visibilitychange', onVisChange);
+        window.location.href = kakaoUrl;
+      }, 1800);
+    } else if (isAndroid) {
+      // Android: 카카오맵 앱 먼저 시도
+      const appUrl = `kakaomap://route?sp=${myLat},${myLng}&ep=${destLat},${destLng}&by=FOOT`;
+      let timer = null;
+      const onVisChange = () => {
+        if (document.visibilityState === 'hidden') {
+          clearTimeout(timer);
+          document.removeEventListener('visibilitychange', onVisChange);
+        }
+      };
+      document.addEventListener('visibilitychange', onVisChange);
+      window.location.href = appUrl;
+      timer = setTimeout(() => {
+        document.removeEventListener('visibilitychange', onVisChange);
         window.location.href = kakaoUrl;
       }, 1500);
-    } else if (isAndroid) {
-      // Android: 카카오맵 앱 먼저 → 없으면 웹
-      const appUrl = `kakaomap://route?sp=${myLat},${myLng}&ep=${destLat},${destLng}&by=FOOT`;
-      window.location.href = appUrl;
-      setTimeout(() => { window.location.href = kakaoUrl; }, 1200);
     } else {
       // PC: 새 탭으로
       window.open(kakaoUrl, '_blank');
