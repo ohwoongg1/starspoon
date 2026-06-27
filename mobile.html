@@ -215,6 +215,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 /* ── 순위 페이지 ── */
 .rank-page{flex:1;overflow-y:auto;background:var(--bg);padding:20px;display:none}
 .rank-page.show{display:block}
+@media(max-width:768px){
+  #savedPage{
+    position:fixed;top:0;left:0;right:0;bottom:52px;
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+    z-index:100;padding-bottom:20px;
+  }
+}
 .rank-section{margin-bottom:28px}
 .rank-section-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
 .rank-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
@@ -3488,8 +3495,11 @@ window.setPage = function(page, el) {
   if (savedPageEl) {
     savedPageEl.style.display = page==='saved' ? 'block' : 'none';
     if (page==='saved') {
+      // ★ 모든 스크롤 컨테이너 최상단으로
       savedPageEl.scrollTop = 0;
-      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      window.scrollTo({top: 0, behavior: 'instant'});
       renderSavedPage();
     }
   }
@@ -3993,7 +4003,7 @@ function renderMspResultList() {
             ? `<button class="msp-added-btn" onclick="event.stopPropagation();mspRemoveBasket('${item.id}')">✓ 담김</button>`
             : `<button class="msp-add-btn" onclick="event.stopPropagation();mspAddBasket({id:'${item.id}',name:'${item.name.replace(/'/g,"\'")}',lat:${item.lat},lng:${item.lng},type:'star',icon:'${starIcon}',celeb:'${item.celeb}'})">+ 코스</button>`
           }
-          <button onclick="event.stopPropagation();toggleSave('${item.id}');this.textContent=savedList.includes('${item.id}')?'❤️ 저장됨':'🤍 저장';this.style.borderColor=savedList.includes('${item.id}')?'var(--gold)':'var(--border2)';this.style.color=savedList.includes('${item.id}')?'var(--gold)':'var(--text3)'"
+          <button onclick="event.stopPropagation();_mspToggleSaveStar('${item.id}',this)"
             style="padding:4px 8px;background:none;border:1.5px solid ${isSavedStar?'var(--gold)':'var(--border2)'};border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;color:${isSavedStar?'var(--gold)':'var(--text3)'}">
             ${isSavedStar ? '❤️ 저장됨' : '🤍 저장'}
           </button>
@@ -4023,6 +4033,15 @@ function renderMspResultList() {
   });
   body.innerHTML = html;
 }
+
+// ★ 검색결과 스타맛집 저장 토글 (savedList가 module 스코프라 함수로 처리)
+window._mspToggleSaveStar = async function(id, btn) {
+  await toggleSave(id);
+  const saved = savedList.includes(id);
+  btn.textContent = saved ? '❤️ 저장됨' : '🤍 저장';
+  btn.style.borderColor = saved ? 'var(--gold)' : 'var(--border2)';
+  btn.style.color = saved ? 'var(--gold)' : 'var(--text3)';
+};
 
 // ★ 검색결과 장소 id로 객체 찾기 (onclick 문자열 이스케이프 우회)
 window._mspPlaceById = function(id) {
@@ -5100,7 +5119,9 @@ window.setSavedTab = function(tab) {
   // ★ 항상 최상단으로 스크롤
   const savedPage = document.getElementById('savedPage');
   if (savedPage) savedPage.scrollTop = 0;
-  window.scrollTo(0, 0);
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+  window.scrollTo({top: 0, behavior: 'instant'});
 };
 
 async function renderSavedPage() {
