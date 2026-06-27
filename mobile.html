@@ -2427,7 +2427,7 @@ function renderPins() {
       const btnStyle2 = 'font-size:12px;border-radius:8px;padding:7px 6px;font-weight:600;text-align:center;text-decoration:none;display:block;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0.1)';
       const aKakao = document.createElement('a');
       aKakao.href = '#';
-      aKakao.target = '_blank'; aKakao.textContent = '🗺️ 길찾기';
+      aKakao.target = '_blank'; aKakao.textContent = '🟢 길찾기';
       aKakao.style.cssText = btnStyle2 + ';color:#F59E0B;border:1.5px solid #F59E0B';
       aKakao.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); openNavigation(d.name, d.lat, d.lng); });
       aKakao.addEventListener('touchend', e => { e.preventDefault(); e.stopPropagation(); openNavigation(d.name, d.lat, d.lng); }, {passive:false});
@@ -3768,21 +3768,53 @@ window.mspDoSearch = async function() {
 
     // 1. 스타스푼 DB 검색
     const qn = textQ.replace(/\s/g,'');
-    _mspStarResults = DATA.filter(d => {
+    const qLow = textQ.toLowerCase();
+
+    // ★ 전체 DB에서 검색 (현재 큐레이터 필터 무시)
+    let allData = DATA;
+    // DATA가 특정 큐레이터 맛집만 있으면 전체 로드
+    if (DATA.length < 100 || (selCurator && selCurator !== '전체')) {
+      try {
+        const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
+        allData = [];
+        snapAll.forEach(d => {
+          const r = d.data();
+          if (!r.hidden) allData.push({
+            id: d.id, name: r.name||'', celeb: r.celeb||'',
+            celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+            area: r.area||'', comment: r.comment||'',
+            yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
+            visits: r.visits||0, saves: r.saves||0,
+            avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+          });
+        });
+      } catch(e) { allData = DATA; }
+    }
+
+    _mspStarResults = allData.filter(d => {
       if (d.hidden) return false;
       return d.name.includes(textQ) || d.name.replace(/\s/g,'').includes(qn) ||
              d.celeb.includes(textQ) || d.area.includes(textQ) ||
              d.comment.includes(textQ) || (d.cat && d.cat.includes(textQ));
-    }).slice(0, 20);
+    });
 
-    // 거리 계산
+    // ★ 정확도 점수로 정렬 (이름 완전일치 > 이름 시작 > 이름 포함 > 기타)
     _mspStarResults.forEach(d => {
+      const nameLow = d.name.toLowerCase();
+      if (nameLow === qLow) d._score = 100;
+      else if (nameLow.startsWith(qLow)) d._score = 80;
+      else if (nameLow.includes(qLow)) d._score = 60;
+      else if (d.celeb.includes(textQ)) d._score = 40;
+      else if (d.area.includes(textQ)) d._score = 20;
+      else d._score = 10;
+      // 거리 계산
       if (!d.dist) {
         const dlat = d.lat - myLat, dlng = d.lng - myLng;
         d.dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
       }
     });
-    _mspStarResults.sort((a,b) => (a.dist||999999)-(b.dist||999999));
+    _mspStarResults.sort((a,b) => (b._score||0) - (a._score||0) || (a.dist||999999) - (b.dist||999999));
+    _mspStarResults = _mspStarResults.slice(0, 30);
 
     // 2. 카카오맵 장소 검색
     _mspPlaceResults = await new Promise(resolve => {
