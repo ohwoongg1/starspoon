@@ -3542,9 +3542,24 @@ window.doSearch = async function(q) {
         avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
       });
     });
+
+    // ★ 검색어 정확도 점수로 정렬 (이름 완전일치 > 이름 시작 > 이름 포함 > 기타)
+    const qLow = q.trim().toLowerCase();
+    DATA.forEach(d => {
+      const nameLow = d.name.toLowerCase();
+      if (nameLow === qLow) d._score = 100;           // 완전 일치
+      else if (nameLow.startsWith(qLow)) d._score = 80; // 이름 시작
+      else if (nameLow.includes(qLow)) d._score = 60;   // 이름 포함
+      else if (d.celeb.includes(q.trim())) d._score = 40; // 큐레이터 포함
+      else if (d.area.includes(q.trim())) d._score = 20;  // 지역 포함
+      else d._score = 10;                              // 기타
+    });
+
     renderList();
     renderPins();
     const items = filtered();
+    // 정확도 점수로 재정렬
+    items.sort((a,b) => (b._score||0) - (a._score||0) || (b.avgRating||0) - (a.avgRating||0));
     if (items.length > 0 && map) {
       map.setCenter(new kakao.maps.LatLng(items[0].lat, items[0].lng));
       map.setLevel(6);
@@ -4125,56 +4140,26 @@ window.openNavigation = function(destName, destLat, destLng) {
   const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
   const isAndroid = /Android/i.test(navigator.userAgent);
 
-  if (myLat && myLng) {
-    // ★ 현재위치 있으면 → 카카오맵 길찾기 (출발지+목적지 좌표 직접)
-    const kakaoUrl = `https://map.kakao.com/link/from/현재위치,${myLat},${myLng}/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
+  // ★ 네이버지도 앱 딥링크 (카카오맵 연결중 화면 없음)
+  const naverAppUrl = `nmap://route/walk?dlat=${destLat}&dlng=${destLng}&dname=${encodeURIComponent(destName)}&appname=starspoon`;
+  const naverWebUrl = `https://map.naver.com/p/search/${encodeURIComponent(destName)}`;
 
-    // ★ iOS: 카카오맵 앱 딥링크 (목적지 자동 입력)
-    const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-    const isAndroid = /Android/i.test(navigator.userAgent);
-
-    // 카카오맵 앱 딥링크 - 목적지 좌표+이름 자동 입력
-    const kakaoAppUrl = `kakaomap://route?ep=${destLat},${destLng}&ename=${encodeURIComponent(destName)}&by=FOOT`;
-    // 카카오맵 웹 fallback
-    const kakaoWebUrl = `https://map.kakao.com/link/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
-    // 네이버지도 웹 fallback (카카오맵 없을 때)
-    const naverUrl = `https://map.naver.com/p/search/${encodeURIComponent(destName)}`;
-
-    if (isIOS || isAndroid) {
-      // 앱 딥링크 시도 → visibilitychange로 앱 전환 감지 → 타이머 취소
-      let fallbackTimer = null;
-      const onHide = () => {
-        if (document.hidden) {
-          clearTimeout(fallbackTimer);
-          document.removeEventListener('visibilitychange', onHide);
-        }
-      };
-      document.addEventListener('visibilitychange', onHide);
-      // 앱 딥링크 실행
-      window.location.href = kakaoAppUrl;
-      // 2초 후에도 앱 안 열리면 웹으로
-      fallbackTimer = setTimeout(() => {
+  if (isIOS || isAndroid) {
+    let fallbackTimer = null;
+    const onHide = () => {
+      if (document.hidden) {
+        clearTimeout(fallbackTimer);
         document.removeEventListener('visibilitychange', onHide);
-        window.location.href = kakaoWebUrl;
-      }, 2000);
-    } else {
-      window.open(kakaoWebUrl, '_blank');
-    }
+      }
+    };
+    document.addEventListener('visibilitychange', onHide);
+    window.location.href = naverAppUrl;
+    fallbackTimer = setTimeout(() => {
+      document.removeEventListener('visibilitychange', onHide);
+      window.location.href = naverWebUrl;
+    }, 2000);
   } else {
-    // 현재위치 없으면 → 목적지 검색만
-    showToast('📍 현재위치를 확인하는 중이에요...');
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        myLat = pos.coords.latitude;
-        myLng = pos.coords.longitude;
-        openNavigation(destName, destLat, destLng); // 재시도
-      }, () => {
-        // GPS 실패 시 이름 검색 (같은 탭)
-        window.location.href = 'https://map.kakao.com/link/search/' + encodeURIComponent(destName);
-      });
-    } else {
-      window.location.href = 'https://map.kakao.com/link/search/' + encodeURIComponent(destName);
-    }
+    window.open(naverWebUrl, '_blank');
   }
 };
 
@@ -4414,10 +4399,10 @@ function copyToClipboard(text) {
 window.shareKakaoPC = function(id) {
   const d = DATA.find(x => x.id === id);
   if (!d) return;
-  // safeKakaoShare handles initialization
   const rating = d.avgRating ? `⭐ ${d.avgRating.toFixed(1)}점` : '';
   const desc = [d.cat, d.area, rating].filter(Boolean).join(' · ');
-  const shareUrl = `https://www.starspoon.co.kr/mobile.html?name=${encodeURIComponent(d.name)}&celeb=${encodeURIComponent(d.celeb)}`;
+  // ★ restId로 공유 → 받는 사람이 링크 열면 해당 음식점 바로 표시
+  const shareUrl = `https://www.starspoon.co.kr/mobile.html?restId=${encodeURIComponent(id)}`;
   safeKakaoShare({
     objectType: 'feed',
     content: {
@@ -6084,12 +6069,72 @@ initKakaoLogin();
   // URL에 courseId 있으면 공유받은 코스 표시
   const _urlParams = new URLSearchParams(window.location.search);
   const _courseId = _urlParams.get('courseId');
+  const _restId = _urlParams.get('restId');
   if (_courseId) {
     await loadSharedCourse(_courseId);
+  } else if (_restId) {
+    // ★ 공유받은 음식점 바로 표시
+    await loadSharedRest(_restId);
   } else {
     await loadRests('성시경'); // 성시경 맛집 (거리순 정렬)
   }
 })();
+
+// ── 공유받은 음식점 로드 ──
+async function loadSharedRest(restId) {
+  try {
+    showToast('공유받은 맛집을 불러오는 중...');
+    // Firebase에서 해당 음식점 직접 로드
+    const snap = await getDoc(doc(db, 'restaurants', restId));
+    if (!snap.exists()) {
+      showToast('음식점 정보를 찾을 수 없어요');
+      await loadRests('성시경');
+      return;
+    }
+    const r = snap.data();
+    const sharedRest = {
+      id: snap.id, name: r.name||'', celeb: r.celeb||'',
+      celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+      area: r.area||'', comment: r.comment||'',
+      yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
+      visits: r.visits||0, saves: r.saves||0,
+      avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+      address: r.address||''
+    };
+
+    // 해당 큐레이터 전체 맛집 로드
+    await loadRests(sharedRest.celeb || '성시경');
+
+    // 공유받은 음식점이 DATA에 없으면 추가
+    if (!DATA.find(d => d.id === restId)) DATA.unshift(sharedRest);
+
+    // URL 파라미터 제거
+    window.history.replaceState({}, '', window.location.pathname);
+
+    // 지도 준비 후 해당 음식점 포커스
+    const mapReady = await new Promise(resolve => {
+      if (map) { resolve(true); return; }
+      let elapsed = 0;
+      const check = setInterval(() => {
+        elapsed += 100;
+        if (map) { clearInterval(check); resolve(true); }
+        else if (elapsed >= 5000) { clearInterval(check); resolve(false); }
+      }, 100);
+    });
+
+    if (mapReady) {
+      setTimeout(() => {
+        map.setCenter(new kakao.maps.LatLng(sharedRest.lat, sharedRest.lng));
+        map.setLevel(4);
+        focusCard(restId);
+        showToast(`📍 ${sharedRest.celeb} · ${sharedRest.name} 공유받은 맛집이에요!`);
+      }, 500);
+    }
+  } catch(e) {
+    console.log('음식점 로드 오류:', e);
+    await loadRests('성시경');
+  }
+}
 
 // ── 공유받은 코스 로드 ──
 async function loadSharedCourse(courseId) {
