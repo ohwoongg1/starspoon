@@ -1161,12 +1161,13 @@ function toggleLocalPlace(item) {
     setLocalPlaces(places);
     showToast('저장 취소됐어요');
   } else {
-    places.unshift(item); // 최근 저장이 맨 위
+    places.unshift(item);
     if (places.length > 100) places = places.slice(0, 100);
     setLocalPlaces(places);
     showToast('📍 ' + item.name + ' 저장됐어요! ❤️');
   }
 }
+window.toggleLocalPlace = toggleLocalPlace;
 
 // 로컬 저장 목록 (로그인 여부 무관)
 function getLocalSaved() {
