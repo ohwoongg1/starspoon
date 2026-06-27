@@ -4234,20 +4234,21 @@ function showNavSheet(destName, appUrl, webUrl) {
       <div style="width:40px;height:4px;background:#D4D3CF;border-radius:2px;margin:0 auto 16px"></div>
       <div style="font-size:15px;font-weight:700;color:#1A1A18;margin-bottom:4px">🗺️ 길찾기</div>
       <div style="font-size:13px;color:#9A9A96;margin-bottom:16px">${destName}</div>
-      <a href="${appUrl}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#03C75A;border-radius:12px;text-decoration:none;margin-bottom:10px">
+      <a href="${appUrl}" onclick="document.getElementById('navSheet').remove()" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#03C75A;border-radius:12px;text-decoration:none;margin-bottom:10px">
         <span style="font-size:22px">🟢</span>
         <div>
           <div style="font-size:14px;font-weight:700;color:#fff">네이버지도 앱으로 길찾기</div>
           <div style="font-size:11px;color:rgba(255,255,255,0.8);margin-top:2px">앱이 설치된 경우</div>
         </div>
       </a>
-      <a href="${webUrl}" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#F4F3EF;border-radius:12px;text-decoration:none">
+      <a href="${webUrl}" onclick="document.getElementById('navSheet').remove()" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:#F4F3EF;border-radius:12px;text-decoration:none">
         <span style="font-size:22px">🌐</span>
         <div>
           <div style="font-size:14px;font-weight:700;color:#1A1A18">웹에서 길찾기</div>
           <div style="font-size:11px;color:#9A9A96;margin-top:2px">앱 없이 브라우저에서</div>
         </div>
       </a>
+      <button onclick="document.getElementById('navSheet').remove()" style="width:100%;margin-top:10px;padding:13px;background:none;border:1.5px solid #D4D3CF;border-radius:12px;font-size:14px;font-weight:600;color:#9A9A96;cursor:pointer">✕ 닫기</button>
     </div>`;
 
   document.body.appendChild(sheet);
