@@ -3816,12 +3816,42 @@ window.mspDoSearch = async function() {
     _mspStarResults.sort((a,b) => (b._score||0) - (a._score||0) || (a.dist||999999) - (b.dist||999999));
     _mspStarResults = _mspStarResults.slice(0, 30);
 
+    // ★ 스타맛집 0개면 → 카카오맵 장소검색 결과 첫번째 좌표 기준 주변 스타맛집 표시
+    let _nearbyCenter = null;
+    if (_mspStarResults.length === 0) {
+      // 카카오맵에서 검색어 좌표 먼저 가져오기
+      _nearbyCenter = await new Promise(resolve => {
+        const ps = new kakao.maps.services.Places();
+        ps.keywordSearch(textQ, (data, status) => {
+          if (status === kakao.maps.services.Status.OK && data[0]) {
+            resolve({lat: parseFloat(data[0].y), lng: parseFloat(data[0].x), name: data[0].place_name});
+          } else resolve(null);
+        }, {size: 1});
+      });
+
+      if (_nearbyCenter) {
+        // 해당 좌표 반경 3km 내 스타맛집
+        const RADIUS = 3000;
+        _mspStarResults = allData.filter(d => {
+          if (d.hidden) return false;
+          const dlat = d.lat - _nearbyCenter.lat, dlng = d.lng - _nearbyCenter.lng;
+          const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+          d._nearbyDist = dist;
+          return dist <= RADIUS;
+        }).sort((a,b) => (a._nearbyDist||0) - (b._nearbyDist||0)).slice(0, 20);
+
+        if (_mspStarResults.length > 0) {
+          showToast(`📍 ${_nearbyCenter.name} 주변 스타맛집 ${_mspStarResults.length}곳`);
+        }
+      }
+    }
+
     // 2. 카카오맵 장소 검색
     _mspPlaceResults = await new Promise(resolve => {
       const ps = new kakao.maps.services.Places();
       ps.keywordSearch(textQ, (data, status) => {
         if (status !== kakao.maps.services.Status.OK) { resolve([]); return; }
-        resolve(data.slice(0, 15).map(p => {
+        const results = data.slice(0, 15).map(p => {
           const lat = parseFloat(p.y), lng = parseFloat(p.x);
           const dlat = lat - myLat, dlng = lng - myLng;
           const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
@@ -3832,27 +3862,34 @@ window.mspDoSearch = async function() {
           else if (cat.includes('숙박') || cat.includes('호텔') || cat.includes('펜션')) { icon='🏨'; iconClass='ri-hotel'; }
           else if (cat.includes('관광') || cat.includes('명소') || cat.includes('문화')) { icon='🏛️'; iconClass='ri-tour'; }
           else if (cat.includes('쇼핑')) { icon='🛍️'; iconClass='ri-shop'; }
-          return {
-            id: 'kakao_' + p.id,
-            name: p.place_name,
-            sub: (p.road_address_name || p.address_name),
-            lat, lng, dist,
-            icon, iconClass,
-            type: 'place',
-            url: p.place_url
-          };
-        }));
+          // ★ 정확도 점수 (이름 완전일치 최우선)
+          const nameLow = p.place_name.toLowerCase();
+          const qL = textQ.toLowerCase();
+          let score = 0;
+          if (nameLow === qL) score = 100;
+          else if (nameLow.startsWith(qL)) score = 80;
+          else if (nameLow.includes(qL)) score = 60;
+          else score = 10;
+          return { id: 'kakao_' + p.id, name: p.place_name, sub: (p.road_address_name || p.address_name), lat, lng, dist, icon, iconClass, type: 'place', url: p.place_url, _score: score };
+        });
+        // ★ 정확도 점수 우선 → 같은 점수면 거리순
+        results.sort((a,b) => (b._score||0) - (a._score||0) || (a.dist||0) - (b.dist||0));
+        resolve(results);
       }, {
-        location: new kakao.maps.LatLng(myLat, myLng),
-        sort: kakao.maps.services.SortBy.DISTANCE,
         size: 15
+        // ★ location/sort 제거 → 카카오맵 기본 정확도순 검색
       });
     });
 
     // 탭 카운트 업데이트
     const total = _mspStarResults.length + _mspPlaceResults.length;
     document.getElementById('rtabCnt-all').textContent = total ? `(${total})` : '';
-    document.getElementById('rtabCnt-star').textContent = _mspStarResults.length ? `(${_mspStarResults.length})` : '';
+    const starLabel = _mspStarResults.length
+      ? (_nearbyCenter && _mspStarResults[0]._nearbyDist !== undefined
+          ? `(주변 ${_mspStarResults.length})`
+          : `(${_mspStarResults.length})`)
+      : '';
+    document.getElementById('rtabCnt-star').textContent = starLabel;
     document.getElementById('rtabCnt-place').textContent = _mspPlaceResults.length ? `(${_mspPlaceResults.length})` : '';
 
     switchResultTab('all');
