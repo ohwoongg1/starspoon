@@ -4129,45 +4129,10 @@ window.openNavigation = function(destName, destLat, destLng) {
     // ★ 현재위치 있으면 → 카카오맵 길찾기 (출발지+목적지 좌표 직접)
     const kakaoUrl = `https://map.kakao.com/link/from/현재위치,${myLat},${myLng}/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
 
-    if (isIOS) {
-      // iOS: 카카오맵 앱 먼저 시도
-      const appUrl = `kakaomap://route?sp=${myLat},${myLng}&ep=${destLat},${destLng}&by=FOOT`;
-      // 앱으로 전환되면 페이지가 hidden 상태가 됨 → 타이머 취소
-      let timer = null;
-      const onVisChange = () => {
-        if (document.visibilityState === 'hidden') {
-          // 앱이 열림 → 웹 이동 취소
-          clearTimeout(timer);
-          document.removeEventListener('visibilitychange', onVisChange);
-        }
-      };
-      document.addEventListener('visibilitychange', onVisChange);
-      window.location.href = appUrl;
-      // 1.8초 후에도 앱 안 열리면 카카오맵 웹으로
-      timer = setTimeout(() => {
-        document.removeEventListener('visibilitychange', onVisChange);
-        window.location.href = kakaoUrl;
-      }, 1800);
-    } else if (isAndroid) {
-      // Android: 카카오맵 앱 먼저 시도
-      const appUrl = `kakaomap://route?sp=${myLat},${myLng}&ep=${destLat},${destLng}&by=FOOT`;
-      let timer = null;
-      const onVisChange = () => {
-        if (document.visibilityState === 'hidden') {
-          clearTimeout(timer);
-          document.removeEventListener('visibilitychange', onVisChange);
-        }
-      };
-      document.addEventListener('visibilitychange', onVisChange);
-      window.location.href = appUrl;
-      timer = setTimeout(() => {
-        document.removeEventListener('visibilitychange', onVisChange);
-        window.location.href = kakaoUrl;
-      }, 1500);
-    } else {
-      // PC: 새 탭으로
-      window.open(kakaoUrl, '_blank');
-    }
+    // ★ 딥링크 없이 카카오맵 공식 길찾기 URL 직접 사용
+    // 카카오맵이 설치돼 있으면 자동으로 앱으로 연결됨
+    const kakaoNavUrl = `https://map.kakao.com/link/to/${encodeURIComponent(destName)},${destLat},${destLng}`;
+    window.location.href = kakaoNavUrl;
   } else {
     // 현재위치 없으면 → 목적지 검색만
     showToast('📍 현재위치를 확인하는 중이에요...');
