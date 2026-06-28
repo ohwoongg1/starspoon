@@ -780,10 +780,10 @@ input::placeholder{color:var(--text3) !important;opacity:1}
       <span class="list-title" id="listTitle">성시경 맛집</span>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="list-count" id="listCount">0곳</span>
-        <select class="sort-select" onchange="setSort(this.value)">
-          <option value="rating">평점순</option>
-          <option value="saves">저장순</option>
-          <option value="recent">최신순</option>
+        <select class="sort-select" onchange="setSort(this.value)" id="sortSelect">
+          <option value="rating">⭐ 평점순</option>
+          <option value="myDist">📍 내 거리순</option>
+          <option value="mapDist">🗺️ 지도순</option>
         </select>
       </div>
     </div>
@@ -1141,7 +1141,7 @@ let DATA = [];
 let selCurator = '성시경';
 let selCuratorTab = 'star';
 let selCat = '전체';
-let selSort = 'rating';
+let selSort = 'myDist';
 let searchQ = '';
 let currentPage = 'main';
 let map, markers = [], overlays = [], markerMap = {};
@@ -2196,8 +2196,26 @@ function filtered() {
     items.sort((a,b) => (a.dist||0) - (b.dist||0));
   } else {
     if (selSort === 'rating') items.sort((a,b) => (b.avgRating||0)-(a.avgRating||0));
-    else if (selSort === 'saves') items.sort((a,b) => (b.saves||0)-(a.saves||0));
-    else items.sort((a,b) => (b.visits||0)-(a.visits||0));
+    else if (selSort === 'myDist') {
+      // 내 GPS 위치 기준 거리순
+      items.forEach(d => {
+        const dlat = d.lat - myLat, dlng = d.lng - myLng;
+        d.dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+      });
+      items.sort((a,b) => (a.dist||999999) - (b.dist||999999));
+    }
+    else if (selSort === 'mapDist') {
+      // 현재 지도 중심 기준 거리순
+      const center = map ? map.getCenter() : null;
+      const cLat = center ? center.getLat() : myLat;
+      const cLng = center ? center.getLng() : myLng;
+      items.forEach(d => {
+        const dlat = d.lat - cLat, dlng = d.lng - cLng;
+        d._mapDist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+      });
+      items.sort((a,b) => (a._mapDist||999999) - (b._mapDist||999999));
+    }
+    else items.sort((a,b) => (b.avgRating||0)-(a.avgRating||0));
   }
   return items;
 }
@@ -2380,14 +2398,23 @@ kakao.maps.load(function() {
     const ne = bounds.getNorthEast();
     const center = map.getCenter();
     const cLat = center.getLat(), cLng = center.getLng();
-    // 드래그 범위 저장 (큐레이터 선택 시 재사용)
     mapBoundsFilter = {sw, ne, cLat, cLng};
-    // 거리 재계산 (내 위치 기준, 미터)
+
+    // ★ 지도순이면 지도 중심 기준으로 즉시 리스트 업데이트
+    if (selSort === 'mapDist') {
+      DATA.forEach(r => {
+        const dlat = r.lat - cLat, dlng = r.lng - cLng;
+        r._mapDist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+      });
+      renderList();
+      return;
+    }
+
+    // 거리 재계산 (내 위치 기준)
     DATA.forEach(r => {
       const dlat = r.lat - myLat, dlng = r.lng - myLng;
       r.dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
     });
-    // 현재 지도 범위 안 맛집만 필터
     const allFiltered = filtered();
     const inBounds = allFiltered.filter(r =>
       r.lat >= sw.getLat() && r.lat <= ne.getLat() &&
@@ -3535,8 +3562,19 @@ window.setCat = function(el, cat) {
 
 window.setSort = function(sort) {
   selSort = sort;
+  const sel = document.getElementById('sortSelect');
+  if (sel) sel.value = sort;
   renderList();
 };
+
+// ★ 장소 검색으로 지도 이동 시 자동으로 지도순 전환
+function switchToMapSort() {
+  if (selSort !== 'mapDist') {
+    selSort = 'mapDist';
+    const sel = document.getElementById('sortSelect');
+    if (sel) sel.value = 'mapDist';
+  }
+}
 
 // 지역 키워드 판별
 const REGION_KEYWORDS = ['서울','부산','대구','인천','광주','대전','울산','경기','강원','충북','충남','전북','전남','경북','경남','제주','세종','부천','수원','성남','고양','용인','안양','안산','화성','평택','의정부','시흥','파주','김포','광명','군포','이천','양주','오산','구리','안성','포천','의왕','하남','여주','양평','동두천','가평','연천','속초','강릉','원주','춘천','동해','태백','삼척','홍천','횡성','영월','평창','정선','철원','화천','양구','인제','고성','양양','청주','충주','제천','보은','옥천','영동','증평','진천','괴산','음성','단양','천안','공주','보령','아산','서산','논산','계룡','당진','금산','부여','서천','청양','홍성','예산','태안','전주','군산','익산','정읍','남원','김제','완주','진안','무주','장수','임실','순창','고창','부안','목포','여수','순천','나주','광양','담양','곡성','구례','고흥','보성','화순','장흥','강진','해남','영암','무안','함평','영광','장성','완도','진도','신안','포항','경주','김천','안동','구미','영주','영천','상주','문경','경산','군위','의성','청송','영양','영덕','청도','고령','성주','칠곡','예천','봉화','울진','울릉','창원','진주','통영','사천','김해','밀양','거제','양산','의령','함안','창녕','고성','남해','하동','산청','함양','거창','합천','제주시','서귀포'];
@@ -3623,6 +3661,7 @@ window.doSearch = async function(q) {
     // 정확도 점수로 재정렬
     items.sort((a,b) => (b._score||0) - (a._score||0) || (b.avgRating||0) - (a.avgRating||0));
     if (items.length > 0 && map) {
+      switchToMapSort();
       map.setCenter(new kakao.maps.LatLng(items[0].lat, items[0].lng));
       map.setLevel(6);
     }
@@ -3649,6 +3688,7 @@ function moveToRegion(q) {
   geocoder.addressSearch(searchQuery, function(result, status) {
     if (status === kakao.maps.services.Status.OK) {
       const coords = new kakao.maps.LatLng(result[0].y, result[0].x);
+      switchToMapSort();
       map.setCenter(coords);
       const level = q.endsWith('동') ? 5 : q.endsWith('구') ? 7 : 8;
       map.setLevel(level);
@@ -3661,6 +3701,8 @@ function moveToRegion(q) {
     geocoder.addressSearch(q, function(result2, status2) {
       if (status2 === kakao.maps.services.Status.OK) {
         const coords = new kakao.maps.LatLng(result2[0].y, result2[0].x);
+        switchToMapSort();
+      switchToMapSort();
         map.setCenter(coords);
         map.setLevel(7);
         renderPins();
@@ -3671,7 +3713,8 @@ function moveToRegion(q) {
         ps.keywordSearch(q, function(result3, status3) {
           if (status3 === kakao.maps.services.Status.OK && result3[0]) {
             const coords = new kakao.maps.LatLng(result3[0].y, result3[0].x);
-            map.setCenter(coords);
+            switchToMapSort();
+      map.setCenter(coords);
             map.setLevel(7);
             renderPins();
             showToast('📍 ' + q + ' 지역 맛집을 보여드려요');
@@ -3812,7 +3855,6 @@ window.onMobileSearchInput = function(v) {
 window.mspDoSearch = async function() {
   const textQ = document.getElementById('mobileSearch')?.value?.trim() || '';
 
-  // 검색어 없으면 기존 필터 검색
   if (!textQ && !mspSelCurator && !mspSelRegion) {
     saveMRecentSearch('전체 맛집');
     applyMspFilters();
@@ -3821,146 +3863,190 @@ window.mspDoSearch = async function() {
 
   if (textQ) {
     saveMRecentSearch(textQ);
-    // 통합검색 결과 화면으로 전환
     document.getElementById('mspDefaultView').style.display = 'none';
     document.getElementById('mspResultView').style.display = 'flex';
     mspCurResultTab = 'all';
     document.getElementById('mspResultBody').innerHTML =
       '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">검색 중...<br><i class="ti ti-loader" style="font-size:24px;display:block;margin:10px auto;opacity:0.4"></i></div>';
 
-    // 1. 스타스푼 DB 검색
-    const qn = textQ.replace(/\s/g,'');
-    const qLow = textQ.toLowerCase();
-
-    // ★ 전체 DB에서 검색 (현재 큐레이터 필터 무시)
-    let allData = DATA;
-    // DATA가 특정 큐레이터 맛집만 있으면 전체 로드
-    if (DATA.length < 100 || (selCurator && selCurator !== '전체')) {
-      try {
-        const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
-        allData = [];
-        snapAll.forEach(d => {
-          const r = d.data();
-          if (!r.hidden) allData.push({
-            id: d.id, name: r.name||'', celeb: r.celeb||'',
-            celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
-            area: r.area||'', comment: r.comment||'',
-            yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
-            visits: r.visits||0, saves: r.saves||0,
-            avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
-          });
-        });
-      } catch(e) { allData = DATA; }
-    }
-
-    _mspStarResults = allData.filter(d => {
-      if (d.hidden) return false;
-      return d.name.includes(textQ) || d.name.replace(/\s/g,'').includes(qn) ||
-             d.celeb.includes(textQ) || d.area.includes(textQ) ||
-             d.comment.includes(textQ) || (d.cat && d.cat.includes(textQ));
-    });
-
-    // ★ 정확도 점수로 정렬 (이름 완전일치 > 이름 시작 > 이름 포함 > 기타)
-    _mspStarResults.forEach(d => {
-      const nameLow = d.name.toLowerCase();
-      if (nameLow === qLow) d._score = 100;
-      else if (nameLow.startsWith(qLow)) d._score = 80;
-      else if (nameLow.includes(qLow)) d._score = 60;
-      else if (d.celeb.includes(textQ)) d._score = 40;
-      else if (d.area.includes(textQ)) d._score = 20;
-      else d._score = 10;
-      // 거리 계산
-      if (!d.dist) {
-        const dlat = d.lat - myLat, dlng = d.lng - myLng;
-        d.dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
-      }
-    });
-    _mspStarResults.sort((a,b) => (b._score||0) - (a._score||0) || (a.dist||999999) - (b.dist||999999));
-    _mspStarResults = _mspStarResults.slice(0, 30);
-
-    // ★ 스타맛집 0개면 → 카카오맵 장소검색 결과 첫번째 좌표 기준 주변 스타맛집 표시
-    let _nearbyCenter = null;
-    if (_mspStarResults.length === 0) {
-      // 카카오맵에서 검색어 좌표 먼저 가져오기
-      _nearbyCenter = await new Promise(resolve => {
-        const ps = new kakao.maps.services.Places();
-        ps.keywordSearch(textQ, (data, status) => {
-          if (status === kakao.maps.services.Status.OK && data[0]) {
-            resolve({lat: parseFloat(data[0].y), lng: parseFloat(data[0].x), name: data[0].place_name});
-          } else resolve(null);
-        }, {size: 1});
-      });
-
-      if (_nearbyCenter) {
-        // 해당 좌표 반경 3km 내 스타맛집
-        const RADIUS = 3000;
-        _mspStarResults = allData.filter(d => {
-          if (d.hidden) return false;
-          const dlat = d.lat - _nearbyCenter.lat, dlng = d.lng - _nearbyCenter.lng;
-          const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
-          d._nearbyDist = dist;
-          return dist <= RADIUS;
-        }).sort((a,b) => (a._nearbyDist||0) - (b._nearbyDist||0)).slice(0, 20);
-
-        if (_mspStarResults.length > 0) {
-          showToast(`📍 ${_nearbyCenter.name} 주변 스타맛집 ${_mspStarResults.length}곳`);
-        }
-      }
-    }
-
-    // 2. 카카오맵 장소 검색
-    _mspPlaceResults = await new Promise(resolve => {
+    // ★ 1단계: 카카오맵 장소 목록 먼저 표시 (선택 화면)
+    const placeList = await new Promise(resolve => {
       const ps = new kakao.maps.services.Places();
       ps.keywordSearch(textQ, (data, status) => {
         if (status !== kakao.maps.services.Status.OK) { resolve([]); return; }
-        const results = data.slice(0, 15).map(p => {
-          const lat = parseFloat(p.y), lng = parseFloat(p.x);
-          const dlat = lat - myLat, dlng = lng - myLng;
-          const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
-          const cat = p.category_name || '';
-          let icon = '🗺️', iconClass = 'ri-general';
-          if (cat.includes('음식') || cat.includes('식당') || cat.includes('맛집')) { icon='🍽️'; iconClass='ri-star'; }
-          else if (cat.includes('카페') || cat.includes('커피')) { icon='☕'; iconClass='ri-cafe'; }
-          else if (cat.includes('숙박') || cat.includes('호텔') || cat.includes('펜션')) { icon='🏨'; iconClass='ri-hotel'; }
-          else if (cat.includes('관광') || cat.includes('명소') || cat.includes('문화')) { icon='🏛️'; iconClass='ri-tour'; }
-          else if (cat.includes('쇼핑')) { icon='🛍️'; iconClass='ri-shop'; }
-          // ★ 정확도 점수 (이름 완전일치 최우선)
-          const nameLow = p.place_name.toLowerCase();
-          const qL = textQ.toLowerCase();
-          let score = 0;
-          if (nameLow === qL) score = 100;
-          else if (nameLow.startsWith(qL)) score = 80;
-          else if (nameLow.includes(qL)) score = 60;
-          else score = 10;
-          return { id: 'kakao_' + p.id, name: p.place_name, sub: (p.road_address_name || p.address_name), lat, lng, dist, icon, iconClass, type: 'place', url: p.place_url, _score: score };
-        });
-        // ★ 정확도 점수 우선 → 같은 점수면 거리순
-        results.sort((a,b) => (b._score||0) - (a._score||0) || (a.dist||0) - (b.dist||0));
-        resolve(results);
-      }, {
-        size: 15
-        // ★ location/sort 제거 → 카카오맵 기본 정확도순 검색
-      });
+        resolve(data.slice(0, 10).map(p => ({
+          id: 'kakao_' + p.id,
+          name: p.place_name,
+          sub: p.road_address_name || p.address_name,
+          lat: parseFloat(p.y), lng: parseFloat(p.x),
+          cat: p.category_name || '',
+          dist: (() => {
+            const dlat = parseFloat(p.y) - myLat, dlng = parseFloat(p.x) - myLng;
+            return Math.round(Math.sqrt(dlat*dlat + dlng*dlng) * 111320);
+          })()
+        })));
+      }, { size: 10 });
     });
 
-    // 탭 카운트 업데이트
-    const total = _mspStarResults.length + _mspPlaceResults.length;
-    document.getElementById('rtabCnt-all').textContent = total ? `(${total})` : '';
-    const starLabel = _mspStarResults.length
-      ? (_nearbyCenter && _mspStarResults[0]._nearbyDist !== undefined
-          ? `(주변 ${_mspStarResults.length})`
-          : `(${_mspStarResults.length})`)
-      : '';
-    document.getElementById('rtabCnt-star').textContent = starLabel;
-    document.getElementById('rtabCnt-place').textContent = _mspPlaceResults.length ? `(${_mspPlaceResults.length})` : '';
+    // ★ 장소 선택 화면 렌더
+    _mspPlaceResults = [];
+    _mspStarResults = [];
+    document.getElementById('rtabCnt-all').textContent = '';
+    document.getElementById('rtabCnt-star').textContent = '';
+    document.getElementById('rtabCnt-place').textContent = '';
 
-    switchResultTab('all');
+    if (!placeList.length) {
+      document.getElementById('mspResultBody').innerHTML =
+        '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">검색 결과가 없어요</div>';
+      return;
+    }
+
+    // 선택 목록 표시
+    const body = document.getElementById('mspResultBody');
+    body.innerHTML = `
+      <div style="padding:10px 14px 6px;font-size:12px;color:var(--text3);font-weight:600;background:var(--bg2);border-bottom:1px solid var(--border)">
+        📍 장소를 선택하면 주변 스타맛집을 찾아드려요
+      </div>
+      ${placeList.map((p, i) => {
+        const distStr = p.dist < 1000 ? p.dist + 'm' : (p.dist/1000).toFixed(1) + 'km';
+        const catShort = p.cat.split('>').pop().trim();
+        return `<div class="msp-result-item" onclick="mspSelectPlace(${i})" style="cursor:pointer">
+          <div class="msp-result-icon ri-general">📍</div>
+          <div class="msp-result-info">
+            <div class="msp-result-name">${p.name}</div>
+            <div class="msp-result-sub">${p.sub}${catShort ? ' · ' + catShort : ''} · ${distStr}</div>
+          </div>
+          <i class="ti ti-chevron-right" style="font-size:16px;color:var(--text3);flex-shrink:0"></i>
+        </div>`;
+      }).join('')}`;
+
+    // 선택용 데이터 저장
+    window._mspSelectList = placeList;
     renderMspBasket();
+
   } else {
     saveMRecentSearch((mspSelCurator||'') + (mspSelRegion?' '+mspSelRegion:''));
     applyMspFilters();
   }
 };
+
+// ★ 장소 선택 → 그 위치 기준 스타맛집 + 주변 장소 표시
+window.mspSelectPlace = async function(idx) {
+  const place = (window._mspSelectList || [])[idx];
+  if (!place) return;
+
+  const body = document.getElementById('mspResultBody');
+  body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">주변 맛집 찾는 중...<br><i class="ti ti-loader" style="font-size:24px;display:block;margin:10px auto;opacity:0.4"></i></div>';
+
+  // 지도 이동 + 지도순 전환
+  if (map) {
+    switchToMapSort();
+    map.setCenter(new kakao.maps.LatLng(place.lat, place.lng));
+    map.setLevel(5);
+    renderList(); // 지도 중심 기준 메인 리스트 재정렬
+  }
+
+  // 선택한 장소 표시 (헤더)
+  const headerHtml = `
+    <div style="padding:10px 14px;background:var(--gold-bg);border-bottom:1px solid var(--gold);display:flex;align-items:center;gap:8px">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--gold)">📍 ${place.name}</div>
+        <div style="font-size:11px;color:var(--text3)">${place.sub}</div>
+      </div>
+      <button onclick="mspDoSearch()" style="margin-left:auto;background:none;border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text3);cursor:pointer">← 다시 선택</button>
+    </div>`;
+
+  // 스타스푼 DB에서 반경 3km 스타맛집 검색
+  const RADIUS = 3000;
+  let allData = DATA;
+  if (DATA.length < 100) {
+    try {
+      const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
+      allData = [];
+      snapAll.forEach(d => {
+        const r = d.data();
+        if (!r.hidden) allData.push({
+          id: d.id, name: r.name||'', celeb: r.celeb||'',
+          celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+          area: r.area||'', comment: r.comment||'',
+          yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
+          visits: r.visits||0, saves: r.saves||0,
+          avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+        });
+      });
+    } catch(e) { allData = DATA; }
+  }
+
+  _mspStarResults = allData.filter(d => {
+    if (d.hidden) return false;
+    const dlat = d.lat - place.lat, dlng = d.lng - place.lng;
+    const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+    d._nearbyDist = dist;
+    return dist <= RADIUS;
+  }).sort((a,b) => (a._nearbyDist||0) - (b._nearbyDist||0)).slice(0, 20);
+
+  // 카카오맵 주변 주요 장소 검색 (역, 관광지, 쇼핑, 카페 등)
+  _mspPlaceResults = await new Promise(resolve => {
+    const ps = new kakao.maps.services.Places();
+    const center = new kakao.maps.LatLng(place.lat, place.lng);
+    // 주요 장소 카테고리 검색 (AT4=관광명소, SW8=지하철역, MT1=대형마트, CT1=문화시설)
+    ps.categorySearch('AT4', (data1, status1) => {
+      const tour = status1 === kakao.maps.services.Status.OK ? data1.slice(0,5) : [];
+      ps.categorySearch('SW8', (data2, status2) => {
+        const subway = status2 === kakao.maps.services.Status.OK ? data2.slice(0,5) : [];
+        ps.categorySearch('CT1', (data3, status3) => {
+          const culture = status3 === kakao.maps.services.Status.OK ? data3.slice(0,5) : [];
+          const all = [...tour, ...subway, ...culture];
+          const seen = new Set();
+          const results = all
+            .filter(p => { if(seen.has(p.id)) return false; seen.add(p.id); return true; })
+            .map(p => {
+              const lat = parseFloat(p.y), lng = parseFloat(p.x);
+              const dlat = lat - place.lat, dlng = lng - place.lng;
+              const dist = Math.round(Math.sqrt(dlat*dlat + dlng*dlng) * 111320);
+              const cat = p.category_name || '';
+              let icon = '🗺️', iconClass = 'ri-general';
+              if (cat.includes('관광') || cat.includes('명소')) { icon='🏛️'; iconClass='ri-tour'; }
+              else if (cat.includes('지하철') || cat.includes('역')) { icon='🚇'; iconClass='ri-general'; }
+              else if (cat.includes('문화') || cat.includes('공연')) { icon='🎭'; iconClass='ri-tour'; }
+              else if (cat.includes('마트') || cat.includes('쇼핑')) { icon='🛍️'; iconClass='ri-shop'; }
+              return {
+                id: 'kakao_' + p.id, name: p.place_name,
+                sub: p.road_address_name || p.address_name,
+                lat, lng, dist, icon, iconClass, type: 'place', url: p.place_url, _score: 50
+              };
+            })
+            .sort((a,b) => a.dist - b.dist)
+            .slice(0, 15);
+          resolve(results);
+        }, { location: center, radius: RADIUS, size: 5 });
+      }, { location: center, radius: RADIUS, size: 5 });
+    }, { location: center, radius: RADIUS, size: 5 });
+  });
+
+  // 탭 카운트 업데이트
+  const total = _mspStarResults.length + _mspPlaceResults.length;
+  document.getElementById('rtabCnt-all').textContent = total ? `(${total})` : '';
+  document.getElementById('rtabCnt-star').textContent = _mspStarResults.length ? `(${_mspStarResults.length})` : '';
+  document.getElementById('rtabCnt-place').textContent = _mspPlaceResults.length ? `(${_mspPlaceResults.length})` : '';
+
+  if (_mspStarResults.length > 0) {
+    showToast(`⭐ ${place.name} 주변 스타맛집 ${_mspStarResults.length}곳!`);
+  } else {
+    showToast(`📍 ${place.name} 주변 맛집을 보여드려요`);
+  }
+
+  mspCurResultTab = 'all';
+  ['all','star','place'].forEach(t => {
+    document.getElementById('rtab-'+t)?.classList.toggle('on', t==='all');
+  });
+  renderMspResultList();
+
+  // 헤더 삽입
+  body.insertAdjacentHTML('afterbegin', headerHtml);
+  renderMspBasket();
+};
+
 
 // ── 탭 전환 ──
 window.switchResultTab = function(tab) {
@@ -4289,6 +4375,10 @@ window.clearSearch = async function() {
   // 모바일 search-mode 해제
   const sheet = document.querySelector('.list-panel');
   if (sheet) sheet.classList.remove('search-mode');
+  // 정렬 내 거리순으로 복원
+  selSort = 'myDist';
+  const sel = document.getElementById('sortSelect');
+  if (sel) sel.value = 'myDist';
   // 성시경으로 초기화
   selCurator = '성시경';
   renderMobileCuratorStrip();
