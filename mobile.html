@@ -3939,91 +3939,70 @@ window.mspSelectPlace = async function(idx) {
   const body = document.getElementById('mspResultBody');
   body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">주변 맛집 찾는 중...<br><i class="ti ti-loader" style="font-size:24px;display:block;margin:10px auto;opacity:0.4"></i></div>';
 
-  // 지도 이동 + 지도순 전환 + 핀 표시
+  // ★ 전체 DB 로드 (큐레이터 무관하게 항상)
+  let allData = [];
+  try {
+    const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
+    snapAll.forEach(d => {
+      const r = d.data();
+      if (!r.hidden) allData.push({
+        id: d.id, name: r.name||'', celeb: r.celeb||'',
+        celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
+        area: r.area||'', comment: r.comment||'',
+        yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
+        visits: r.visits||0, saves: r.saves||0,
+        avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
+      });
+    });
+  } catch(e) { allData = DATA; }
+
+  // ★ 반경 3km 스타맛집 필터
+  const RADIUS = 3000;
+  _mspStarResults = allData.filter(d => {
+    const dlat = d.lat - place.lat, dlng = d.lng - place.lng;
+    const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+    d._nearbyDist = dist;
+    d._type = 'star';
+    return dist <= RADIUS;
+  }).sort((a,b) => (a._nearbyDist||0) - (b._nearbyDist||0)).slice(0, 20);
+
+  // ★ 지도 이동 + 지도순 전환
   if (map) {
     switchToMapSort();
     map.setCenter(new kakao.maps.LatLng(place.lat, place.lng));
     map.setLevel(5);
-
-    // ★ 기존 검색 핀 제거
+    // 기존 검색 핀 제거
     if (window._mspSearchMarkers) {
       window._mspSearchMarkers.forEach(m => m.setMap(null));
+      window._mspSearchMarkers = [];
     }
-    window._mspSearchMarkers = [];
-
-    // ★ 선택한 장소 핀 (빨간 핀)
-    const selectedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#EF4444"/><text x="18" y="25" text-anchor="middle" font-size="14">📍</text></svg>`;
-    const selectedMarker = new kakao.maps.Marker({
-      map,
-      position: new kakao.maps.LatLng(place.lat, place.lng),
-      image: new kakao.maps.MarkerImage(
-        'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(selectedSvg),
-        new kakao.maps.Size(36, 44), {offset: new kakao.maps.Point(18, 44)}
-      ),
-      title: place.name,
-      zIndex: 10
+    // ★ 선택한 장소 빨간 핀
+    const selSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#EF4444"/><text x="18" y="25" text-anchor="middle" font-size="14">📍</text></svg>`;
+    const selMarker = new kakao.maps.Marker({
+      map, position: new kakao.maps.LatLng(place.lat, place.lng),
+      image: new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(selSvg), new kakao.maps.Size(36,44),{offset:new kakao.maps.Point(18,44)}),
+      title: place.name, zIndex: 10
     });
-    window._mspSearchMarkers.push(selectedMarker);
-
-    renderList(); // 지도 중심 기준 메인 리스트 재정렬
+    window._mspSearchMarkers = [selMarker];
   }
 
-  // 선택한 장소 표시 (헤더)
-  const headerHtml = `
-    <div style="padding:10px 14px;background:var(--gold-bg);border-bottom:1px solid var(--gold);display:flex;align-items:center;gap:8px">
-      <div>
-        <div style="font-size:13px;font-weight:700;color:var(--gold)">📍 ${place.name}</div>
-        <div style="font-size:11px;color:var(--text3)">${place.sub}</div>
-      </div>
-      <button onclick="mspDoSearch()" style="margin-left:auto;background:none;border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text3);cursor:pointer">← 다시 선택</button>
-    </div>`;
+  // ★ DATA를 주변 스타맛집으로 교체 → renderPins가 이걸 사용
+  DATA = _mspStarResults;
+  document.getElementById('listTitle').textContent = `📍 ${place.name} 주변`;
+  document.getElementById('listCount').textContent = _mspStarResults.length + '곳';
+  renderList();
+  renderPins(); // ★ DATA 교체 후 renderPins → markerMap 채워짐
 
-  // 스타스푼 DB에서 반경 3km 스타맛집 검색
-  const RADIUS = 3000;
-  let allData = DATA;
-  if (DATA.length < 100) {
-    try {
-      const snapAll = await getDocs(query(collection(db, 'restaurants'), limit(2000)));
-      allData = [];
-      snapAll.forEach(d => {
-        const r = d.data();
-        if (!r.hidden) allData.push({
-          id: d.id, name: r.name||'', celeb: r.celeb||'',
-          celebs: r.celebs||[r.celeb||''], cat: r.category||r.cat||'한식',
-          area: r.area||'', comment: r.comment||'',
-          yt: r.video_url||r.yt||'', lat: r.lat||37.5665, lng: r.lng||126.9780,
-          visits: r.visits||0, saves: r.saves||0,
-          avgRating: r.avgRating||0, ratingCount: r.ratingCount||0,
-        });
-      });
-    } catch(e) { allData = DATA; }
-  }
-
-  _mspStarResults = allData.filter(d => {
-    if (d.hidden) return false;
-    const dlat = d.lat - place.lat, dlng = d.lng - place.lng;
-    const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
-    d._nearbyDist = dist;
-    d._type = 'star'; // ★ _type 명시
-    return dist <= RADIUS;
-  }).sort((a,b) => (a._nearbyDist||0) - (b._nearbyDist||0)).slice(0, 20);
-
-  // ★ _mspStarResults를 DATA에 병합 (focusCard가 DATA에서 찾으므로)
-  _mspStarResults.forEach(d => {
-    if (!DATA.find(x => x.id === d.id)) DATA.push(d);
-  });
-
-  // 카카오맵 주변 주요 장소 검색 (역, 관광지, 쇼핑, 카페 등)
+  // 주변 주요 장소 검색
   _mspPlaceResults = await new Promise(resolve => {
     const ps = new kakao.maps.services.Places();
     const center = new kakao.maps.LatLng(place.lat, place.lng);
-    // 주요 장소 카테고리 검색 (AT4=관광명소, SW8=지하철역, MT1=대형마트, CT1=문화시설)
-    ps.categorySearch('AT4', (data1, status1) => {
-      const tour = status1 === kakao.maps.services.Status.OK ? data1.slice(0,5) : [];
-      ps.categorySearch('SW8', (data2, status2) => {
-        const subway = status2 === kakao.maps.services.Status.OK ? data2.slice(0,5) : [];
-        ps.categorySearch('CT1', (data3, status3) => {
-          const culture = status3 === kakao.maps.services.Status.OK ? data3.slice(0,5) : [];
+    ps.categorySearch('AT4', (data1, s1) => {
+      const tour = s1 === kakao.maps.services.Status.OK ? data1.slice(0,5) : [];
+      ps.categorySearch('SW8', (data2, s2) => {
+        const subway = s2 === kakao.maps.services.Status.OK ? data2.slice(0,5) : [];
+        ps.categorySearch('CT1', (data3, s3) => {
+          const culture = s3 === kakao.maps.services.Status.OK ? data3.slice(0,5) : [];
           const all = [...tour, ...subway, ...culture];
           const seen = new Set();
           const results = all
@@ -4035,107 +4014,72 @@ window.mspSelectPlace = async function(idx) {
               const cat = p.category_name || '';
               let icon = '🗺️', iconClass = 'ri-general';
               if (cat.includes('관광') || cat.includes('명소')) { icon='🏛️'; iconClass='ri-tour'; }
-              else if (cat.includes('지하철') || cat.includes('역')) { icon='🚇'; iconClass='ri-general'; }
+              else if (cat.includes('지하철') || cat.includes('역')) { icon='🚇'; }
               else if (cat.includes('문화') || cat.includes('공연')) { icon='🎭'; iconClass='ri-tour'; }
-              else if (cat.includes('마트') || cat.includes('쇼핑')) { icon='🛍️'; iconClass='ri-shop'; }
-              return {
-                id: 'kakao_' + p.id, name: p.place_name,
-                sub: p.road_address_name || p.address_name,
-                lat, lng, dist, icon, iconClass, type: 'place', url: p.place_url, _score: 50
-              };
+              return { id:'kakao_'+p.id, name:p.place_name, sub:p.road_address_name||p.address_name, lat, lng, dist, icon, iconClass, type:'place', _score:50 };
             })
-            .sort((a,b) => a.dist - b.dist)
-            .slice(0, 15);
+            .sort((a,b) => a.dist - b.dist).slice(0, 15);
           resolve(results);
-        }, { location: center, radius: RADIUS, size: 5 });
-      }, { location: center, radius: RADIUS, size: 5 });
-    }, { location: center, radius: RADIUS, size: 5 });
+        }, {location:center, radius:RADIUS, size:5});
+      }, {location:center, radius:RADIUS, size:5});
+    }, {location:center, radius:RADIUS, size:5});
   });
 
-  // 탭 카운트 업데이트
+  // 탭 카운트
   const total = _mspStarResults.length + _mspPlaceResults.length;
   document.getElementById('rtabCnt-all').textContent = total ? `(${total})` : '';
   document.getElementById('rtabCnt-star').textContent = _mspStarResults.length ? `(${_mspStarResults.length})` : '';
   document.getElementById('rtabCnt-place').textContent = _mspPlaceResults.length ? `(${_mspPlaceResults.length})` : '';
 
-  if (_mspStarResults.length > 0) {
-    showToast(`⭐ ${place.name} 주변 스타맛집 ${_mspStarResults.length}곳!`);
-  } else {
-    showToast(`📍 ${place.name} 주변 장소를 보여드려요`);
-  }
-
-  // ★ 주변 장소 결과도 지도에 핀 표시
-  if (map && window._mspSearchMarkers) {
-    _mspPlaceResults.forEach(p => {
-      const icon = p.icon || '🗺️';
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="36" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#3B82F6"/><text x="18" y="25" text-anchor="middle" font-size="13">${icon}</text></svg>`;
-      const marker = new kakao.maps.Marker({
-        map,
-        position: new kakao.maps.LatLng(p.lat, p.lng),
-        image: new kakao.maps.MarkerImage(
-          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
-          new kakao.maps.Size(30, 36), {offset: new kakao.maps.Point(15, 36)}
-        ),
-        title: p.name, zIndex: 5
-      });
-      // 클릭하면 이름 표시
-      kakao.maps.event.addListener(marker, 'click', () => showToast('📍 ' + p.name));
-      window._mspSearchMarkers.push(marker);
-    });
-  }
+  // 선택 장소 헤더
+  const headerHtml = `
+    <div style="padding:10px 14px;background:var(--gold-bg);border-bottom:1px solid var(--gold);display:flex;align-items:center;gap:8px">
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--gold)">📍 ${place.name}</div>
+        <div style="font-size:11px;color:var(--text3)">${place.sub}</div>
+      </div>
+      <button onclick="mspDoSearch()" style="background:none;border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text3);cursor:pointer">← 다시 선택</button>
+    </div>`;
 
   mspCurResultTab = 'all';
   ['all','star','place'].forEach(t => {
     document.getElementById('rtab-'+t)?.classList.toggle('on', t==='all');
   });
   renderMspResultList();
-
-  // 헤더 삽입
   body.insertAdjacentHTML('afterbegin', headerHtml);
   renderMspBasket();
+
+  if (_mspStarResults.length > 0) {
+    showToast(`⭐ ${place.name} 주변 스타맛집 ${_mspStarResults.length}곳!`);
+  } else {
+    showToast(`📍 ${place.name} 주변 장소를 보여드려요`);
+  }
 };
 
 
-// ★ 검색결과 스타맛집 클릭 → 패널 닫고 지도 포커스 + 리스트를 주변 스타맛집으로
+// ★ 검색결과 스타맛집 클릭 → 패널 닫고 지도 팝업 열기
 window._mspFocusStar = function(id) {
-  const d = DATA.find(x => x.id === id);
-  // 패널만 닫기
+  // 패널 닫기
   document.getElementById('mSearchPanel').classList.remove('open');
   document.getElementById('mobileSearch').value = '';
   const cb = document.getElementById('mClearBtn');
   if (cb) cb.style.display = 'none';
 
-  if (!d || !map) return;
+  if (!map) return;
 
-  // ★ 리스트를 _mspStarResults (주변 스타맛집)으로 교체
-  if (_mspStarResults.length > 0) {
-    DATA = _mspStarResults;
-    document.getElementById('listTitle').textContent = '주변 스타맛집';
-    document.getElementById('listCount').textContent = _mspStarResults.length + '곳';
-    renderList();
-    // 검색 임시 핀 제거
-    if (window._mspSearchMarkers) {
-      window._mspSearchMarkers.forEach(m => m.setMap(null));
-      window._mspSearchMarkers = [];
-    }
-    // renderPins 완료 후 팝업 열기
-    renderPins();
-    setTimeout(() => {
-      map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
-      map.setLevel(4);
-      if (markerMap[id]) {
-        kakao.maps.event.trigger(markerMap[id], 'click');
-      } else {
-        showToast('⭐ ' + d.name);
-      }
-    }, 100);
-  } else {
-    // 스타맛집 없으면 그냥 지도만 이동
+  // markerMap에 이미 핀이 있음 (renderPins가 DATA=_mspStarResults 기준으로 만들었으니)
+  const d = DATA.find(x => x.id === id);
+  if (d) {
     map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
     map.setLevel(4);
-    showToast('📍 ' + d.name);
   }
+  setTimeout(() => {
+    if (markerMap[id]) {
+      kakao.maps.event.trigger(markerMap[id], 'click');
+    }
+  }, 150);
 };
+
 
 // ── 탭 전환 ──
 window.switchResultTab = function(tab) {
