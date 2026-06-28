@@ -3987,6 +3987,8 @@ window.mspSelectPlace = async function(idx) {
   }
 
   // ★ DATA를 주변 스타맛집으로 교체 → renderPins가 이걸 사용
+  // selCurator를 '전체'로 바꿔야 filtered()가 모든 큐레이터 핀 표시
+  selCurator = '전체';
   DATA = _mspStarResults;
   document.getElementById('listTitle').textContent = `📍 ${place.name} 주변`;
   document.getElementById('listCount').textContent = _mspStarResults.length + '곳';
