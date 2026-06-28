@@ -1839,11 +1839,9 @@ function renderMobileCuratorStrip() {
   const display = document.getElementById('mSearchDisplay');
   const clearBtn = document.getElementById('mTopClearBtn');
   if (display && window.innerWidth <= 768) {
-    const curatorIcon = STAR_CURATORS.find(c => c.name === selCurator)?.icon || '🍽️';
-    const isFiltered = (selCurator && selCurator !== '전체') || !!regionFilter || !!searchQ;
-    const label = selCurator && selCurator !== '전체'
-      ? `${curatorIcon} ${selCurator}${regionFilter ? ' · ' + regionFilter : ''}`
-      : (regionFilter ? '📍 ' + regionFilter : (searchQ ? searchQ : '맛집, 음식, 지역 검색'));
+    // ★ 검색창은 항상 placeholder처럼 - 큐레이터는 pill 바에서만 표시
+    const isFiltered = !!regionFilter || !!searchQ;
+    const label = regionFilter ? '📍 ' + regionFilter : (searchQ ? searchQ : '맛집, 음식, 지역 검색');
     display.textContent = label;
     display.style.color = isFiltered ? 'var(--text)' : 'var(--text3)';
     if (clearBtn) clearBtn.style.display = isFiltered ? 'block' : 'none';
@@ -4347,14 +4345,10 @@ async function applyMspFilters() {
     b.classList.toggle('on', b.textContent.trim() === selCat || (selCat==='전체' && b.textContent.trim()==='전체'));
   });
 
-  const label = [];
-  if (mspSelRegion) label.push(mspSelRegion);
-  if (mspSelCurator) label.push(mspSelCurator);
-  if (mspSelCat && mspSelCat !== '전체') label.push(mspSelCat);
-  const displayText = label.join(' · ') || '전체 맛집';
-  if (display) { display.textContent = displayText; display.style.color = 'var(--text)'; }
+  // ★ 검색창은 항상 placeholder - 큐레이터/필터는 pill 바에서만 표시
+  if (display) { display.textContent = '맛집, 음식, 지역 검색'; display.style.color = 'var(--text3)'; }
   const topClearBtn = document.getElementById('mTopClearBtn');
-  if (topClearBtn) topClearBtn.style.display = displayText !== '전체 맛집' ? 'block' : 'none';
+  if (topClearBtn) topClearBtn.style.display = 'none';
 
   if (mspSelRegion) {
     document.getElementById('mainSearch').value = mspSelRegion;
