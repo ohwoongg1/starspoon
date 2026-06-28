@@ -3843,6 +3843,8 @@ window.closeMobileSearch = function() {
   document.getElementById('mobileSearch').value = '';
   const cb = document.getElementById('mClearBtn');
   if (cb) cb.style.display = 'none';
+  // ★ 검색 핀은 유지 (사용자가 선택한 장소 핀이 지도에 남아있어야 함)
+  // clearSearch() 호출 시에만 제거
 };
 
 window.onMobileSearchInput = function(v) {
@@ -3937,11 +3939,32 @@ window.mspSelectPlace = async function(idx) {
   const body = document.getElementById('mspResultBody');
   body.innerHTML = '<div style="padding:40px 20px;text-align:center;font-size:13px;color:var(--text3)">주변 맛집 찾는 중...<br><i class="ti ti-loader" style="font-size:24px;display:block;margin:10px auto;opacity:0.4"></i></div>';
 
-  // 지도 이동 + 지도순 전환
+  // 지도 이동 + 지도순 전환 + 핀 표시
   if (map) {
     switchToMapSort();
     map.setCenter(new kakao.maps.LatLng(place.lat, place.lng));
     map.setLevel(5);
+
+    // ★ 기존 검색 핀 제거
+    if (window._mspSearchMarkers) {
+      window._mspSearchMarkers.forEach(m => m.setMap(null));
+    }
+    window._mspSearchMarkers = [];
+
+    // ★ 선택한 장소 핀 (빨간 핀)
+    const selectedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#EF4444"/><text x="18" y="25" text-anchor="middle" font-size="14">📍</text></svg>`;
+    const selectedMarker = new kakao.maps.Marker({
+      map,
+      position: new kakao.maps.LatLng(place.lat, place.lng),
+      image: new kakao.maps.MarkerImage(
+        'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(selectedSvg),
+        new kakao.maps.Size(36, 44), {offset: new kakao.maps.Point(18, 44)}
+      ),
+      title: place.name,
+      zIndex: 10
+    });
+    window._mspSearchMarkers.push(selectedMarker);
+
     renderList(); // 지도 중심 기준 메인 리스트 재정렬
   }
 
@@ -3981,8 +4004,14 @@ window.mspSelectPlace = async function(idx) {
     const dlat = d.lat - place.lat, dlng = d.lng - place.lng;
     const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
     d._nearbyDist = dist;
+    d._type = 'star'; // ★ _type 명시
     return dist <= RADIUS;
   }).sort((a,b) => (a._nearbyDist||0) - (b._nearbyDist||0)).slice(0, 20);
+
+  // ★ _mspStarResults를 DATA에 병합 (focusCard가 DATA에서 찾으므로)
+  _mspStarResults.forEach(d => {
+    if (!DATA.find(x => x.id === d.id)) DATA.push(d);
+  });
 
   // 카카오맵 주변 주요 장소 검색 (역, 관광지, 쇼핑, 카페 등)
   _mspPlaceResults = await new Promise(resolve => {
@@ -4032,7 +4061,27 @@ window.mspSelectPlace = async function(idx) {
   if (_mspStarResults.length > 0) {
     showToast(`⭐ ${place.name} 주변 스타맛집 ${_mspStarResults.length}곳!`);
   } else {
-    showToast(`📍 ${place.name} 주변 맛집을 보여드려요`);
+    showToast(`📍 ${place.name} 주변 장소를 보여드려요`);
+  }
+
+  // ★ 주변 장소 결과도 지도에 핀 표시
+  if (map && window._mspSearchMarkers) {
+    _mspPlaceResults.forEach(p => {
+      const icon = p.icon || '🗺️';
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="36" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#3B82F6"/><text x="18" y="25" text-anchor="middle" font-size="13">${icon}</text></svg>`;
+      const marker = new kakao.maps.Marker({
+        map,
+        position: new kakao.maps.LatLng(p.lat, p.lng),
+        image: new kakao.maps.MarkerImage(
+          'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
+          new kakao.maps.Size(30, 36), {offset: new kakao.maps.Point(15, 36)}
+        ),
+        title: p.name, zIndex: 5
+      });
+      // 클릭하면 이름 표시
+      kakao.maps.event.addListener(marker, 'click', () => showToast('📍 ' + p.name));
+      window._mspSearchMarkers.push(marker);
+    });
   }
 
   mspCurResultTab = 'all';
@@ -4046,6 +4095,48 @@ window.mspSelectPlace = async function(idx) {
   renderMspBasket();
 };
 
+
+// ★ 검색결과 스타맛집 클릭 → 패널 닫고 지도 포커스 + 리스트를 주변 스타맛집으로
+window._mspFocusStar = function(id) {
+  const d = DATA.find(x => x.id === id);
+  // 패널만 닫기
+  document.getElementById('mSearchPanel').classList.remove('open');
+  document.getElementById('mobileSearch').value = '';
+  const cb = document.getElementById('mClearBtn');
+  if (cb) cb.style.display = 'none';
+
+  if (!d || !map) return;
+
+  // ★ 리스트를 _mspStarResults (주변 스타맛집)으로 교체
+  if (_mspStarResults.length > 0) {
+    const prevData = DATA;
+    DATA = _mspStarResults;
+    document.getElementById('listTitle').textContent = '주변 스타맛집';
+    document.getElementById('listCount').textContent = _mspStarResults.length + '곳';
+    renderList();
+    renderPins();
+  }
+
+  // 지도 이동 + 팝업
+  setTimeout(() => {
+    map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
+    map.setLevel(4);
+    if (markerMap[id]) {
+      kakao.maps.event.trigger(markerMap[id], 'click');
+    } else {
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="36" height="42" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="#F59E0B"/><text x="18" y="24" text-anchor="middle" font-size="14">⭐</text></svg>`;
+      const pos = new kakao.maps.LatLng(d.lat, d.lng);
+      const marker = new kakao.maps.Marker({
+        map, position: pos,
+        image: new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg), new kakao.maps.Size(36,42),{offset:new kakao.maps.Point(18,42)})
+      });
+      if (!window._mspSearchMarkers) window._mspSearchMarkers = [];
+      window._mspSearchMarkers.push(marker);
+      markerMap[id] = marker;
+      kakao.maps.event.trigger(marker, 'click');
+    }
+  }, 300);
+};
 
 // ── 탭 전환 ──
 window.switchResultTab = function(tab) {
@@ -4094,7 +4185,7 @@ function renderMspResultList() {
     if (item._type === 'star') {
       const isSavedStar = savedList.includes(item.id);
       const starIcon = STAR_CURATORS.find(c=>c.name===item.celeb)?.icon||'⭐';
-      html += `<div class="msp-result-item" onclick="focusCard('${item.id}');closeMobileSearch()">
+      html += `<div class="msp-result-item" onclick="_mspFocusStar('${item.id}')">
         <div class="msp-result-icon ri-star">${starIcon}</div>
         <div class="msp-result-info">
           <div class="msp-result-name">${item.name}</div>
@@ -4374,6 +4465,11 @@ window.clearSearch = async function() {
   // 모바일 search-mode 해제
   const sheet = document.querySelector('.list-panel');
   if (sheet) sheet.classList.remove('search-mode');
+  // 검색 핀 제거
+  if (window._mspSearchMarkers) {
+    window._mspSearchMarkers.forEach(m => m.setMap(null));
+    window._mspSearchMarkers = [];
+  }
   // 정렬 내 거리순으로 복원
   selSort = 'myDist';
   const sel = document.getElementById('sortSelect');
