@@ -165,6 +165,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 }
 .toast.show{display:flex}
 
+/* ── 콘텐츠 선택 바 ── */
+.content-bar{
+  position:fixed;top:112px;left:8px;right:8px;z-index:198;
+  display:none;
+}
+.content-bar.show{display:block}
+.content-bar-inner{
+  display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+  padding:4px 0;
+}
+.content-bar-inner::-webkit-scrollbar{display:none}
+.cpill{
+  display:flex;align-items:center;gap:5px;
+  background:var(--white);border-radius:16px;
+  padding:5px 12px;font-size:11px;font-weight:600;
+  color:var(--text2);white-space:nowrap;flex-shrink:0;
+  border:1.5px solid var(--border2);box-shadow:var(--shadow);
+  cursor:pointer;transition:all .15s;
+}
+.cpill.on{background:var(--drama);border-color:var(--drama);color:#fff}
+.cpill.artist-pill.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.cpill.movie-pill.on{background:var(--movie);border-color:var(--movie);color:#fff}
+.cpill-count{font-size:10px;opacity:0.7}
+
 @media(max-width:768px){
   .bottom-sheet{height:40vh}
 }
@@ -202,6 +226,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
   <div class="fpill drama" id="pill-drama" onclick="setFilter('drama',this)">🎬 드라마</div>
   <div class="fpill artist" id="pill-artist" onclick="setFilter('artist',this)">⭐ 한류스타</div>
   <div class="fpill movie" id="pill-movie" onclick="setFilter('movie',this)">🎥 영화</div>
+</div>
+
+<!-- 인기 콘텐츠 선택 바 -->
+<div class="content-bar" id="contentBar">
+  <div class="content-bar-inner" id="contentBarInner">
+    <!-- JS로 동적 렌더 -->
+  </div>
 </div>
 
 <!-- 하단 시트 -->
@@ -434,14 +465,79 @@ window.cardClick = function(id) {
   else openPopup(d, null);
 };
 
+// ── 인기 콘텐츠 데이터 ──
+const POPULAR_DRAMAS = ["남자친구","빈센조","경우의 수","화양연화","김비서가 왜 그럴까","호텔 델루나","여신강림","이태원 클라쓰","간 떨어지는 동거","도깨비","멜랑꼴리아","그 해 우리는","검색어를 입력하세요 WWW","월간 집","더 킹 : 영원의 군주","런온","로맨스는 별책부록","나의 아저씨","푸른 바다의 전설","사랑의 불시착"];
+const POPULAR_ARTISTS = ["방탄소년단","블랙핑크","슈퍼주니어","세븐틴","트와이스","동방신기","BTOB","소녀시대","엑소","레드벨벳"];
+const POPULAR_MOVIES = ["광해","아가씨","가장 보통의 연애","택시운전사","건축학개론"];
+
+let curContent = ''; // 선택된 콘텐츠명
+
+// ── 콘텐츠 바 렌더 ──
+function renderContentBar(type) {
+  const bar = document.getElementById('contentBar');
+  const inner = document.getElementById('contentBarInner');
+
+  if (type === 'all') {
+    bar.classList.remove('show');
+    return;
+  }
+
+  bar.classList.add('show');
+  const items = type==='drama' ? POPULAR_DRAMAS : type==='artist' ? POPULAR_ARTISTS : POPULAR_MOVIES;
+  const pillClass = type==='artist' ? 'artist-pill' : type==='movie' ? 'movie-pill' : '';
+  const counts = {};
+  ALL_DATA.filter(d => d.mediaType===type).forEach(d => {
+    counts[d.title] = (counts[d.title]||0) + 1;
+  });
+
+  inner.innerHTML = `<div class="cpill ${pillClass}${curContent===''?' on':''}" onclick="selectContent('',this,'${type}')">전체 ${type==='drama'?'드라마':type==='artist'?'한류스타':'영화'}</div>` +
+    items.map(title => {
+      const cnt = counts[title] || 0;
+      return `<div class="cpill ${pillClass}${curContent===title?' on':''}" onclick="selectContent('${title.replace(/'/g,"\\'")}',this,'${type}')">
+        ${title} <span class="cpill-count">${cnt}</span>
+      </div>`;
+    }).join('');
+}
+
+// ── 콘텐츠 선택 ──
+window.selectContent = function(title, el, type) {
+  curContent = title;
+  document.querySelectorAll('.cpill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+
+  if (!title) {
+    // 전체 선택
+    FILTERED = ALL_DATA.filter(d => d.mediaType===type);
+  } else {
+    FILTERED = ALL_DATA.filter(d => d.title===title);
+  }
+
+  const labels = {drama:'🎬', artist:'⭐', movie:'🎥'};
+  document.getElementById('sheetTitle').textContent = title ? `${labels[type]} ${title}` : `${labels[type]} 전체`;
+  document.getElementById('sheetCount').textContent = FILTERED.length + '곳';
+
+  renderPins();
+  renderList();
+
+  // 첫 번째 장소로 지도 이동
+  if (FILTERED.length > 0) {
+    const bounds = new kakao.maps.LatLngBounds();
+    FILTERED.slice(0, 50).forEach(d => bounds.extend(new kakao.maps.LatLng(d.lat, d.lng)));
+    map.setBounds(bounds, 80);
+    showToast(`${title||'전체'} 촬영지 ${FILTERED.length}곳!`);
+  }
+};
+
 // ── 필터 ──
 window.setFilter = function(type, el) {
   curFilter = type;
+  curContent = '';
   document.querySelectorAll('.fpill').forEach(p => p.classList.remove('on'));
   el.classList.add('on');
   FILTERED = type==='all' ? [...ALL_DATA] : ALL_DATA.filter(d => d.mediaType===type);
   const labels = {all:'성지순례 명소', drama:'🎬 드라마 촬영지', artist:'⭐ 한류스타 방문지', movie:'🎥 영화 촬영지'};
   document.getElementById('sheetTitle').textContent = labels[type];
+  renderContentBar(type);
   renderPins();
   renderList();
 };
