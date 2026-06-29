@@ -33,6 +33,60 @@
   --kakao:#FEE500;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+
+/* ── 온보딩 스플래시 ── */
+.onboard-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#1A1A18 0%,#2D2A20 50%,#1A1A18 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 24px;text-align:center;
+  animation:fadeInSplash .4s ease;
+}
+@keyframes fadeInSplash{from{opacity:0}to{opacity:1}}
+.onboard-overlay.hide{
+  animation:fadeOutSplash .5s ease forwards;
+}
+@keyframes fadeOutSplash{from{opacity:1}to{opacity:0;pointer-events:none}}
+.onboard-logo{
+  display:flex;align-items:center;gap:10px;margin-bottom:20px;
+}
+.onboard-logo-icon{
+  width:52px;height:52px;background:var(--gold);
+  border-radius:14px;display:flex;align-items:center;
+  justify-content:center;font-size:26px;
+}
+.onboard-logo-text{font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px}
+.onboard-logo-text span{color:var(--gold)}
+.onboard-title{
+  font-size:20px;font-weight:700;color:#fff;
+  margin-bottom:8px;line-height:1.4;
+}
+.onboard-sub{
+  font-size:14px;color:rgba(255,255,255,0.6);
+  margin-bottom:28px;line-height:1.6;
+}
+.onboard-curators{
+  display:flex;flex-wrap:wrap;gap:8px;
+  justify-content:center;margin-bottom:32px;
+}
+.onboard-curator{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:20px;padding:8px 14px;
+  font-size:13px;font-weight:600;color:#fff;
+}
+.onboard-start-btn{
+  width:100%;max-width:280px;
+  padding:16px;background:var(--gold);color:#fff;
+  border:none;border-radius:14px;font-size:16px;font-weight:700;
+  cursor:pointer;margin-bottom:16px;
+  box-shadow:0 4px 20px rgba(245,158,11,0.4);
+}
+.onboard-skip{
+  font-size:12px;color:rgba(255,255,255,0.4);
+  background:none;border:none;cursor:pointer;
+}
 /* iOS input 자동 줌 방지 */
 @media screen and (max-width:768px){
   input,select,textarea{font-size:16px!important}
@@ -680,6 +734,28 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 <body>
 
 <!-- ── 헤더 ── -->
+
+<!-- ── 온보딩 스플래시 ── -->
+<div class="onboard-overlay" id="onboardOverlay">
+  <div class="onboard-logo">
+    <div class="onboard-logo-icon">🥄</div>
+    <span class="onboard-logo-text">Star<span>spoon</span></span>
+  </div>
+  <div class="onboard-title">연예인이 직접 간 맛집만<br>지도에서 찾아보세요!</div>
+  <div class="onboard-sub">유튜브·방송에 나온 스타 맛집을<br>큐레이터별로 탐색하고 코스도 짜요</div>
+  <div class="onboard-curators">
+    <span class="onboard-curator">🎵 성시경</span>
+    <span class="onboard-curator">😄 풍자</span>
+    <span class="onboard-curator">😋 이영자</span>
+    <span class="onboard-curator">🍱 히밥</span>
+    <span class="onboard-curator">🌸 입짧은햇님</span>
+    <span class="onboard-curator">🍺 김사원세끼</span>
+  </div>
+  <button class="onboard-start-btn" onclick="closeOnboard()">
+    🗺️ 맛집 지도 시작하기
+  </button>
+  <button class="onboard-skip" onclick="closeOnboard()">다시 보지 않기</button>
+</div>
 <header class="header">
   <a class="logo" href="/">
     <img src="/icon-192.png" style="width:32px;height:32px;border-radius:8px;" alt="스타스푼 로고">
@@ -1132,6 +1208,31 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
+
+// ── 온보딩 스플래시 ──
+window.closeOnboard = function() {
+  const overlay = document.getElementById('onboardOverlay');
+  if (!overlay) return;
+  overlay.classList.add('hide');
+  setTimeout(() => overlay.remove(), 500);
+  localStorage.setItem('starspoon_onboarded', '1');
+};
+
+// 첫 방문자만 스플래시 표시
+(function() {
+  const onboarded = localStorage.getItem('starspoon_onboarded');
+  if (onboarded) {
+    // 재방문자: 스플래시 바로 제거
+    const overlay = document.getElementById('onboardOverlay');
+    if (overlay) overlay.remove();
+  } else {
+    // 첫 방문자: 8초 후 자동 닫기
+    setTimeout(() => {
+      const overlay = document.getElementById('onboardOverlay');
+      if (overlay) closeOnboard();
+    }, 8000);
+  }
+})();
 
 // ── 상태 ──
 let currentUser = null;
@@ -2120,6 +2221,15 @@ async function loadRests(celeb) {
   try {
     document.getElementById('listTitle').textContent = celeb + ' 맛집';
     document.getElementById('listCount').textContent = '로딩 중...';
+    // ★ 힌트 메시지
+    const hints = {
+      '성시경': '🎵 성시경이 다녀간 맛집을 불러오는 중...',
+      '풍자': '😄 풍자가 극찬한 맛집을 불러오는 중...',
+      '이영자': '😋 이영자의 숨은 맛집을 불러오는 중...',
+      '히밥': '🍱 히밥이 먹방한 맛집을 불러오는 중...',
+      '입짧은햇님': '🌸 입짧은햇님의 맛집을 불러오는 중...',
+    };
+    if (hints[celeb]) showToast(hints[celeb]);
     let q = query(collection(db, 'restaurants'), where('celeb', '==', celeb), limit(2000));
     const snap = await getDocs(q);
     DATA = [];
