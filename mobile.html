@@ -1327,11 +1327,6 @@ window.openPlaceInfo = function(name, lat, lng) {
     const addr = best.road_address_name || best.address_name || '';
     const placeUrl = best.place_url || '';
 
-    // 현재 영업 여부 (카카오 API에서 직접 제공 안 함 → 시간대 기반 추정)
-    const now = new Date();
-    const hour = now.getHours();
-    const isLikelyOpen = hour >= 9 && hour < 22;
-
     let bodyHtml = '';
 
     if (addr) bodyHtml += `
@@ -1349,10 +1344,7 @@ window.openPlaceInfo = function(name, lat, lng) {
     bodyHtml += `
       <div class="place-info-row">
         <span class="place-info-icon">⏰</span>
-        <span>영업 정보</span>
-        <span class="${isLikelyOpen?'place-info-status-open':'place-info-status-close'}">
-          ${isLikelyOpen?'🟢 영업 중일 가능성 높음':'🔴 영업 종료 가능성 높음'}
-        </span>
+        <span style="color:var(--text3);font-size:12px">영업시간은 아래 버튼에서 확인하세요</span>
       </div>`;
 
     document.getElementById('placeInfoBody').innerHTML = bodyHtml;
