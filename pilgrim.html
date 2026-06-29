@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Starspoon 성지순례 — K드라마·영화·한류스타 촬영지 지도</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=25b433faf5d746c938cbcc7658f650b0&libraries=services"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#F59E0B;--gold-bg:rgba(245,158,11,0.10);
+  --drama:#8B5CF6;--drama-bg:rgba(139,92,246,0.10);
+  --artist:#F59E0B;--artist-bg:rgba(245,158,11,0.10);
+  --movie:#EF4444;--movie-bg:rgba(239,68,68,0.10);
+  --show:#10B981;--show-bg:rgba(16,185,129,0.10);
+  --bg:#0F0F1A;--bg2:#1A1A2E;--bg3:#16213E;
+  --white:#fff;--text:#F0F0FF;--text2:#A0A0C0;--text3:#6060A0;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+  --shadow:0 4px 20px rgba(0,0,0,0.4);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;height:100vh;overflow:hidden}
+
+/* ── 상단 바 ── */
+.top-bar{
+  position:fixed;top:8px;left:8px;right:8px;z-index:200;
+  display:flex;align-items:center;gap:8px;
+}
+.logo-box{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(15,15,26,0.92);backdrop-filter:blur(12px);
+  border-radius:12px;padding:8px 14px;border:1px solid var(--border2);
+  box-shadow:var(--shadow);flex-shrink:0;text-decoration:none;
+}
+.logo-text{font-size:14px;font-weight:800;color:var(--text)}
+.logo-text span{color:var(--gold)}
+.search-box{
+  flex:1;display:flex;align-items:center;gap:8px;
+  background:rgba(15,15,26,0.92);backdrop-filter:blur(12px);
+  border-radius:12px;padding:9px 14px;border:1px solid var(--border2);
+  box-shadow:var(--shadow);
+}
+.search-box input{
+  flex:1;border:none;outline:none;background:none;
+  font-size:14px;color:var(--text);
+}
+.search-box input::placeholder{color:var(--text3);font-size:13px}
+
+/* ── 필터 pill 바 ── */
+.filter-bar{
+  position:fixed;top:70px;left:8px;right:8px;z-index:199;
+  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+  padding:4px 0;
+}
+.filter-bar::-webkit-scrollbar{display:none}
+.fpill{
+  display:flex;align-items:center;gap:5px;
+  background:rgba(15,15,26,0.88);backdrop-filter:blur(10px);
+  border-radius:20px;padding:7px 14px;font-size:12px;font-weight:600;
+  color:var(--text2);white-space:nowrap;flex-shrink:0;
+  border:1.5px solid var(--border2);box-shadow:var(--shadow);cursor:pointer;
+  transition:all .15s;
+}
+.fpill.on{border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,0.12)}
+.fpill.drama.on{border-color:var(--drama);color:var(--drama);background:var(--drama-bg)}
+.fpill.artist.on{border-color:var(--artist);color:var(--artist);background:var(--artist-bg)}
+.fpill.movie.on{border-color:var(--movie);color:var(--movie);background:var(--movie-bg)}
+
+/* ── 카카오맵 ── */
+#kakao-map{width:100%;height:100vh}
+
+/* ── 하단 시트 ── */
+.bottom-sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:var(--bg2);border-radius:20px 20px 0 0;
+  border-top:1px solid var(--border2);
+  box-shadow:0 -8px 32px rgba(0,0,0,0.5);
+  display:flex;flex-direction:column;
+  height:42vh;transition:height .3s cubic-bezier(.25,.46,.45,.94);
+}
+.bottom-sheet::before{
+  content:'';display:block;width:40px;height:4px;
+  background:var(--border2);border-radius:2px;
+  margin:12px auto 0;flex-shrink:0;
+}
+.sheet-header{
+  padding:8px 16px 10px;display:flex;align-items:center;
+  justify-content:space-between;flex-shrink:0;border-bottom:1px solid var(--border);
+}
+.sheet-title{font-size:13px;font-weight:700;color:var(--text)}
+.sheet-count{font-size:12px;color:var(--text3)}
+.sheet-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+
+/* ── 카드 ── */
+.pilgrim-card{
+  padding:13px 16px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .12s;
+}
+.pilgrim-card:active{background:rgba(255,255,255,0.04)}
+.card-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.card-badge{
+  font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;
+  flex-shrink:0;margin-top:2px;
+}
+.badge-drama{background:var(--drama-bg);color:var(--drama)}
+.badge-artist{background:var(--artist-bg);color:var(--artist)}
+.badge-movie{background:var(--movie-bg);color:var(--movie)}
+.card-info{flex:1;min-width:0}
+.card-title{font-size:11px;color:var(--text3);margin-bottom:2px}
+.card-place{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-story{
+  font-size:12px;color:var(--text2);line-height:1.5;
+  padding:7px 10px;background:rgba(255,255,255,0.04);
+  border-radius:8px;border-left:2.5px solid var(--drama);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  margin-bottom:8px;
+}
+.card-story.artist{border-left-color:var(--artist)}
+.card-story.movie{border-left-color:var(--movie)}
+.card-btns{display:flex;gap:6px;flex-wrap:wrap}
+.card-btn{
+  display:flex;align-items:center;gap:4px;
+  padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;
+  border:1px solid;cursor:pointer;text-decoration:none;background:none;
+  transition:all .12s;
+}
+.btn-nav{color:#03C75A;border-color:#03C75A}
+.btn-addr{color:var(--text3);border-color:var(--border2)}
+.btn-share{color:var(--gold);border-color:var(--gold)}
+
+/* ── 팝업 ── */
+.map-popup{
+  background:var(--bg2);border-radius:14px;
+  padding:14px 14px 12px;min-width:220px;max-width:260px;
+  box-shadow:0 8px 32px rgba(0,0,0,0.6);
+  border:1px solid var(--border2);font-family:-apple-system,sans-serif;
+}
+.popup-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-bottom:6px;display:inline-block}
+.popup-title{font-size:11px;color:var(--text3);margin-bottom:2px}
+.popup-place{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
+.popup-story{font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:10px;
+  padding:6px 8px;background:rgba(255,255,255,0.05);border-radius:6px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+
+/* ── 로딩 ── */
+.loading{
+  position:fixed;inset:0;background:var(--bg);z-index:999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+}
+.loading-title{font-size:20px;font-weight:800;color:var(--text)}
+.loading-sub{font-size:13px;color:var(--text3)}
+.loading-bar{width:200px;height:4px;background:var(--border2);border-radius:2px;overflow:hidden}
+.loading-fill{height:100%;background:linear-gradient(90deg,var(--drama),var(--gold));border-radius:2px;width:0;transition:width .3s}
+
+/* ── 빈 상태 ── */
+.empty{padding:48px 20px;text-align:center;color:var(--text3)}
+.empty i{font-size:36px;display:block;margin-bottom:10px;opacity:.3}
+
+/* ── 토스트 ── */
+.toast{
+  position:fixed;bottom:48vh;left:50%;transform:translateX(-50%);
+  background:rgba(26,26,46,0.95);backdrop-filter:blur(10px);
+  color:var(--text);padding:10px 18px;border-radius:10px;
+  font-size:13px;display:none;align-items:center;gap:8px;
+  z-index:999;border:1px solid var(--border2);white-space:nowrap;
+}
+.toast.show{display:flex}
+
+@media(max-width:768px){
+  .bottom-sheet{height:40vh}
+}
+</style>
+</head>
+<body>
+
+<!-- 로딩 -->
+<div class="loading" id="loading">
+  <div style="font-size:48px">🎬</div>
+  <div class="loading-title">Star<span style="color:var(--gold)">spoon</span> 성지순례</div>
+  <div class="loading-sub" id="loadingMsg">K드라마·영화·한류스타 촬영지 불러오는 중...</div>
+  <div class="loading-bar"><div class="loading-fill" id="loadingFill"></div></div>
+</div>
+
+<!-- 지도 -->
+<div id="kakao-map"></div>
+
+<!-- 상단 바 -->
+<div class="top-bar">
+  <a class="logo-box" href="/mobile.html">
+    <span style="font-size:18px">🎬</span>
+    <span class="logo-text">Star<span>spoon</span></span>
+  </a>
+  <div class="search-box">
+    <i class="ti ti-search" style="color:var(--text3);font-size:15px;flex-shrink:0"></i>
+    <input type="text" id="searchInput" placeholder="드라마, 영화, 장소 검색..." oninput="onSearchInput(this.value)">
+    <button id="clearBtn" onclick="clearSearch()" style="display:none;background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer">✕</button>
+  </div>
+</div>
+
+<!-- 필터 바 -->
+<div class="filter-bar">
+  <div class="fpill on" id="pill-all" onclick="setFilter('all',this)">🗺️ 전체</div>
+  <div class="fpill drama" id="pill-drama" onclick="setFilter('drama',this)">🎬 드라마</div>
+  <div class="fpill artist" id="pill-artist" onclick="setFilter('artist',this)">⭐ 한류스타</div>
+  <div class="fpill movie" id="pill-movie" onclick="setFilter('movie',this)">🎥 영화</div>
+</div>
+
+<!-- 하단 시트 -->
+<div class="bottom-sheet" id="bottomSheet">
+  <div class="sheet-header">
+    <span class="sheet-title" id="sheetTitle">성지순례 명소</span>
+    <span class="sheet-count" id="sheetCount">로딩 중...</span>
+  </div>
+  <div class="sheet-body" id="sheetBody">
+    <div class="empty"><i class="ti ti-map-pin"></i><p>데이터 불러오는 중...</p></div>
+  </div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, limit, where, orderBy } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyC5nf84GbQQ_5vIDwhIvTZ5zPqf7nrnSxU",
+  authDomain: "starspoon-120d7.firebaseapp.com",
+  projectId: "starspoon-120d7",
+  storageBucket: "starspoon-120d7.firebasestorage.app",
+  messagingSenderId: "672370227821",
+  appId: "1:672370227821:web:aea1d9c6ca8587842a5d64"
+});
+const db = getFirestore(app);
+
+// ── 상태 ──
+let map;
+let ALL_DATA = [];
+let FILTERED = [];
+let curFilter = 'all';
+let searchQ = '';
+let markers = [];
+let markerMap = {};
+let myLat = 37.5550, myLng = 126.9700;
+
+// ── 지도 초기화 ──
+kakao.maps.load(async function() {
+  map = new kakao.maps.Map(document.getElementById('kakao-map'), {
+    center: new kakao.maps.LatLng(37.5550, 126.9700),
+    level: 8
+  });
+  map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
+
+  // 내 위치
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      myLat = pos.coords.latitude;
+      myLng = pos.coords.longitude;
+      map.setCenter(new kakao.maps.LatLng(myLat, myLng));
+    }, ()=>{}, {timeout:3000});
+  }
+
+  // 데이터 로드
+  await loadData();
+});
+
+// ── 데이터 로드 ──
+async function loadData() {
+  try {
+    setLoading(10, '성지순례 데이터 연결 중...');
+    const snap = await getDocs(query(collection(db, 'pilgrimages'), limit(9600)));
+    setLoading(60, '지도에 표시하는 중...');
+    ALL_DATA = [];
+    snap.forEach(d => ALL_DATA.push({id:d.id, ...d.data()}));
+    setLoading(90, '완성 중...');
+    FILTERED = [...ALL_DATA];
+    renderPins();
+    renderList();
+    setLoading(100, '완료!');
+    setTimeout(() => document.getElementById('loading').style.display='none', 500);
+    showToast(`🎬 ${ALL_DATA.length.toLocaleString()}곳의 성지를 불러왔어요!`);
+  } catch(e) {
+    console.error(e);
+    document.getElementById('loadingMsg').textContent = '로드 실패: ' + e.message;
+  }
+}
+
+function setLoading(pct, msg) {
+  document.getElementById('loadingFill').style.width = pct + '%';
+  document.getElementById('loadingMsg').textContent = msg;
+}
+
+// ── 핀 렌더 ──
+function renderPins() {
+  markers.forEach(m => m.setMap(null));
+  markers = []; markerMap = {};
+
+  // 지도 범위 내 핀만 (성능)
+  const bounds = map ? map.getBounds() : null;
+  const visible = bounds
+    ? FILTERED.filter(d => d.lat >= bounds.getSouthWest().getLat() && d.lat <= bounds.getNorthEast().getLat() && d.lng >= bounds.getSouthWest().getLng() && d.lng <= bounds.getNorthEast().getLng())
+    : FILTERED.slice(0, 300);
+
+  // 최대 500개 핀
+  visible.slice(0, 500).forEach(d => {
+    const color = d.mediaType==='drama' ? '#8B5CF6' : d.mediaType==='artist' ? '#F59E0B' : '#EF4444';
+    const icon = d.mediaType==='drama' ? '🎬' : d.mediaType==='artist' ? '⭐' : '🎥';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="38" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="${color}"/><text x="18" y="24" text-anchor="middle" font-size="13">${icon}</text></svg>`;
+    const marker = new kakao.maps.Marker({
+      map, position: new kakao.maps.LatLng(d.lat, d.lng),
+      image: new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg), new kakao.maps.Size(32,38),{offset:new kakao.maps.Point(16,38)}),
+      title: d.placeName
+    });
+    kakao.maps.event.addListener(marker, 'click', () => openPopup(d, marker));
+    markerMap[d.id] = marker;
+    markers.push(marker);
+  });
+
+  document.getElementById('sheetCount').textContent = FILTERED.length.toLocaleString() + '곳';
+}
+
+// ── 팝업 ──
+let _openPopup = null;
+function openPopup(d, marker) {
+  if (_openPopup) { _openPopup.setMap(null); _openPopup = null; }
+
+  const badgeClass = d.mediaType==='drama'?'badge-drama':d.mediaType==='artist'?'badge-artist':'badge-movie';
+  const badgeText = d.mediaType==='drama'?'🎬 드라마':d.mediaType==='artist'?'⭐ 한류스타':'🎥 영화';
+  const storyClass = d.mediaType==='artist'?'artist':d.mediaType==='movie'?'movie':'';
+
+  const div = document.createElement('div');
+  div.className = 'map-popup';
+  div.innerHTML = `
+    <button onclick="closePopup()" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:16px;color:var(--text3);cursor:pointer;line-height:1">✕</button>
+    <span class="popup-badge ${badgeClass}">${badgeText}</span>
+    <div class="popup-title">${d.title}</div>
+    <div class="popup-place">${d.placeIcon||'📍'} ${d.placeName}</div>
+    <div class="popup-story">"${d.story||'이 장소에서 촬영되었어요'}"</div>
+    <div style="display:flex;gap:6px">
+      <a href="#" onclick="event.preventDefault();openNav('${d.placeName.replace(/'/g,"\\'")}',${d.lat},${d.lng})" class="card-btn btn-nav" style="flex:1;justify-content:center">🟢 길찾기</a>
+      <button onclick="copyAddr('${d.addr.replace(/'/g,"\\'")}') " class="card-btn btn-addr" style="flex:1;justify-content:center">📍 주소복사</button>
+    </div>
+    ${d.operTime && d.operTime!=='정보없음' ? `<div style="font-size:11px;color:var(--text3);margin-top:8px">⏰ ${d.operTime}</div>` : ''}`;
+
+  div.addEventListener('click', e => e.stopPropagation());
+  div.addEventListener('touchstart', e => e.stopPropagation(), {passive:true});
+
+  const pos = new kakao.maps.LatLng(d.lat, d.lng);
+  _openPopup = new kakao.maps.CustomOverlay({position:pos, content:div, yAnchor:1.4, zIndex:10});
+  _openPopup.setMap(map);
+  map.setCenter(pos);
+  map.setLevel(5);
+
+  // 리스트에서 해당 카드 하이라이트
+  document.querySelectorAll('.pilgrim-card').forEach(c => c.style.background='');
+  const card = document.getElementById('card-'+d.id);
+  if (card) {
+    card.style.background = 'rgba(255,255,255,0.05)';
+    card.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+}
+
+window.closePopup = function() {
+  if (_openPopup) { _openPopup.setMap(null); _openPopup = null; }
+};
+kakao.maps.load(() => {
+  // 지도 클릭 → 팝업 닫기 (지도 초기화 후)
+  setTimeout(() => {
+    if (map) kakao.maps.event.addListener(map, 'click', () => {
+      if (_openPopup) { _openPopup.setMap(null); _openPopup = null; }
+    });
+  }, 1000);
+});
+
+// 드래그 끝 → 핀 재렌더
+kakao.maps.load(() => {
+  setTimeout(() => {
+    if (map) kakao.maps.event.addListener(map, 'dragend', renderPins);
+    if (map) kakao.maps.event.addListener(map, 'zoom_changed', renderPins);
+  }, 1000);
+});
+
+// ── 리스트 렌더 ──
+function renderList() {
+  const body = document.getElementById('sheetBody');
+  const items = searchQ
+    ? FILTERED.filter(d =>
+        d.title?.includes(searchQ) ||
+        d.placeName?.includes(searchQ) ||
+        d.story?.includes(searchQ) ||
+        d.addr?.includes(searchQ)
+      )
+    : FILTERED;
+
+  document.getElementById('sheetCount').textContent = items.length.toLocaleString() + '곳';
+
+  if (!items.length) {
+    body.innerHTML = '<div class="empty"><i class="ti ti-mood-empty"></i><p>검색 결과가 없어요</p></div>';
+    return;
+  }
+
+  // 최대 100개 표시
+  body.innerHTML = items.slice(0, 100).map(d => {
+    const badgeClass = d.mediaType==='drama'?'badge-drama':d.mediaType==='artist'?'badge-artist':'badge-movie';
+    const badgeText = d.typeLabel || '드라마';
+    const storyClass = d.mediaType==='artist'?'artist':d.mediaType==='movie'?'movie':'';
+    return `<div class="pilgrim-card" id="card-${d.id}" onclick="cardClick('${d.id}')">
+      <div class="card-top">
+        <span class="card-badge ${badgeClass}">${badgeText}</span>
+        <div class="card-info">
+          <div class="card-title">${d.title}</div>
+          <div class="card-place">${d.placeIcon||'📍'} ${d.placeName}</div>
+        </div>
+      </div>
+      <div class="card-story ${storyClass}">"${d.story||'이 장소에서 촬영되었어요'}"</div>
+      <div class="card-btns">
+        <a href="#" onclick="event.preventDefault();event.stopPropagation();openNav('${d.placeName.replace(/'/g,"\\'")}',${d.lat},${d.lng})" class="card-btn btn-nav">🟢 길찾기</a>
+        <button onclick="event.stopPropagation();copyAddr('${d.addr.replace(/'/g,"\\'")}') " class="card-btn btn-addr">📍 주소</button>
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center">${d.addr?.split(' ').slice(0,3).join(' ')||''}</span>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (items.length > 100) {
+    body.innerHTML += `<div style="padding:16px;text-align:center;font-size:12px;color:var(--text3)">지도를 움직여 주변 장소를 탐색하세요</div>`;
+  }
+}
+
+window.cardClick = function(id) {
+  const d = ALL_DATA.find(x => x.id===id);
+  if (!d || !map) return;
+  map.setCenter(new kakao.maps.LatLng(d.lat, d.lng));
+  map.setLevel(5);
+  if (markerMap[id]) kakao.maps.event.trigger(markerMap[id], 'click');
+  else openPopup(d, null);
+};
+
+// ── 필터 ──
+window.setFilter = function(type, el) {
+  curFilter = type;
+  document.querySelectorAll('.fpill').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  FILTERED = type==='all' ? [...ALL_DATA] : ALL_DATA.filter(d => d.mediaType===type);
+  const labels = {all:'성지순례 명소', drama:'🎬 드라마 촬영지', artist:'⭐ 한류스타 방문지', movie:'🎥 영화 촬영지'};
+  document.getElementById('sheetTitle').textContent = labels[type];
+  renderPins();
+  renderList();
+};
+
+// ── 검색 ──
+window.onSearchInput = function(v) {
+  searchQ = v.trim();
+  document.getElementById('clearBtn').style.display = v ? 'block' : 'none';
+  renderList();
+  // 검색어 있으면 핀도 필터
+  if (searchQ) {
+    const matched = FILTERED.filter(d =>
+      d.title?.includes(searchQ) || d.placeName?.includes(searchQ) || d.story?.includes(searchQ)
+    );
+    if (matched.length > 0) {
+      markers.forEach(m => m.setMap(null));
+      markers = [];
+      matched.slice(0, 200).forEach(d => {
+        const color = d.mediaType==='drama'?'#8B5CF6':d.mediaType==='artist'?'#F59E0B':'#EF4444';
+        const icon = d.mediaType==='drama'?'🎬':d.mediaType==='artist'?'⭐':'🎥';
+        const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="38" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="${color}"/><text x="18" y="24" text-anchor="middle" font-size="13">${icon}</text></svg>`;
+        const marker = new kakao.maps.Marker({
+          map, position: new kakao.maps.LatLng(d.lat, d.lng),
+          image: new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg), new kakao.maps.Size(32,38),{offset:new kakao.maps.Point(16,38)})
+        });
+        kakao.maps.event.addListener(marker, 'click', () => openPopup(d, marker));
+        markerMap[d.id] = marker;
+        markers.push(marker);
+      });
+      if (matched.length > 0) {
+        map.setCenter(new kakao.maps.LatLng(matched[0].lat, matched[0].lng));
+        map.setLevel(7);
+      }
+    }
+  } else {
+    renderPins();
+  }
+};
+
+window.clearSearch = function() {
+  searchQ = '';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('clearBtn').style.display = 'none';
+  renderPins();
+  renderList();
+};
+
+// ── 길찾기 ──
+window.openNav = function(name, lat, lng) {
+  const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const appUrl = `nmap://route/walk?dlat=${lat}&dlng=${lng}&dname=${encodeURIComponent(name)}&appname=starspoon`;
+  const webUrl = `https://map.naver.com/p/directions/-/-/${lng},${lat},${encodeURIComponent(name)},PLACE_POI/-/walk`;
+  if (isIOS && navigator.share) {
+    navigator.share({title:'길찾기: '+name, url:webUrl});
+  } else {
+    window.location.href = appUrl;
+    setTimeout(() => window.location.href = webUrl, 2000);
+  }
+};
+
+// ── 주소 복사 ──
+window.copyAddr = function(addr) {
+  navigator.clipboard?.writeText(addr).then(() => showToast('📍 주소가 복사됐어요!'));
+};
+
+// ── 토스트 ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+window.showToast = showToast;
+</script>
+</body>
+</html>
