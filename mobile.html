@@ -6286,16 +6286,22 @@ function showFinishSummary() {
   // 장소별 상세 목록
   const placesDetail = _animPlaces.map((p, i) => {
     const dist = segDists[i] ? formatDist(segDists[i]) : '';
+    const walkMin = segDists[i] ? Math.round(segDists[i] / 67) : 0;
     const dbItem = DATA.find(d => d.id === p.id || ('star_' + d.id) === p.id);
-    const comment = dbItem?.comment || p.sub || '';
+    const comment = dbItem?.comment || p.sub || p.story || '';
+    const prevPlace = i===0 ? _animBase : _animPlaces[i-1];
+    const naverNavUrl = `https://map.naver.com/p/directions/${prevPlace.lng},${prevPlace.lat},${encodeURIComponent(prevPlace.name||'출발지')},PLACE_POI/${p.lng},${p.lat},${encodeURIComponent(p.name)},PLACE_POI/-/walk`;
     return `<div style="display:flex;align-items:flex-start;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">
       <div style="width:22px;height:22px;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${i+1}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:12px;font-weight:700;color:var(--text)">${p.name}</div>
         ${comment ? `<div style="font-size:10px;color:var(--text3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">"${comment}"</div>` : ''}
-        ${dist ? `<div style="font-size:10px;color:var(--text3)">다음 장소까지 ${dist}</div>` : ''}
+        ${dist ? `<div style="font-size:10px;color:var(--text3)">
+          🚶 도보 약 ${walkMin}분 (${dist})
+          <a href="${naverNavUrl}" target="_blank" style="color:#03C75A;font-weight:600;margin-left:4px;text-decoration:none">네이버 길찾기 →</a>
+        </div>` : ''}
       </div>
-      <a href="#" onclick="event.preventDefault();openNavigation('${p.name.replace(/'/g,String.fromCharCode(39))}',${p.lat||0},${p.lng||0})" style="font-size:10px;color:var(--gold);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;text-decoration:none;flex-shrink:0;white-space:nowrap">🗺️ 길찾기</a>
+      <a href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${p.name.replace(/'/g,String.fromCharCode(39))}',${p.lat||0},${p.lng||0})" style="font-size:10px;color:var(--gold);border:1px solid var(--gold);border-radius:5px;padding:3px 6px;text-decoration:none;flex-shrink:0;white-space:nowrap">🗺️ 길찾기</a>
     </div>`;
   }).join('');
 
@@ -6492,6 +6498,40 @@ initKakaoLogin();
   });
 
   await loadStarCurators(); // 큐레이터 먼저
+
+  // ★ pilgrim.html에서 코스담기로 넘어온 경우
+  const _urlParams2 = new URLSearchParams(window.location.search);
+  if (_urlParams2.get('from') === 'pilgrim') {
+    const pilgrimData = localStorage.getItem('starspoon_pilgrim_course');
+    if (pilgrimData) {
+      try {
+        const courseData = JSON.parse(pilgrimData);
+        localStorage.removeItem('starspoon_pilgrim_course');
+        // globalBasket에 담기
+        window._globalBasket = courseData.places.map(p => ({
+          id: p.id, name: p.name,
+          lat: p.lat, lng: p.lng,
+          type: 'pilgrim',
+          icon: p.icon || '🎬',
+          celeb: p.title || ''
+        }));
+        renderGlobalBasketBar();
+        // 기준점 설정
+        if (courseData.baseLat && courseData.baseLng) {
+          mCourseBasePlace = {
+            name: courseData.baseName || '출발지',
+            lat: courseData.baseLat,
+            lng: courseData.baseLng
+          };
+        }
+        // 코스짜기 패널 자동 열기
+        setTimeout(() => {
+          openCourseFromBasket();
+          showToast(`🎬 성지순례 ${courseData.places.length}곳 코스짜기 시작!`);
+        }, 800);
+      } catch(e) { console.log('pilgrim 연동 오류:', e); }
+    }
+  }
 
   // URL에 courseId 있으면 공유받은 코스 표시
   const _urlParams = new URLSearchParams(window.location.search);

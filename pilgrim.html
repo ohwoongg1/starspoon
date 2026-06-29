@@ -127,7 +127,63 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .btn-addr{color:var(--text3);border-color:var(--border2)}
 .btn-share{color:var(--gold);border-color:var(--gold)}
 
-/* ── 카드 이미지 ── */
+/* ── 기준점 설정 바 ── */
+.base-bar{
+  position:fixed;top:112px;left:8px;right:8px;z-index:197;
+  background:var(--white);border-radius:12px;
+  border:1px solid var(--border);box-shadow:var(--shadow);
+  padding:10px 14px;display:flex;align-items:center;gap:8px;
+}
+.base-bar.has-content{border-color:var(--gold)}
+.base-btn{
+  display:flex;align-items:center;gap:5px;
+  padding:7px 12px;border-radius:8px;font-size:12px;font-weight:600;
+  border:1.5px solid var(--border2);background:none;cursor:pointer;
+  color:var(--text2);transition:all .15s;flex-shrink:0;
+}
+.base-btn.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.base-input{
+  flex:1;border:none;outline:none;background:none;
+  font-size:13px;color:var(--text);
+}
+.base-input::placeholder{color:var(--text3);font-size:12px}
+.base-clear{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;flex-shrink:0}
+
+/* ── 코스담기 골드바 ── */
+.pilgrim-basket{
+  position:fixed;bottom:0;left:0;right:0;z-index:400;
+  background:var(--gold);color:#fff;
+  display:none;flex-direction:column;
+  box-shadow:0 -4px 16px rgba(245,158,11,0.4);
+}
+.pilgrim-basket.show{display:flex}
+.basket-chips{
+  display:flex;gap:6px;padding:8px 14px 0;
+  overflow-x:auto;scrollbar-width:none;
+}
+.basket-chips::-webkit-scrollbar{display:none}
+.basket-chip{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(255,255,255,0.2);border-radius:10px;
+  padding:3px 8px;font-size:11px;white-space:nowrap;flex-shrink:0;
+}
+.basket-chip button{background:none;border:none;color:#fff;cursor:pointer;font-size:13px;line-height:1}
+.basket-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 14px 12px;
+}
+.basket-count{font-size:13px;font-weight:700}
+.basket-go-btn{
+  background:#fff;color:var(--gold);border:none;
+  border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;
+  cursor:pointer;
+}
+
+/* ── 거리 뱃지 ── */
+.dist-badge{
+  font-size:11px;color:var(--text3);font-weight:600;
+  margin-left:auto;flex-shrink:0;
+}
 .card-img-wrap{
   position:relative;margin-bottom:8px;
   border-radius:10px;overflow:hidden;
@@ -189,7 +245,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 
 /* ── 콘텐츠 선택 바 ── */
 .content-bar{
-  position:fixed;top:112px;left:8px;right:8px;z-index:198;
+  position:fixed;top:168px;left:8px;right:8px;z-index:198;
   display:none;
 }
 .content-bar.show{display:block}
@@ -250,10 +306,30 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
   <div class="fpill movie" id="pill-movie" onclick="setFilter('movie',this)">🎥 영화</div>
 </div>
 
+<!-- 기준점 설정 바 -->
+<div class="base-bar" id="baseBar">
+  <button class="base-btn" id="myLocBtn" onclick="setMyLocation()">
+    📍 내 위치
+  </button>
+  <input type="text" class="base-input" id="baseInput" 
+    placeholder="또는 장소 검색 (예: 경복궁, 홍대입구역)"
+    onkeydown="if(event.key==='Enter')searchBasePlace()"
+    oninput="document.getElementById('baseClearBtn').style.display=this.value?'block':'none'">
+  <button id="baseClearBtn" class="base-clear" onclick="clearBase()" style="display:none">✕</button>
+  <button onclick="searchBasePlace()" style="background:var(--gold);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button>
+</div>
+
 <!-- 인기 콘텐츠 선택 바 -->
 <div class="content-bar" id="contentBar">
-  <div class="content-bar-inner" id="contentBarInner">
-    <!-- JS로 동적 렌더 -->
+  <div class="content-bar-inner" id="contentBarInner"></div>
+</div>
+
+<!-- 코스담기 골드바 -->
+<div class="pilgrim-basket" id="pilgrimBasket">
+  <div class="basket-chips" id="pilgrimBasketChips"></div>
+  <div class="basket-footer">
+    <span class="basket-count" id="pilgrimBasketCount">0곳 담김</span>
+    <button class="basket-go-btn" onclick="goToCourse()">🗺️ 코스짜기 →</button>
   </div>
 </div>
 
@@ -506,6 +582,8 @@ function renderList() {
     const badgeText = d.typeLabel || '드라마';
     const storyClass = d.mediaType==='artist'?'artist':d.mediaType==='movie'?'movie':'';
     const naverUrl = `https://map.naver.com/p/search/${d.placeName.replace(/ /g,'+')}`;
+    const distStr = d._baseDist ? (d._baseDist < 1000 ? Math.round(d._baseDist)+'m' : (d._baseDist/1000).toFixed(1)+'km') : '';
+    const inBasket = pilgrimBasket.some(b => b.id===d.id);
     return `<div class="pilgrim-card" id="card-${d.id}" onclick="cardClick('${d.id}')">
       <div class="card-top">
         <span class="card-badge ${badgeClass}">${badgeText}</span>
@@ -514,12 +592,16 @@ function renderList() {
           <div class="card-place">${d.placeIcon||'📍'} ${d.placeName}</div>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">${d.addr?.split(' ').slice(0,3).join(' ')||''}</div>
         </div>
+        ${distStr ? `<span class="dist-badge">📍 ${distStr}</span>` : ''}
       </div>
       <div class="card-story ${storyClass}">"${d.story||'이 장소에서 촬영되었어요'}"</div>
       <div class="card-btns">
         <a href="#" onclick="event.preventDefault();event.stopPropagation();openNav('${d.placeName.replace(/'/g,"\\'")}',${d.lat},${d.lng})" class="card-btn btn-nav">🟢 길찾기</a>
         <a href="${naverUrl}" target="_blank" onclick="event.stopPropagation()" class="card-btn" style="color:#03C75A;border-color:#03C75A;text-decoration:none">🍽️ 가게정보</a>
-        ${d.operTime && d.operTime!=='정보없음' ? `<span style="font-size:11px;color:var(--text3)">⏰ ${d.operTime.replace('매일 ','')}</span>` : ''}
+        <button onclick="event.stopPropagation();addToPilgrimBasket('${d.id}')" 
+          class="card-btn" style="${inBasket?'background:var(--gold);color:#fff;border-color:var(--gold)':'color:var(--gold);border-color:var(--gold)'}">
+          ${inBasket ? '✓ 담김' : '+ 코스담기'}
+        </button>
       </div>
     </div>`;
   }).join('');
@@ -536,6 +618,128 @@ window.cardClick = function(id) {
   map.setLevel(5);
   if (markerMap[id]) kakao.maps.event.trigger(markerMap[id], 'click');
   else openPopup(d, null);
+};
+
+// ── 기준점 상태 ──
+let baseLat = null, baseLng = null, baseName = '';
+let pilgrimBasket = []; // 코스담기 목록
+
+// ── 내 위치 기준점 설정 ──
+window.setMyLocation = function() {
+  if (!navigator.geolocation) { showToast('위치 서비스를 사용할 수 없어요'); return; }
+  showToast('📍 내 위치 가져오는 중...');
+  navigator.geolocation.getCurrentPosition(pos => {
+    baseLat = pos.coords.latitude;
+    baseLng = pos.coords.longitude;
+    baseName = '내 위치';
+    document.getElementById('myLocBtn').classList.add('on');
+    document.getElementById('baseInput').value = '';
+    document.getElementById('baseClearBtn').style.display = 'none';
+    document.getElementById('baseBar').classList.add('has-content');
+    showToast('📍 내 위치 기준점 설정 완료!');
+    sortByBase();
+  }, () => showToast('위치를 가져올 수 없어요'), {timeout:5000});
+};
+
+// ── 장소 검색으로 기준점 설정 ──
+window.searchBasePlace = function() {
+  const keyword = document.getElementById('baseInput').value.trim();
+  if (!keyword) return;
+  const ps = new kakao.maps.services.Places();
+  ps.keywordSearch(keyword, function(data, status) {
+    if (status !== kakao.maps.services.Status.OK || !data.length) {
+      showToast('장소를 찾을 수 없어요'); return;
+    }
+    const p = data[0];
+    baseLat = parseFloat(p.y);
+    baseLng = parseFloat(p.x);
+    baseName = p.place_name;
+    document.getElementById('baseInput').value = p.place_name;
+    document.getElementById('myLocBtn').classList.remove('on');
+    document.getElementById('baseBar').classList.add('has-content');
+    document.getElementById('baseClearBtn').style.display = 'block';
+    showToast(`📍 ${p.place_name} 기준점 설정!`);
+    map.setCenter(new kakao.maps.LatLng(baseLat, baseLng));
+    map.setLevel(7);
+    sortByBase();
+  }, {size:1});
+};
+
+// ── 기준점 초기화 ──
+window.clearBase = function() {
+  baseLat = null; baseLng = null; baseName = '';
+  document.getElementById('baseInput').value = '';
+  document.getElementById('baseClearBtn').style.display = 'none';
+  document.getElementById('myLocBtn').classList.remove('on');
+  document.getElementById('baseBar').classList.remove('has-content');
+  renderList();
+};
+
+// ── 기준점 기준 거리 계산 후 정렬 ──
+function sortByBase() {
+  if (!baseLat || !baseLng) return;
+  FILTERED.forEach(d => {
+    const dlat = d.lat - baseLat, dlng = d.lng - baseLng;
+    d._baseDist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
+  });
+  FILTERED.sort((a,b) => (a._baseDist||999999) - (b._baseDist||999999));
+  renderList();
+  showToast(`📍 ${baseName} 기준 가까운 순으로 정렬됐어요!`);
+}
+
+// ── 코스담기 ──
+window.addToPilgrimBasket = function(id) {
+  const d = ALL_DATA.find(x => x.id===id);
+  if (!d) return;
+  if (pilgrimBasket.some(b => b.id===id)) {
+    showToast('이미 담긴 장소예요!'); return;
+  }
+  pilgrimBasket.push({
+    id: d.id, name: d.placeName,
+    lat: d.lat, lng: d.lng,
+    type: 'pilgrim',
+    icon: d.mediaType==='drama'?'🎬':d.mediaType==='artist'?'⭐':'🎥',
+    title: d.title, story: d.story||''
+  });
+  renderPilgrimBasket();
+  showToast(`🗺️ ${d.placeName} 담겼어요! (${pilgrimBasket.length}곳)`);
+};
+
+window.removeFromPilgrimBasket = function(id) {
+  pilgrimBasket = pilgrimBasket.filter(b => b.id!==id);
+  renderPilgrimBasket();
+};
+
+function renderPilgrimBasket() {
+  const bar = document.getElementById('pilgrimBasket');
+  const chips = document.getElementById('pilgrimBasketChips');
+  const cnt = document.getElementById('pilgrimBasketCount');
+  if (!pilgrimBasket.length) { bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  cnt.textContent = pilgrimBasket.length + '곳 담김';
+  chips.innerHTML = pilgrimBasket.map(b =>
+    `<span class="basket-chip">${b.icon} ${b.name}
+      <button onclick="removeFromPilgrimBasket('${b.id}')">×</button>
+    </span>`
+  ).join('');
+}
+
+// ── 코스짜기 → mobile.html 연동 ──
+window.goToCourse = function() {
+  if (!pilgrimBasket.length) { showToast('장소를 먼저 담아주세요'); return; }
+
+  // localStorage로 mobile.html에 전달
+  const courseData = {
+    from: 'pilgrim',
+    baseLat: baseLat || myLat,
+    baseLng: baseLng || myLng,
+    baseName: baseName || '현재 위치',
+    places: pilgrimBasket
+  };
+  localStorage.setItem('starspoon_pilgrim_course', JSON.stringify(courseData));
+
+  // mobile.html로 이동
+  window.location.href = '/mobile.html?from=pilgrim';
 };
 
 // ── 인기 콘텐츠 데이터 ──
