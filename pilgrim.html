@@ -127,6 +127,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .btn-addr{color:var(--text3);border-color:var(--border2)}
 .btn-share{color:var(--gold);border-color:var(--gold)}
 
+/* ── 카드 이미지 ── */
+.card-img-wrap{
+  position:relative;margin-bottom:8px;
+  border-radius:10px;overflow:hidden;
+  height:130px;background:var(--bg2);
+  border:1px solid var(--border);
+}
+.card-img-wrap img{width:100%;height:100%;object-fit:cover;display:block}
+.card-img-overlay{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,rgba(0,0,0,0.55));
+  padding:8px 10px;
+  font-size:10px;color:#fff;font-weight:600;
+}
+.card-roadview-btn{
+  position:absolute;top:6px;right:6px;
+  background:rgba(0,0,0,0.5);color:#fff;
+  border:none;border-radius:6px;padding:3px 8px;
+  font-size:10px;cursor:pointer;
+  text-decoration:none;display:flex;align-items:center;gap:3px;
+}
+
 /* ── 팝업 ── */
 .map-popup{
   background:var(--white);border-radius:14px;
@@ -368,7 +390,7 @@ function openPopup(d, marker) {
     <div class="popup-story">"${d.story||'이 장소에서 촬영되었어요'}"</div>
     <div style="display:flex;gap:6px">
       <a href="#" onclick="event.preventDefault();openNav('${d.placeName.replace(/'/g,"\\'")}',${d.lat},${d.lng})" class="card-btn btn-nav" style="flex:1;justify-content:center">🟢 길찾기</a>
-      <button onclick="copyAddr('${d.addr.replace(/'/g,"\\'")}') " class="card-btn btn-addr" style="flex:1;justify-content:center">📍 주소복사</button>
+      <a href="https://map.naver.com/p/search/${d.placeName.replace(/ /g,'+')}" target="_blank" onclick="event.stopPropagation()" class="card-btn" style="flex:1;justify-content:center;color:#03C75A;border:1px solid #03C75A;text-decoration:none">🍽️ 가게정보</a>
     </div>
     ${d.operTime && d.operTime!=='정보없음' ? `<div style="font-size:11px;color:var(--text3);margin-top:8px">⏰ ${d.operTime}</div>` : ''}`;
 
@@ -434,19 +456,21 @@ function renderList() {
     const badgeClass = d.mediaType==='drama'?'badge-drama':d.mediaType==='artist'?'badge-artist':'badge-movie';
     const badgeText = d.typeLabel || '드라마';
     const storyClass = d.mediaType==='artist'?'artist':d.mediaType==='movie'?'movie':'';
+    const naverUrl = `https://map.naver.com/p/search/${d.placeName.replace(/ /g,'+')}`;
     return `<div class="pilgrim-card" id="card-${d.id}" onclick="cardClick('${d.id}')">
       <div class="card-top">
         <span class="card-badge ${badgeClass}">${badgeText}</span>
         <div class="card-info">
           <div class="card-title">${d.title}</div>
           <div class="card-place">${d.placeIcon||'📍'} ${d.placeName}</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${d.addr?.split(' ').slice(0,3).join(' ')||''}</div>
         </div>
       </div>
       <div class="card-story ${storyClass}">"${d.story||'이 장소에서 촬영되었어요'}"</div>
       <div class="card-btns">
         <a href="#" onclick="event.preventDefault();event.stopPropagation();openNav('${d.placeName.replace(/'/g,"\\'")}',${d.lat},${d.lng})" class="card-btn btn-nav">🟢 길찾기</a>
-        <button onclick="event.stopPropagation();copyAddr('${d.addr.replace(/'/g,"\\'")}') " class="card-btn btn-addr">📍 주소</button>
-        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center">${d.addr?.split(' ').slice(0,3).join(' ')||''}</span>
+        <a href="${naverUrl}" target="_blank" onclick="event.stopPropagation()" class="card-btn" style="color:#03C75A;border-color:#03C75A;text-decoration:none">🍽️ 가게정보</a>
+        ${d.operTime && d.operTime!=='정보없음' ? `<span style="font-size:11px;color:var(--text3)">⏰ ${d.operTime.replace('매일 ','')}</span>` : ''}
       </div>
     </div>`;
   }).join('');
