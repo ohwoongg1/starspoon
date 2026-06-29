@@ -389,13 +389,17 @@ function openPopup(d, marker) {
     <div class="popup-place">${d.placeIcon||'📍'} ${d.placeName}</div>
     <div class="popup-story">"${d.story||'이 장소에서 촬영되었어요'}"</div>
     <div style="display:flex;gap:6px">
-      <a href="#" onclick="event.preventDefault();openNav('${d.placeName.replace(/'/g,"\\'")}',${d.lat},${d.lng})" class="card-btn btn-nav" style="flex:1;justify-content:center">🟢 길찾기</a>
-      <a href="https://map.naver.com/p/search/${d.placeName.replace(/ /g,'+')}" target="_blank" onclick="event.stopPropagation()" class="card-btn" style="flex:1;justify-content:center;color:#03C75A;border:1px solid #03C75A;text-decoration:none">🍽️ 가게정보</a>
+      <button onclick="openNav('${d.placeName.replace(/'/g,"\'")}',${d.lat},${d.lng})" class="card-btn btn-nav" style="flex:1;justify-content:center">🟢 길찾기</button>
+      <a href="https://map.naver.com/p/search/${d.placeName.replace(/ /g,'+')}" target="_blank" class="card-btn" style="flex:1;justify-content:center;color:#03C75A;border:1px solid #03C75A;text-decoration:none">🍽️ 가게정보</a>
     </div>
     ${d.operTime && d.operTime!=='정보없음' ? `<div style="font-size:11px;color:var(--text3);margin-top:8px">⏰ ${d.operTime}</div>` : ''}`;
 
   div.addEventListener('click', e => e.stopPropagation());
-  div.addEventListener('touchstart', e => e.stopPropagation(), {passive:true});
+  div.addEventListener('touchstart', e => {
+    // 링크/버튼 터치는 허용, 나머지만 차단
+    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+    e.stopPropagation();
+  }, {passive:true});
 
   const pos = new kakao.maps.LatLng(d.lat, d.lng);
   _openPopup = new kakao.maps.CustomOverlay({position:pos, content:div, yAnchor:1.4, zIndex:10});
