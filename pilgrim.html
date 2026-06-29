@@ -382,24 +382,68 @@ function openPopup(d, marker) {
 
   const div = document.createElement('div');
   div.className = 'map-popup';
+  // ★ innerHTML 대신 createElement로 버튼 직접 바인딩 (이벤트 전파 완전 차단)
   div.innerHTML = `
-    <button onclick="closePopup()" style="position:absolute;top:8px;right:10px;background:none;border:none;font-size:16px;color:var(--text3);cursor:pointer;line-height:1">✕</button>
     <span class="popup-badge ${badgeClass}">${badgeText}</span>
     <div class="popup-title">${d.title}</div>
     <div class="popup-place">${d.placeIcon||'📍'} ${d.placeName}</div>
     <div class="popup-story">"${d.story||'이 장소에서 촬영되었어요'}"</div>
-    <div style="display:flex;gap:6px">
-      <button onclick="openNav('${d.placeName.replace(/'/g,"\'")}',${d.lat},${d.lng})" class="card-btn btn-nav" style="flex:1;justify-content:center">🟢 길찾기</button>
-      <a href="https://map.naver.com/p/search/${d.placeName.replace(/ /g,'+')}" target="_blank" class="card-btn" style="flex:1;justify-content:center;color:#03C75A;border:1px solid #03C75A;text-decoration:none">🍽️ 가게정보</a>
-    </div>
+    <div id="popup-btns" style="display:flex;gap:6px;margin-top:8px"></div>
     ${d.operTime && d.operTime!=='정보없음' ? `<div style="font-size:11px;color:var(--text3);margin-top:8px">⏰ ${d.operTime}</div>` : ''}`;
 
-  div.addEventListener('click', e => e.stopPropagation());
-  div.addEventListener('touchstart', e => {
-    // 링크/버튼 터치는 허용, 나머지만 차단
-    if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') return;
+  // 닫기 버튼
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'position:absolute;top:8px;right:10px;background:none;border:none;font-size:16px;color:var(--text3);cursor:pointer;line-height:1';
+  const doClose = (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); };
+  closeBtn.addEventListener('click', doClose);
+  closeBtn.addEventListener('touchend', doClose, {passive:false});
+  div.appendChild(closeBtn);
+
+  // 버튼 영역
+  const btnArea = div.querySelector('#popup-btns');
+
+  // 길찾기 버튼
+  const navBtn = document.createElement('button');
+  navBtn.textContent = '🟢 길찾기';
+  navBtn.className = 'card-btn btn-nav';
+  navBtn.style.cssText = 'flex:1;justify-content:center;cursor:pointer';
+  const doNav = (e) => { e.preventDefault(); e.stopPropagation(); openNav(d.placeName, d.lat, d.lng); };
+  navBtn.addEventListener('click', doNav);
+  navBtn.addEventListener('touchend', doNav, {passive:false});
+  btnArea.appendChild(navBtn);
+
+  // 가게정보 버튼
+  const infoBtn = document.createElement('button');
+  infoBtn.textContent = '🍽️ 가게정보';
+  infoBtn.className = 'card-btn';
+  infoBtn.style.cssText = 'flex:1;justify-content:center;cursor:pointer;color:#03C75A;border:1px solid #03C75A;background:none';
+  const doInfo = (e) => {
+    e.preventDefault();
     e.stopPropagation();
-  }, {passive:true});
+    window.open('https://map.naver.com/p/search/' + encodeURIComponent(d.placeName), '_blank');
+  };
+  infoBtn.addEventListener('click', doInfo);
+  infoBtn.addEventListener('touchend', doInfo, {passive:false});
+  btnArea.appendChild(infoBtn);
+
+  // ★ 팝업 내 모든 이벤트가 지도로 전파되지 않게 차단
+  ['click','touchstart','touchend','mousedown','mouseup'].forEach(evt => {
+    div.addEventListener(evt, e => e.stopPropagation(), {passive:false});
+  });
+
+  // ★ 팝업 내 링크/버튼은 직접 처리
+  div.querySelectorAll && setTimeout(() => {
+    div.querySelectorAll('a[href]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.stopPropagation();
+        if (a.target === '_blank') {
+          window.open(a.href, '_blank');
+          e.preventDefault();
+        }
+      });
+    });
+  }, 0);
 
   const pos = new kakao.maps.LatLng(d.lat, d.lng);
   _openPopup = new kakao.maps.CustomOverlay({position:pos, content:div, yAnchor:1.4, zIndex:10});
@@ -422,7 +466,8 @@ window.closePopup = function() {
 kakao.maps.load(() => {
   // 지도 클릭 → 팝업 닫기 (지도 초기화 후)
   setTimeout(() => {
-    if (map) kakao.maps.event.addListener(map, 'click', () => {
+    if (map) kakao.maps.event.addListener(map, 'click', (e) => {
+      // 팝업이 열려있고 팝업 내부 클릭이면 무시
       if (_openPopup) { _openPopup.setMap(null); _openPopup = null; }
     });
   }, 1000);
