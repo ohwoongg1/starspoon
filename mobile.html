@@ -87,6 +87,53 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
   font-size:12px;color:rgba(255,255,255,0.4);
   background:none;border:none;cursor:pointer;
 }
+
+/* ── 식당정보 바텀시트 ── */
+.place-info-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.45);
+  z-index:700;display:none;align-items:flex-end;
+}
+.place-info-overlay.show{display:flex}
+.place-info-sheet{
+  width:100%;background:var(--white);
+  border-radius:20px 20px 0 0;
+  padding:0 0 max(20px,env(safe-area-inset-bottom));
+  max-height:70vh;overflow-y:auto;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.15);
+}
+.place-info-hd{
+  padding:16px 16px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;
+  justify-content:space-between;
+  position:sticky;top:0;background:var(--white);z-index:1;
+}
+.place-info-name{font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px}
+.place-info-cat{font-size:12px;color:var(--text3)}
+.place-info-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--text3);padding:0;line-height:1}
+.place-info-body{padding:14px 16px}
+.place-info-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 0;border-bottom:1px solid var(--border);
+  font-size:13px;color:var(--text2);
+}
+.place-info-row:last-child{border-bottom:none}
+.place-info-icon{font-size:16px;flex-shrink:0;width:24px;text-align:center}
+.place-info-status-open{color:#10B981;font-weight:700;font-size:12px;margin-left:6px}
+.place-info-status-close{color:var(--red);font-weight:700;font-size:12px;margin-left:6px}
+.place-info-btns{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:8px;padding:14px 16px 0;
+}
+.place-info-btn{
+  padding:12px;border-radius:10px;font-size:13px;font-weight:700;
+  border:none;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;gap:6px;text-decoration:none;
+}
+.pib-call{background:#F0FDF4;color:#166534}
+.pib-naver{background:#F0FDF4;color:#03C75A}
+.pib-reserve{background:var(--gold-bg);color:var(--gold)}
+.pib-more{background:var(--bg2);color:var(--text2)}
 /* iOS input 자동 줌 방지 */
 @media screen and (max-width:768px){
   input,select,textarea{font-size:16px!important}
@@ -1072,6 +1119,26 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   </div>
 </div>
 
+
+<!-- ── 식당정보 바텀시트 ── -->
+<div class="place-info-overlay" id="placeInfoOverlay" onclick="closePlaceInfo(event)">
+  <div class="place-info-sheet" onclick="event.stopPropagation()">
+    <div class="place-info-hd">
+      <div>
+        <div class="place-info-name" id="placeInfoName"></div>
+        <div class="place-info-cat" id="placeInfoCat"></div>
+      </div>
+      <button class="place-info-close" onclick="closePlaceInfo()">✕</button>
+    </div>
+    <div class="place-info-body" id="placeInfoBody">
+      <div style="padding:20px;text-align:center;color:var(--text3)">
+        <i class="ti ti-loader" style="font-size:24px;display:block;margin-bottom:8px"></i>
+        정보 불러오는 중...
+      </div>
+    </div>
+    <div class="place-info-btns" id="placeInfoBtns"></div>
+  </div>
+</div>
 <!-- ── 토스트 ── -->
 <div class="toast" id="toast"><i class="ti ti-check"></i><span id="toastMsg"></span></div>
 
@@ -1208,6 +1275,117 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const googleProvider = new GoogleAuthProvider();
 window.Kakao.init('25b433faf5d746c938cbcc7658f650b0');
+
+// ── 식당정보 바텀시트 ──
+window.openPlaceInfo = function(name, lat, lng) {
+  document.getElementById('placeInfoName').textContent = name;
+  document.getElementById('placeInfoCat').textContent = '';
+  document.getElementById('placeInfoBody').innerHTML = `
+    <div style="padding:20px;text-align:center;color:var(--text3)">
+      <i class="ti ti-loader" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4"></i>
+      정보 불러오는 중...
+    </div>`;
+  document.getElementById('placeInfoBtns').innerHTML = '';
+  document.getElementById('placeInfoOverlay').classList.add('show');
+
+  // 카카오맵 장소 검색으로 상세정보 가져오기
+  const ps = new kakao.maps.services.Places();
+  const searchQuery = lat && lng
+    ? name // 좌표 있으면 이름으로 검색
+    : name;
+
+  ps.keywordSearch(searchQuery, function(data, status) {
+    if (status !== kakao.maps.services.Status.OK || !data.length) {
+      document.getElementById('placeInfoBody').innerHTML = `
+        <div style="padding:20px;text-align:center;color:var(--text3)">
+          <i class="ti ti-info-circle" style="font-size:28px;display:block;margin-bottom:8px;opacity:0.3"></i>
+          상세 정보를 찾을 수 없어요
+        </div>`;
+      // 그래도 네이버 링크는 제공
+      document.getElementById('placeInfoBtns').innerHTML = `
+        <a href="https://map.naver.com/p/search/${encodeURIComponent(name)}" target="_blank"
+          class="place-info-btn pib-naver" style="grid-column:1/-1">
+          🍽️ 네이버에서 정보 보기
+        </a>`;
+      return;
+    }
+
+    // 가장 가까운 결과 선택
+    let best = data[0];
+    if (lat && lng) {
+      best = data.reduce((a, b) => {
+        const da = Math.abs(parseFloat(a.y)-lat) + Math.abs(parseFloat(a.x)-lng);
+        const db = Math.abs(parseFloat(b.y)-lat) + Math.abs(parseFloat(b.x)-lng);
+        return da < db ? a : b;
+      });
+    }
+
+    document.getElementById('placeInfoCat').textContent = best.category_name?.split('>').pop().trim() || '';
+
+    // 영업시간 판단 (카카오 데이터 없으면 표시 안 함)
+    const phone = best.phone || '';
+    const addr = best.road_address_name || best.address_name || '';
+    const placeUrl = best.place_url || '';
+
+    // 현재 영업 여부 (카카오 API에서 직접 제공 안 함 → 시간대 기반 추정)
+    const now = new Date();
+    const hour = now.getHours();
+    const isLikelyOpen = hour >= 9 && hour < 22;
+
+    let bodyHtml = '';
+
+    if (addr) bodyHtml += `
+      <div class="place-info-row">
+        <span class="place-info-icon">📍</span>
+        <span>${addr}</span>
+      </div>`;
+
+    if (phone) bodyHtml += `
+      <div class="place-info-row">
+        <span class="place-info-icon">📞</span>
+        <a href="tel:${phone}" onclick="event.stopPropagation()" style="color:var(--gold);font-weight:700;text-decoration:none">${phone}</a>
+      </div>`;
+
+    bodyHtml += `
+      <div class="place-info-row">
+        <span class="place-info-icon">⏰</span>
+        <span>영업 정보</span>
+        <span class="${isLikelyOpen?'place-info-status-open':'place-info-status-close'}">
+          ${isLikelyOpen?'🟢 영업 중일 가능성 높음':'🔴 영업 종료 가능성 높음'}
+        </span>
+      </div>`;
+
+    document.getElementById('placeInfoBody').innerHTML = bodyHtml;
+
+    // 버튼 구성
+    let btnsHtml = '';
+    if (phone) btnsHtml += `
+      <a href="tel:${phone}" class="place-info-btn pib-call">📞 전화하기</a>`;
+
+    btnsHtml += `
+      <a href="https://map.naver.com/p/search/${encodeURIComponent(name)}" target="_blank"
+        class="place-info-btn pib-reserve">📅 예약/웨이팅</a>`;
+
+    btnsHtml += `
+      <a href="${placeUrl||'https://map.kakao.com/link/search/'+encodeURIComponent(name)}" target="_blank"
+        class="place-info-btn pib-more" style="grid-column:${phone?'1/-1':'1/-1'}">
+        🗺️ 카카오맵에서 더보기
+      </a>`;
+
+    document.getElementById('placeInfoBtns').innerHTML = btnsHtml;
+
+  }, {
+    location: lat && lng ? new kakao.maps.LatLng(lat, lng) : undefined,
+    radius: lat && lng ? 500 : undefined,
+    size: 5
+  });
+};
+
+window.closePlaceInfo = function(e) {
+  if (!e || e.target === document.getElementById('placeInfoOverlay')) {
+    document.getElementById('placeInfoOverlay').classList.remove('show');
+  }
+};
 
 // ── 온보딩 스플래시 ──
 window.closeOnboard = function() {
@@ -2402,7 +2580,7 @@ function renderList() {
       <div class="rest-link">
         <button class="link-btn" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')" style="background:var(--gold);border:1px solid var(--gold);color:#fff;font-weight:700">🗺️ 코스담기</button>
         ${d.yt ? `<a class="link-btn link-yt" href="${d.yt}" target="_blank" onclick="event.stopPropagation()">${d.yt.includes('youtube.com')||d.yt.includes('youtu.be') ? '<i class="ti ti-brand-youtube"></i> 영상' : '🔗 링크'}</a>` : ''}
-        <a class="link-btn" href="https://map.naver.com/p/search/${d.name.replace(/ /g,'+')}" target="_blank" onclick="event.stopPropagation()" style="background:none;border:1px solid #03C75A;border-radius:8px;padding:6px 12px;font-size:12px;color:#03C75A;text-decoration:none;font-weight:600">🍽️ 식당정보</a>
+        <button class="link-btn" onclick="event.stopPropagation();openPlaceInfo('${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng})" style="background:none;border:1px solid #03C75A;border-radius:8px;padding:6px 12px;font-size:12px;color:#03C75A;cursor:pointer;font-weight:600">🍽️ 식당정보</button>
         <button class="link-btn" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:600">💬 댓글·평점</button>
         <button class="link-btn" onclick="event.stopPropagation();shareKakaoPC('${d.id}')" style="background:#FEE500;border:1px solid #F0D000;border-radius:8px;padding:6px 12px;font-size:12px;color:#3A1D1D;cursor:pointer;font-weight:600">💛 카카오공유</button>
         <button class="link-btn" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')" style="background:none;border:1px solid #FECACA;border-radius:8px;padding:6px 10px;font-size:11px;color:#EF4444;cursor:pointer;font-weight:600">🚨 신고</button>
@@ -2660,8 +2838,8 @@ function renderPins() {
       commentBtn.style.cssText = 'font-size:11px;color:#03C75A;border:1px solid #03C75A;border-radius:8px;padding:6px;background:none;cursor:pointer;font-weight:600;-webkit-tap-highlight-color:rgba(0,0,0,0.1)';
       const doInfo = (e) => {
         e.preventDefault(); e.stopPropagation();
-        const naverUrl = `https://map.naver.com/p/search/${encodeURIComponent(d.name)}`;
-        window.open(naverUrl, '_blank');
+        if(window._openPinPopup){window._openPinPopup.setMap(null);window._openPinPopup=null;}
+        openPlaceInfo(d.name, d.lat, d.lng);
       };
       commentBtn.addEventListener('click', doInfo);
       commentBtn.addEventListener('touchend', doInfo, {passive:false});
@@ -4279,6 +4457,10 @@ function renderMspResultList() {
             ? `<button class="msp-added-btn" onclick="event.stopPropagation();mspRemoveBasket('${item.id}')">✓ 담김</button>`
             : `<button class="msp-add-btn" onclick="event.stopPropagation();mspAddBasket({id:'${item.id}',name:_mspPlaceById('${item.id}').name,lat:${item.lat},lng:${item.lng},type:'place',icon:'${item.icon||'🗺️'}'})">+ 코스</button>`
           }
+          <button onclick="event.stopPropagation();openPlaceInfo('${item.name.replace(/'/g,"\'") }',${item.lat},${item.lng})"
+            style="padding:4px 8px;background:none;border:1.5px solid #03C75A;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;color:#03C75A">
+            🍽️ 정보
+          </button>
           <button class="msp-save-place-btn"
             data-id="${item.id}"
             onclick="event.stopPropagation();_mspToggleSavePlace('${item.id}',this)"
