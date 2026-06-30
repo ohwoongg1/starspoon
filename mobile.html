@@ -345,7 +345,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .rest-actions{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;animation:gbIn .15s ease}
 .rest-actions.open{display:grid}
 @keyframes gbIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-.rest-name{position:relative;padding-right:16px}
+.rest-name{position:relative;padding-right:16px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .rest-name::after{content:'▾';position:absolute;right:0;top:1px;font-size:11px;color:var(--text3);transition:transform .15s ease}
 .rest-name.open::after{transform:rotate(180deg)}
 .gb{height:62px;border-radius:12px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;text-decoration:none;cursor:pointer;border:1px solid var(--border);box-sizing:border-box;background:var(--bg2);color:var(--text2);transition:transform .08s cubic-bezier(.2,0,.4,1),filter .08s ease,box-shadow .08s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation;will-change:transform}
@@ -369,7 +369,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .detail-text{line-height:1.4;word-break:keep-all}
 .detail-phone{color:var(--gold);text-decoration:none;font-weight:600}
 .detail-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.detail-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;text-decoration:none;border:none;cursor:pointer}
+.detail-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;transition:transform .08s ease,filter .08s ease;-webkit-tap-highlight-color:transparent}
+.detail-btn:active{transform:scale(0.96);filter:brightness(0.92)}
+.rest-actions-sub{grid-column:1/-1;background:var(--bg2);border-radius:8px;padding:8px 10px;margin-top:2px}
 .detail-kakao{background:#FEE500;color:#3A1D1D}
 .detail-naver{background:#03C75A;color:#fff}
 
@@ -2758,13 +2760,10 @@ function renderList() {
         <button class="gb" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><span class="gb-ic">💬</span><span class="gb-tx">댓글·평점</span></button>
         <button class="gb" onclick="event.stopPropagation();shareKakaoPC('${d.id}')"><span class="gb-ic">💛</span><span class="gb-tx">카카오공유</span></button>
         <button class="gb" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')"><span class="gb-ic">🚨</span><span class="gb-tx">신고</span></button>
-      </div>
-      <div class="card-detail" id="detail-${d.id}">
-        ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
-        ${d.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><a class="detail-text detail-phone" href="tel:${d.phone}" onclick="event.stopPropagation()">${d.phone}</a></div>` : ''}
-        <div class="detail-actions">
-          <a class="detail-btn detail-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(d.name + ' ' + d.area)}" target="_blank" onclick="event.stopPropagation()">🟢 네이버지도에서 보기</a>
-        </div>
+        ${d.address || d.phone ? `<div class="rest-actions-sub">
+          ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
+          ${d.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><a class="detail-text detail-phone" href="tel:${d.phone}" onclick="event.stopPropagation()">${d.phone}</a></div>` : ''}
+        </div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -3051,7 +3050,11 @@ function renderPins() {
   });
 }
 
+let _lastToggleTime = {};
 window.toggleCardActions = function(id, nameEl) {
+  const now = Date.now();
+  if (_lastToggleTime[id] && now - _lastToggleTime[id] < 300) return; // 짧은 시간내 중복 호출 무시
+  _lastToggleTime[id] = now;
   const el = document.getElementById('actions-' + id);
   if (!el) return;
   const isOpen = el.classList.toggle('open');
