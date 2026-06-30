@@ -1465,9 +1465,17 @@ window.closeOnboard = function() {
   overlay.classList.add('hide');
   setTimeout(() => overlay.remove(), 500);
   // ★ 오늘 날짜 저장 (내일 다시 표시)
-  const today = new Date().toISOString().slice(0,10); // "2026-06-30"
+  const today = new Date().toISOString().slice(0,10);
   localStorage.setItem('starspoon_onboarded', today);
 };
+
+// 자동 닫힘 (날짜 저장 안 함)
+function autoCloseOnboard() {
+  const overlay = document.getElementById('onboardOverlay');
+  if (!overlay) return;
+  overlay.classList.add('hide');
+  setTimeout(() => overlay.remove(), 500);
+}
 
 // 오늘 이미 닫았으면 스플래시 표시 안 함
 (function() {
@@ -1478,11 +1486,8 @@ window.closeOnboard = function() {
     const overlay = document.getElementById('onboardOverlay');
     if (overlay) overlay.remove();
   } else {
-    // 오늘 아직 안 닫은 경우: 10초 후 자동 닫기
-    setTimeout(() => {
-      const overlay = document.getElementById('onboardOverlay');
-      if (overlay) closeOnboard();
-    }, 10000);
+    // 오늘 아직 안 닫은 경우: 10초 후 자동 닫기 (날짜 저장 안 함)
+    setTimeout(() => autoCloseOnboard(), 10000);
   }
 })();
 
