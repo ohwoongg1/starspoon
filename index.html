@@ -517,7 +517,10 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 <!-- ── 헤더 ── -->
 <header class="header">
   <a class="logo" href="/">
-    <img src="/icon-192.png" style="width:32px;height:32px;border-radius:8px;" alt="스타스푼 로고">
+    <svg width="30" height="30" viewBox="0 0 100 100" fill="none" style="flex-shrink:0">
+      <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="var(--gold)" stroke-width="6" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="8" rx="11" ry="14" fill="var(--gold)" transform="rotate(-8 50 8)"/>
+    </svg>
     <span class="logo-text">Star<span>spoon</span></span>
   </a>
   <div class="header-search">
@@ -3920,7 +3923,12 @@ if (lastSeen !== new Date().toDateString()) {
 <div class="overlay" id="introOverlay" style="z-index:1000">
   <div class="modal" style="width:520px;max-width:92vw">
     <div class="modal-hd" style="background:var(--gold);border-radius:16px 16px 0 0">
-      <span class="modal-title" style="color:#fff;font-size:16px;display:flex;align-items:center;gap:8px;"><img src="/icon-192.png" style="width:24px;height:24px;border-radius:6px;" alt=""> 스타스푼에 오신걸 환영해요!</span>
+      <span class="modal-title" style="color:#fff;font-size:16px;display:flex;align-items:center;gap:8px;">
+        <svg width="24" height="24" viewBox="0 0 100 100" fill="none" style="flex-shrink:0">
+          <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="var(--gold)" stroke-width="7" stroke-linejoin="round"/>
+          <ellipse cx="50" cy="8" rx="12" ry="15" fill="var(--gold)" transform="rotate(-8 50 8)"/>
+        </svg>
+        스타스푼에 오신걸 환영해요!</span>
       <button class="modal-close" onclick="closeIntro()" style="color:#fff">✕</button>
     </div>
     <div class="modal-bd">
