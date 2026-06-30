@@ -342,12 +342,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .rest-rating{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);font-weight:600}
 .rest-rating-count{font-size:11px;color:var(--text3);font-weight:400}
 .rest-saves{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:2px}
-.rest-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-.gb{height:34px;border-radius:8px;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;cursor:pointer;border:1px solid;box-sizing:border-box;background:none;color:var(--text2);transition:transform .12s ease,filter .12s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.gb:active{transform:scale(0.94);filter:brightness(0.93)}
+.rest-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.gb{height:62px;border-radius:12px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;text-decoration:none;cursor:pointer;border:1px solid var(--border);box-sizing:border-box;background:var(--bg2);color:var(--text2);transition:transform .12s ease,filter .12s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.gb .gb-ic{font-size:18px;line-height:1}
+.gb .gb-tx{font-size:10.5px;line-height:1}
+.gb:active{transform:scale(0.95);filter:brightness(0.96)}
+.gb.primary{background:var(--gold);border-color:var(--gold);color:#fff}
+.gb.saved{background:var(--gold-bg);border-color:var(--gold);color:var(--gold)}
 @media (max-width:380px){
-  .rest-actions{font-size:10px}
-  .gb{font-size:10px;height:32px;gap:2px}
+  .gb{height:56px}
+  .gb .gb-ic{font-size:16px}
+  .gb .gb-tx{font-size:10px}
 }
 .link-add{color:var(--text3);background:var(--bg2);border-color:var(--border2);cursor:pointer}
 .card-detail{display:none;margin-top:10px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
@@ -2731,15 +2736,15 @@ function renderList() {
         <div class="rest-saves"><i class="ti ti-heart" style="font-size:11px"></i> ${d.saves||0}</div>
       </div>
       <div class="rest-actions">
-        <a class="gb" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})" style="color:var(--gold);border-color:var(--gold)">🗺️ 길찾기</a>
-        <button class="gb${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')" style="${isSaved?'color:var(--gold);border-color:var(--gold);background:var(--gold-bg)':'border-color:var(--border2)'}">${isSaved?'❤️ 저장됨':'🤍 저장'}</button>
-        <a class="gb" href="${d.yt || ('https://www.youtube.com/results?search_query='+encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name)))}" target="_blank" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);" style="color:#FF0000;border-color:#FF0000">▶️ 영상</a>
-        <a class="gb" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()" style="color:#03C75A;border-color:#03C75A">📅 예약</a>
-        <button class="gb" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')" style="background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700">🗺️ 코스담기</button>
-        <button class="gb" onclick="event.stopPropagation();openPlaceInfo('${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng})" style="border-color:#03C75A;color:#03C75A">🍽️ 식당정보</button>
-        <button class="gb" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')" style="border-color:var(--border2);color:var(--text2)">💬 댓글·평점</button>
-        <button class="gb" onclick="event.stopPropagation();shareKakaoPC('${d.id}')" style="background:#FEE500;border-color:#F0D000;color:#3A1D1D">💛 카카오공유</button>
-        <button class="gb" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')" style="border-color:#FECACA;color:#EF4444">🚨 신고</button>
+        <a class="gb" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})"><span class="gb-ic">🗺️</span><span class="gb-tx">길찾기</span></a>
+        <button class="gb${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')"><span class="gb-ic">${isSaved?'❤️':'🤍'}</span><span class="gb-tx">${isSaved?'저장됨':'저장'}</span></button>
+        <a class="gb" href="${d.yt || ('https://www.youtube.com/results?search_query='+encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name)))}" target="_blank" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);"><span class="gb-ic">▶️</span><span class="gb-tx">영상</span></a>
+        <a class="gb" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()"><span class="gb-ic">📅</span><span class="gb-tx">예약</span></a>
+        <button class="gb primary" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')"><span class="gb-ic">🗺️</span><span class="gb-tx">코스담기</span></button>
+        <button class="gb" onclick="event.stopPropagation();openPlaceInfo('${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng})"><span class="gb-ic">🍽️</span><span class="gb-tx">식당정보</span></button>
+        <button class="gb" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><span class="gb-ic">💬</span><span class="gb-tx">댓글·평점</span></button>
+        <button class="gb" onclick="event.stopPropagation();shareKakaoPC('${d.id}')"><span class="gb-ic">💛</span><span class="gb-tx">카카오공유</span></button>
+        <button class="gb" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')"><span class="gb-ic">🚨</span><span class="gb-tx">신고</span></button>
       </div>
       <div class="card-detail" id="detail-${d.id}">
         ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
