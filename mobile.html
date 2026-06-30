@@ -1485,10 +1485,8 @@ function autoCloseOnboard() {
     // 오늘 이미 닫은 경우: 스플래시 제거
     const overlay = document.getElementById('onboardOverlay');
     if (overlay) overlay.remove();
-  } else {
-    // 오늘 아직 안 닫은 경우: 10초 후 자동 닫기 (날짜 저장 안 함)
-    setTimeout(() => autoCloseOnboard(), 10000);
   }
+  // 오늘 아직 안 닫은 경우: 자동으로 닫지 않음 (사용자가 버튼 눌러야 닫힘)
 })();
 
 // ── 상태 ──
