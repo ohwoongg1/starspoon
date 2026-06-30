@@ -801,7 +801,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   <button class="onboard-start-btn" onclick="closeOnboard()">
     🗺️ 맛집 지도 시작하기
   </button>
-  <button class="onboard-skip" onclick="closeOnboard()">다시 보지 않기</button>
+  <button class="onboard-skip" onclick="closeOnboard()">✕ 오늘 하루 닫기</button>
 </div>
 <header class="header">
   <a class="logo" href="/">
@@ -1385,22 +1385,25 @@ window.closeOnboard = function() {
   if (!overlay) return;
   overlay.classList.add('hide');
   setTimeout(() => overlay.remove(), 500);
-  localStorage.setItem('starspoon_onboarded', '1');
+  // ★ 오늘 날짜 저장 (내일 다시 표시)
+  const today = new Date().toISOString().slice(0,10); // "2026-06-30"
+  localStorage.setItem('starspoon_onboarded', today);
 };
 
-// 첫 방문자만 스플래시 표시
+// 오늘 이미 닫았으면 스플래시 표시 안 함
 (function() {
-  const onboarded = localStorage.getItem('starspoon_onboarded');
-  if (onboarded) {
-    // 재방문자: 스플래시 바로 제거
+  const saved = localStorage.getItem('starspoon_onboarded');
+  const today = new Date().toISOString().slice(0,10);
+  if (saved === today) {
+    // 오늘 이미 닫은 경우: 스플래시 제거
     const overlay = document.getElementById('onboardOverlay');
     if (overlay) overlay.remove();
   } else {
-    // 첫 방문자: 8초 후 자동 닫기
+    // 오늘 아직 안 닫은 경우: 10초 후 자동 닫기
     setTimeout(() => {
       const overlay = document.getElementById('onboardOverlay');
       if (overlay) closeOnboard();
-    }, 8000);
+    }, 10000);
   }
 })();
 
