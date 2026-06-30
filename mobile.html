@@ -34,58 +34,106 @@
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 
-/* ── 온보딩 스플래시 ── */
+/* ── 온보딩 스플래시: "그들이 앉았던, 그 자리" ── */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&display=swap');
 .onboard-overlay{
   position:fixed;inset:0;z-index:9999;
-  background:linear-gradient(160deg,#1A1A18 0%,#2D2A20 50%,#1A1A18 100%);
+  background:#15120F;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:32px 24px;text-align:center;
+  padding:32px 24px;text-align:center;overflow:hidden;
   animation:fadeInSplash .4s ease;
 }
 @keyframes fadeInSplash{from{opacity:0}to{opacity:1}}
-.onboard-overlay.hide{
-  animation:fadeOutSplash .5s ease forwards;
-}
+.onboard-overlay.hide{animation:fadeOutSplash .5s ease forwards}
 @keyframes fadeOutSplash{from{opacity:1}to{opacity:0;pointer-events:none}}
-.onboard-logo{
-  display:flex;align-items:center;gap:10px;margin-bottom:20px;
+.onboard-spotbeam{
+  position:absolute;top:-10%;left:50%;width:420px;height:560px;
+  transform:translateX(-50%);
+  background:radial-gradient(ellipse at top, rgba(232,163,61,0.20) 0%, transparent 65%);
+  pointer-events:none;
 }
-.onboard-logo-icon{
-  width:52px;height:52px;background:var(--gold);
-  border-radius:14px;display:flex;align-items:center;
-  justify-content:center;font-size:26px;
+.onboard-starfield{position:absolute;inset:0;pointer-events:none}
+.onboard-starfield span{
+  position:absolute;width:2px;height:2px;background:#F4C766;
+  border-radius:50%;opacity:0;animation:onboardTwinkle 4s ease-in-out infinite;
 }
-.onboard-logo-text{font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px}
-.onboard-logo-text span{color:var(--gold)}
-.onboard-title{
-  font-size:20px;font-weight:700;color:#fff;
-  margin-bottom:8px;line-height:1.4;
+@keyframes onboardTwinkle{0%,100%{opacity:0}50%{opacity:.8}}
+
+.onboard-langs{
+  position:absolute;top:16px;right:16px;z-index:2;
+  display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:200px;
 }
-.onboard-sub{
-  font-size:14px;color:rgba(255,255,255,0.6);
-  margin-bottom:28px;line-height:1.6;
+.onboard-lang-btn{
+  background:rgba(247,242,232,0.08);border:1.3px solid rgba(247,242,232,0.25);
+  border-radius:14px;padding:4px 9px;font-size:10px;font-weight:600;
+  color:rgba(247,242,232,0.65);cursor:pointer;
 }
+.onboard-lang-btn.on{
+  background:rgba(232,163,61,0.22);border-color:#E8A33D;color:#F4C766;
+}
+
+.onboard-logo{position:relative;z-index:1;margin-bottom:6px}
+.onboard-logo-text{
+  font-family:'Noto Serif KR',serif;font-weight:900;
+  font-size:32px;letter-spacing:-0.5px;color:#F7F2E8;
+}
+.onboard-logo-text span{color:#E8A33D}
+.onboard-eyebrow{
+  position:relative;z-index:1;
+  font-size:11px;letter-spacing:2.5px;color:rgba(247,242,232,0.45);
+  text-transform:uppercase;margin-top:8px;margin-bottom:36px;font-weight:500;
+}
+
 .onboard-curators{
-  display:flex;flex-wrap:wrap;gap:8px;
-  justify-content:center;margin-bottom:32px;
+  position:relative;z-index:1;
+  display:flex;gap:11px;margin-bottom:36px;flex-wrap:wrap;justify-content:center;max-width:320px;
 }
 .onboard-curator{
-  display:flex;align-items:center;gap:6px;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.15);
-  border-radius:20px;padding:8px 14px;
-  font-size:13px;font-weight:600;color:#fff;
+  position:relative;background:#F7F2E8;color:#2A2420;
+  width:64px;height:64px;border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 5px 14px rgba(0,0,0,0.35);
+  border:1px solid rgba(0,0,0,0.06);
+}
+.onboard-curator::before{
+  content:'';position:absolute;inset:4px;
+  border:1px solid rgba(42,36,32,0.16);border-radius:2px;
+}
+.onboard-curator span:first-child{font-size:19px;margin-bottom:1px}
+.onboard-curator span:last-child{
+  font-family:'Noto Serif KR',serif;font-size:9px;font-weight:600;letter-spacing:-0.2px;
+}
+.onboard-curator:nth-child(1){transform:rotate(-4deg)}
+.onboard-curator:nth-child(2){transform:rotate(3deg)}
+.onboard-curator:nth-child(3){transform:rotate(-2deg)}
+.onboard-curator:nth-child(4){transform:rotate(4deg)}
+.onboard-curator:nth-child(5){transform:rotate(-3deg)}
+.onboard-curator:nth-child(6){transform:rotate(2deg)}
+
+.onboard-title{
+  position:relative;z-index:1;
+  font-family:'Noto Serif KR',serif;font-size:21px;font-weight:600;line-height:1.5;
+  color:#F7F2E8;margin-bottom:12px;max-width:300px;
+}
+.onboard-title em{color:#E8A33D;font-style:normal}
+.onboard-sub{
+  position:relative;z-index:1;
+  font-size:13px;line-height:1.7;color:rgba(247,242,232,0.5);
+  margin-bottom:34px;max-width:270px;
 }
 .onboard-start-btn{
-  width:100%;max-width:280px;
-  padding:16px;background:var(--gold);color:#fff;
-  border:none;border-radius:14px;font-size:16px;font-weight:700;
-  cursor:pointer;margin-bottom:16px;
-  box-shadow:0 4px 20px rgba(245,158,11,0.4);
+  position:relative;z-index:1;
+  width:100%;max-width:280px;padding:17px;border-radius:14px;
+  background:linear-gradient(180deg,#F4C766,#E8A33D);
+  color:#15120F;font-family:'Noto Serif KR',serif;
+  font-size:15px;font-weight:600;letter-spacing:0.3px;
+  border:none;cursor:pointer;margin-bottom:16px;
+  box-shadow:0 8px 22px rgba(232,163,61,0.35);
 }
 .onboard-skip{
-  font-size:12px;color:rgba(255,255,255,0.4);
-  background:none;border:none;cursor:pointer;
+  position:relative;z-index:1;
+  font-size:12px;color:rgba(247,242,232,0.4);
+  background:none;border:none;cursor:pointer;letter-spacing:0.2px;
 }
 
 /* ── 식당정보 바텀시트 ── */
@@ -784,37 +832,49 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
 <!-- ── 온보딩 스플래시 ── -->
 <div class="onboard-overlay" id="onboardOverlay">
+  <div class="onboard-spotbeam"></div>
+  <div class="onboard-starfield" id="onboardStarfield"></div>
+
   <!-- 언어 선택 버튼 -->
-  <div style="position:absolute;top:16px;right:16px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-    <button onclick="setOnboardLang('ko')" id="langKo" style="background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.5);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:#fff;cursor:pointer">🇰🇷 한</button>
-    <button onclick="setOnboardLang('en')" id="langEn" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇺🇸 EN</button>
-    <button onclick="setOnboardLang('ja')" id="langJa" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇯🇵 JP</button>
-    <button onclick="setOnboardLang('zh')" id="langZh" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇨🇳 中</button>
-    <button onclick="setOnboardLang('tw')" id="langTw" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇹🇼 繁</button>
-    <button onclick="setOnboardLang('es')" id="langEs" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇪🇸 ES</button>
+  <div class="onboard-langs">
+    <button onclick="setOnboardLang('ko')" id="langKo" class="onboard-lang-btn on">🇰🇷 한</button>
+    <button onclick="setOnboardLang('en')" id="langEn" class="onboard-lang-btn">🇺🇸 EN</button>
+    <button onclick="setOnboardLang('ja')" id="langJa" class="onboard-lang-btn">🇯🇵 JP</button>
+    <button onclick="setOnboardLang('zh')" id="langZh" class="onboard-lang-btn">🇨🇳 中</button>
+    <button onclick="setOnboardLang('tw')" id="langTw" class="onboard-lang-btn">🇹🇼 繁</button>
+    <button onclick="setOnboardLang('es')" id="langEs" class="onboard-lang-btn">🇪🇸 ES</button>
   </div>
-  <div class="onboard-logo">
-    <div class="onboard-logo-icon">🥄</div>
+
+  <div class="onboard-logo" style="display:flex;align-items:center;justify-content:center;gap:10px">
+    <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
+      <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="#E8A33D" stroke-width="5.5" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="8" rx="10" ry="13" fill="#E8A33D" transform="rotate(-8 50 8)"/>
+    </svg>
     <span class="onboard-logo-text">Star<span>spoon</span></span>
   </div>
-  <div class="onboard-title" id="onboardTitle">연예인이 직접 간 맛집만<br>지도에서 찾아보세요!</div>
-  <div class="onboard-sub" id="onboardSub">유튜브·방송에 나온 스타 맛집을<br>큐레이터별로 탐색하고 코스도 짜요</div>
+  <div class="onboard-eyebrow" id="onboardEyebrow">그들이 앉았던, 그 자리</div>
+
   <div class="onboard-curators">
-    <span class="onboard-curator">🎵 성시경</span>
-    <span class="onboard-curator">😄 풍자</span>
-    <span class="onboard-curator">😋 이영자</span>
-    <span class="onboard-curator">🍱 히밥</span>
-    <span class="onboard-curator">🌸 입짧은햇님</span>
-    <span class="onboard-curator">🍺 김사원세끼</span>
+    <span class="onboard-curator"><span>🎵</span><span>성시경</span></span>
+    <span class="onboard-curator"><span>😋</span><span>이영자</span></span>
+    <span class="onboard-curator"><span>🍱</span><span>히밥</span></span>
+    <span class="onboard-curator"><span>😄</span><span>풍자</span></span>
+    <span class="onboard-curator"><span>🌸</span><span>입짧은햇님</span></span>
+    <span class="onboard-curator"><span>🍺</span><span>김사원세끼</span></span>
   </div>
-  <button class="onboard-start-btn" id="onboardBtn" onclick="closeOnboard()">
-    🗺️ 맛집 지도 시작하기
-  </button>
+
+  <div class="onboard-title" id="onboardTitle">스타가 머문 자리에<br><em>당신도 앉아보세요</em></div>
+  <div class="onboard-sub" id="onboardSub">유튜브와 방송에 나온 그 가게,<br>그 테이블, 그 메뉴를 그대로</div>
+
+  <button class="onboard-start-btn" id="onboardBtn" onclick="closeOnboard()">지도 펼치기</button>
   <button class="onboard-skip" id="onboardSkip" onclick="closeOnboard()">✕ 오늘 하루 닫기</button>
 </div>
 <header class="header">
   <a class="logo" href="/">
-    <img src="/icon-192.png" style="width:32px;height:32px;border-radius:8px;" alt="스타스푼 로고">
+    <svg width="30" height="30" viewBox="0 0 100 100" fill="none" style="flex-shrink:0">
+      <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="var(--gold)" stroke-width="6" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="8" rx="11" ry="14" fill="var(--gold)" transform="rotate(-8 50 8)"/>
+    </svg>
     <span class="logo-text">Star<span>spoon</span></span>
   </a>
   <button onclick="toggleRecentPanel()" id="recentBtn" title="최근 본 맛집" style="background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px;display:flex;align-items:center;color:var(--text3);position:relative;flex-shrink:0" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text3)'"><i class="ti ti-clock" style="font-size:20px"></i><span id="recentBadge" style="display:none;position:absolute;top:0;right:0;background:var(--gold);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:6px;line-height:1.5">0</span></button>
@@ -928,7 +988,10 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     <div class="m-top-bar">
       <!-- 로고 -->
       <a href="/" style="display:flex;align-items:center;gap:6px;text-decoration:none;flex-shrink:0;background:var(--white);border-radius:10px;padding:6px 10px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.12)">
-        <img src="/icon-192.png" style="width:22px;height:22px;border-radius:5px;" alt="">
+        <svg width="20" height="20" viewBox="0 0 100 100" fill="none" style="flex-shrink:0">
+          <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="var(--gold)" stroke-width="7" stroke-linejoin="round"/>
+          <ellipse cx="50" cy="8" rx="12" ry="15" fill="var(--gold)" transform="rotate(-8 50 8)"/>
+        </svg>
         <span style="font-size:13px;font-weight:800;color:var(--text);letter-spacing:-0.3px">Star<span style="color:var(--gold)">spoon</span></span>
       </a>
       <!-- 검색창 -->
@@ -1391,39 +1454,45 @@ window.closePlaceInfo = function(e) {
 // ── 온보딩 다국어 ──
 const ONBOARD_LANGS = {
   ko: {
-    title: '연예인이 직접 간 맛집만<br>지도에서 찾아보세요!',
-    sub: '유튜브·방송에 나온 스타 맛집을<br>큐레이터별로 탐색하고 코스도 짜요',
-    btn: '🗺️ 맛집 지도 시작하기',
+    eyebrow: '그들이 앉았던, 그 자리',
+    title: '스타가 머문 자리에<br><em>당신도 앉아보세요</em>',
+    sub: '유튜브와 방송에 나온 그 가게,<br>그 테이블, 그 메뉴를 그대로',
+    btn: '지도 펼치기',
     skip: '✕ 오늘 하루 닫기'
   },
   en: {
-    title: 'Find K-Celebrity Restaurants<br>on the Map!',
-    sub: 'Explore restaurants visited by K-stars<br>from YouTube & TV shows',
-    btn: '🗺️ Start Exploring',
+    eyebrow: 'THE SEAT THEY SAT IN',
+    title: 'Sit where the stars<br><em>once sat</em>',
+    sub: 'The same restaurant, the same table,<br>the same dish — straight from YouTube & TV',
+    btn: 'Open the Map',
     skip: '✕ Close for today'
   },
   ja: {
-    title: '韓国スターが訪れたお店を<br>地図で探そう！',
-    sub: 'YouTubeやTV番組に登場した<br>スターグルメスポットを探索',
-    btn: '🗺️ 地図を見る',
+    eyebrow: 'スターが座った、その席',
+    title: 'スターが訪れたその席に<br><em>あなたも座ってみて</em>',
+    sub: 'YouTubeやTV番組に出てきたお店、<br>テーブル、メニューをそのまま',
+    btn: '地図を見る',
     skip: '✕ 今日は閉じる'
   },
   zh: {
-    title: '探索韩国明星光顾的餐厅<br>就在地图上！',
-    sub: '发现出现在YouTube和电视节目中<br>的明星美食打卡地',
-    btn: '🗺️ 开始探索',
+    eyebrow: '明星坐过的，那个座位',
+    title: '坐在明星曾坐过的位置<br><em>感受同样的氛围</em>',
+    sub: '出现在YouTube和电视节目中的<br>那家店、那张桌子、那道菜',
+    btn: '打开地图',
     skip: '✕ 今天不再显示'
   },
   tw: {
-    title: '探索韓國明星光顧的餐廳<br>就在地圖上！',
-    sub: '發現出現在YouTube和電視節目中<br>的明星美食打卡地',
-    btn: '🗺️ 開始探索',
+    eyebrow: '明星坐過的，那個座位',
+    title: '坐在明星曾坐過的位置<br><em>感受同樣的氛圍</em>',
+    sub: '出現在YouTube和電視節目中的<br>那家店、那張桌子、那道菜',
+    btn: '打開地圖',
     skip: '✕ 今天不再顯示'
   },
   es: {
-    title: '¡Encuentra restaurantes de<br>celebridades coreanas en el mapa!',
-    sub: 'Explora restaurantes visitados por<br>K-estrellas de YouTube y TV',
-    btn: '🗺️ Comenzar a explorar',
+    eyebrow: 'EL ASIENTO QUE OCUPARON',
+    title: 'Siéntate donde<br><em>las estrellas se sentaron</em>',
+    sub: 'El mismo restaurante, la misma mesa,<br>el mismo plato — directo de YouTube y TV',
+    btn: 'Abrir el mapa',
     skip: '✕ Cerrar por hoy'
   }
 };
@@ -1431,6 +1500,7 @@ const ONBOARD_LANGS = {
 window.setOnboardLang = function(lang) {
   const data = ONBOARD_LANGS[lang];
   if (!data) return;
+  document.getElementById('onboardEyebrow').textContent = data.eyebrow;
   document.getElementById('onboardTitle').innerHTML = data.title;
   document.getElementById('onboardSub').innerHTML = data.sub;
   document.getElementById('onboardBtn').textContent = data.btn;
@@ -1439,15 +1509,7 @@ window.setOnboardLang = function(lang) {
   ['ko','en','ja','zh','tw','es'].forEach(l => {
     const btn = document.getElementById('lang' + l.charAt(0).toUpperCase() + l.slice(1));
     if (!btn) return;
-    if (l === lang) {
-      btn.style.background = 'rgba(255,255,255,0.25)';
-      btn.style.borderColor = 'rgba(255,255,255,0.5)';
-      btn.style.color = '#fff';
-    } else {
-      btn.style.background = 'rgba(255,255,255,0.1)';
-      btn.style.borderColor = 'rgba(255,255,255,0.3)';
-      btn.style.color = 'rgba(255,255,255,0.7)';
-    }
+    btn.classList.toggle('on', l === lang);
   });
   localStorage.setItem('starspoon_lang', lang);
 };
@@ -1456,6 +1518,21 @@ window.setOnboardLang = function(lang) {
 (function() {
   const savedLang = localStorage.getItem('starspoon_lang') || 'ko';
   if (savedLang !== 'ko') setOnboardLang(savedLang);
+})();
+
+// 별가루 생성
+(function() {
+  const field = document.getElementById('onboardStarfield');
+  if (!field) return;
+  for (let i = 0; i < 36; i++) {
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100 + '%';
+    s.style.top = Math.random()*100 + '%';
+    s.style.animationDelay = (Math.random()*4) + 's';
+    const sz = (Math.random()*2+1);
+    s.style.width = s.style.height = sz + 'px';
+    field.appendChild(s);
+  }
 })();
 
 // ── 온보딩 스플래시 ──
@@ -7494,7 +7571,10 @@ window.switchResultTab = switchResultTab;
 <div class="hamburger-drawer" id="hamburgerDrawer">
   <div class="hamburger-hd">
     <div class="hamburger-logo">
-      <img src="/icon-192.png" style="width:28px;height:28px;border-radius:7px" alt="">
+      <svg width="26" height="26" viewBox="0 0 100 100" fill="none" style="flex-shrink:0">
+        <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="var(--gold)" stroke-width="6" stroke-linejoin="round"/>
+        <ellipse cx="50" cy="8" rx="11" ry="14" fill="var(--gold)" transform="rotate(-8 50 8)"/>
+      </svg>
       <span style="font-size:15px;font-weight:800;color:var(--text)">Star<span style="color:var(--gold)">spoon</span></span>
     </div>
     <button class="hamburger-close" onclick="closeHamburger()">✕</button>
