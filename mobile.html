@@ -22,70 +22,119 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --gold:#F59E0B;--gold2:#FCD34D;--gold-bg:rgba(245,158,11,0.08);
-  --bg:#FAFAF8;--bg2:#F4F3EF;--bg3:#EEECEA;--white:#fff;
-  --text:#1A1A18;--text2:#5A5A56;--text3:#9A9A96;
-  --border:#E8E7E3;--border2:#D4D3CF;
+  --gold:#B5790F;--gold2:#D9B65C;--gold-bg:rgba(181,121,15,0.08);
+  --bg:#FBF8F2;--bg2:#F5EFE2;--bg3:#EDE4D0;--white:#fff;
+  --text:#2A2420;--text2:#5C5448;--text3:#8A8076;
+  --border:#EDE4D0;--border2:#D9CFB8;
   --red:#EF4444;--blue:#3B82F6;--green:#10B981;--purple:#8B5CF6;
-  --spoon:#9A9A96;--silver:#94A3B8;--gold-grade:#F59E0B;--star:#F59E0B;
+  --spoon:#9A9A96;--silver:#94A3B8;--gold-grade:#B5790F;--star:#B5790F;
   --radius:10px;--radius-lg:16px;--radius-xl:20px;
-  --shadow:0 2px 8px rgba(0,0,0,0.06);--shadow-lg:0 8px 24px rgba(0,0,0,0.10);
+  --shadow:0 2px 8px rgba(42,36,32,0.06);--shadow-lg:0 8px 24px rgba(42,36,32,0.12);
   --kakao:#FEE500;
+  --stage:#1F1A14;--font-display:'Noto Serif KR',serif;
 }
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5}
 
-/* ── 온보딩 스플래시 ── */
+/* ── 온보딩 스플래시: "그들이 앉았던, 그 자리" ── */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&display=swap');
 .onboard-overlay{
   position:fixed;inset:0;z-index:9999;
-  background:linear-gradient(160deg,#1A1A18 0%,#2D2A20 50%,#1A1A18 100%);
+  background:#15120F;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:32px 24px;text-align:center;
+  padding:32px 24px;text-align:center;overflow:hidden;
   animation:fadeInSplash .4s ease;
 }
 @keyframes fadeInSplash{from{opacity:0}to{opacity:1}}
-.onboard-overlay.hide{
-  animation:fadeOutSplash .5s ease forwards;
-}
+.onboard-overlay.hide{animation:fadeOutSplash .5s ease forwards}
 @keyframes fadeOutSplash{from{opacity:1}to{opacity:0;pointer-events:none}}
-.onboard-logo{
-  display:flex;align-items:center;gap:10px;margin-bottom:20px;
+.onboard-spotbeam{
+  position:absolute;top:-10%;left:50%;width:420px;height:560px;
+  transform:translateX(-50%);
+  background:radial-gradient(ellipse at top, rgba(232,163,61,0.20) 0%, transparent 65%);
+  pointer-events:none;
 }
-.onboard-logo-icon{
-  width:52px;height:52px;background:var(--gold);
-  border-radius:14px;display:flex;align-items:center;
-  justify-content:center;font-size:26px;
+.onboard-starfield{position:absolute;inset:0;pointer-events:none}
+.onboard-starfield span{
+  position:absolute;width:2px;height:2px;background:#F4C766;
+  border-radius:50%;opacity:0;animation:onboardTwinkle 4s ease-in-out infinite;
 }
-.onboard-logo-text{font-size:28px;font-weight:800;color:#fff;letter-spacing:-0.5px}
-.onboard-logo-text span{color:var(--gold)}
-.onboard-title{
-  font-size:20px;font-weight:700;color:#fff;
-  margin-bottom:8px;line-height:1.4;
+@keyframes onboardTwinkle{0%,100%{opacity:0}50%{opacity:.8}}
+
+.onboard-langs{
+  position:absolute;top:16px;right:16px;z-index:2;
+  display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;max-width:200px;
 }
-.onboard-sub{
-  font-size:14px;color:rgba(255,255,255,0.6);
-  margin-bottom:28px;line-height:1.6;
+.onboard-lang-btn{
+  background:rgba(247,242,232,0.08);border:1.3px solid rgba(247,242,232,0.25);
+  border-radius:14px;padding:4px 9px;font-size:10px;font-weight:600;
+  color:rgba(247,242,232,0.65);cursor:pointer;
 }
+.onboard-lang-btn.on{
+  background:rgba(232,163,61,0.22);border-color:#E8A33D;color:#F4C766;
+}
+
+.onboard-logo{position:relative;z-index:1;margin-bottom:6px}
+.onboard-logo-text{
+  font-family:'Noto Serif KR',serif;font-weight:900;
+  font-size:32px;letter-spacing:-0.5px;color:#F7F2E8;
+}
+.onboard-logo-text span{color:#E8A33D}
+.onboard-eyebrow{
+  position:relative;z-index:1;
+  font-size:11px;letter-spacing:2.5px;color:rgba(247,242,232,0.45);
+  text-transform:uppercase;margin-top:8px;margin-bottom:36px;font-weight:500;
+}
+
 .onboard-curators{
-  display:flex;flex-wrap:wrap;gap:8px;
-  justify-content:center;margin-bottom:32px;
+  position:relative;z-index:1;
+  display:flex;gap:11px;margin-bottom:36px;flex-wrap:wrap;justify-content:center;max-width:320px;
 }
 .onboard-curator{
-  display:flex;align-items:center;gap:6px;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.15);
-  border-radius:20px;padding:8px 14px;
-  font-size:13px;font-weight:600;color:#fff;
+  position:relative;background:#F7F2E8;color:#2A2420;
+  width:64px;height:64px;border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 5px 14px rgba(0,0,0,0.35);
+  border:1px solid rgba(0,0,0,0.06);
+}
+.onboard-curator::before{
+  content:'';position:absolute;inset:4px;
+  border:1px solid rgba(42,36,32,0.16);border-radius:2px;
+}
+.onboard-curator span:first-child{font-size:19px;margin-bottom:1px}
+.onboard-curator span:last-child{
+  font-family:'Noto Serif KR',serif;font-size:9px;font-weight:600;letter-spacing:-0.2px;
+}
+.onboard-curator:nth-child(1){transform:rotate(-4deg)}
+.onboard-curator:nth-child(2){transform:rotate(3deg)}
+.onboard-curator:nth-child(3){transform:rotate(-2deg)}
+.onboard-curator:nth-child(4){transform:rotate(4deg)}
+.onboard-curator:nth-child(5){transform:rotate(-3deg)}
+.onboard-curator:nth-child(6){transform:rotate(2deg)}
+
+.onboard-title{
+  position:relative;z-index:1;
+  font-family:'Noto Serif KR',serif;font-size:21px;font-weight:600;line-height:1.5;
+  color:#F7F2E8;margin-bottom:12px;max-width:300px;
+}
+.onboard-title em{color:#E8A33D;font-style:normal}
+.onboard-sub{
+  position:relative;z-index:1;
+  font-size:13px;line-height:1.7;color:rgba(247,242,232,0.5);
+  margin-bottom:34px;max-width:270px;
 }
 .onboard-start-btn{
-  width:100%;max-width:280px;
-  padding:16px;background:var(--gold);color:#fff;
-  border:none;border-radius:14px;font-size:16px;font-weight:700;
-  cursor:pointer;margin-bottom:16px;
-  box-shadow:0 4px 20px rgba(245,158,11,0.4);
+  position:relative;z-index:1;
+  width:100%;max-width:280px;padding:17px;border-radius:14px;
+  background:linear-gradient(180deg,#F4C766,#E8A33D);
+  color:#15120F;font-family:'Noto Serif KR',serif;
+  font-size:15px;font-weight:600;letter-spacing:0.3px;
+  border:none;cursor:pointer;margin-bottom:16px;
+  box-shadow:0 8px 22px rgba(232,163,61,0.35);
 }
 .onboard-skip{
-  font-size:12px;color:rgba(255,255,255,0.4);
-  background:none;border:none;cursor:pointer;
+  position:relative;z-index:1;
+  font-size:12px;color:rgba(247,242,232,0.4);
+  background:none;border:none;cursor:pointer;letter-spacing:0.2px;
 }
 
 /* ── 식당정보 바텀시트 ── */
@@ -143,7 +192,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .header{background:var(--white);border-bottom:1px solid var(--border);height:56px;display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:200;box-shadow:var(--shadow)}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0}
 .logo-icon{width:32px;height:32px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
-.logo-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
+.logo-text{font-family:'Noto Serif KR',serif;font-size:17px;font-weight:900;color:var(--text);letter-spacing:-0.3px}
 .logo-text span{color:var(--gold)}
 .header-search{flex:1;max-width:700px;position:relative;display:flex;gap:10px;align-items:center}
 .header-search input{width:100%;height:36px;border-radius:18px;border:1.5px solid var(--border2);background:var(--bg2);padding:0 14px 0 38px;font-size:13px;color:var(--text);outline:none;transition:all .2s}
@@ -238,7 +287,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .curator-panel-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
 .curator-tabs{display:flex;gap:4px;margin-bottom:0}
 .ctab{flex:1;padding:5px;font-size:12px;font-weight:600;border:1.5px solid var(--border2);border-radius:8px;cursor:pointer;text-align:center;color:var(--text2);background:none;transition:all .15s}
-.ctab.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.ctab.on{background:var(--stage);border-color:var(--stage);color:var(--gold2);font-weight:700}
 .curator-list{flex:1;overflow-y:auto;padding:8px}
 .curator-list::-webkit-scrollbar{width:3px}
 .curator-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
@@ -269,6 +318,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 
 /* ── 맛집 카드 ── */
 .rest-card{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;position:relative}
+.rest-card::after{
+  content:'';position:absolute;top:12px;right:14px;
+  width:26px;height:26px;border-radius:50%;
+  background:var(--gold);
+  box-shadow:0 2px 6px rgba(181,121,15,0.4);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z' fill='%23FBF8F2'/%3E%3C/svg%3E");
+  background-size:13px 13px;background-repeat:no-repeat;background-position:center;
+  pointer-events:none;opacity:1;z-index:2;
+}
 .rest-card:hover,.rest-card.on{background:var(--bg2)}
 .rest-card-top{display:flex;gap:10px;margin-bottom:8px}
 .rest-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
@@ -284,14 +342,25 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .rest-rating{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);font-weight:600}
 .rest-rating-count{font-size:11px;color:var(--text3);font-weight:400}
 .rest-saves{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:2px}
-.rest-btns{margin-left:auto;display:flex;gap:4px}
-.btn-sm{border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text2);background:none;cursor:pointer;display:flex;align-items:center;gap:3px;transition:all .15s;white-space:nowrap}
-.btn-sm:hover{background:var(--bg2)}
-.btn-sm.saved{color:var(--gold);border-color:var(--gold);background:var(--gold-bg)}
-.btn-sm.map{color:var(--gold);border-color:var(--gold)}
-.rest-link{display:flex;align-items:center;gap:4px;margin-top:6px}
-.link-btn{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:3px 8px;border-radius:5px;text-decoration:none;font-weight:500;border:1px solid}
-.link-yt{color:#CC0000;background:rgba(204,0,0,0.05);border-color:rgba(204,0,0,0.2)}
+.rest-actions{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;animation:gbIn .15s ease}
+.rest-actions.open{display:grid}
+@keyframes gbIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.rest-name{position:relative;padding-right:16px}
+.rest-name::after{content:'▾';position:absolute;right:0;top:1px;font-size:11px;color:var(--text3);transition:transform .15s ease}
+.rest-name.open::after{transform:rotate(180deg)}
+.gb{height:62px;border-radius:12px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;text-decoration:none;cursor:pointer;border:1px solid var(--border);box-sizing:border-box;background:var(--bg2);color:var(--text2);transition:transform .08s cubic-bezier(.2,0,.4,1),filter .08s ease,box-shadow .08s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation;will-change:transform}
+.gb .gb-ic{font-size:18px;line-height:1;transition:transform .08s ease}
+.gb .gb-tx{font-size:10.5px;line-height:1}
+.gb:active{transform:scale(0.90);filter:brightness(0.90);box-shadow:inset 0 2px 5px rgba(0,0,0,0.18);transition:transform .05s ease,filter .05s ease,box-shadow .05s ease}
+.gb:active .gb-ic{transform:scale(0.85)}
+.gb.primary{background:var(--gold);border-color:var(--gold);color:#fff}
+.gb.primary:active{filter:brightness(0.82)}
+.gb.saved{background:var(--gold-bg);border-color:var(--gold);color:var(--gold)}
+@media (max-width:380px){
+  .gb{height:56px}
+  .gb .gb-ic{font-size:16px}
+  .gb .gb-tx{font-size:10px}
+}
 .link-add{color:var(--text3);background:var(--bg2);border-color:var(--border2);cursor:pointer}
 .card-detail{display:none;margin-top:10px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
 .card-detail.open{display:block}
@@ -697,7 +766,6 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
   /* 카드 */
   .rest-card{padding:12px 14px}
-  .btn-sm{font-size:11px;padding:4px 8px}
 }
 
 /* 모바일 지도 위 UI (항상 정의, 모바일에서만 display) */
@@ -784,28 +852,49 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
 <!-- ── 온보딩 스플래시 ── -->
 <div class="onboard-overlay" id="onboardOverlay">
-  <div class="onboard-logo">
-    <div class="onboard-logo-icon">🥄</div>
+  <div class="onboard-spotbeam"></div>
+  <div class="onboard-starfield" id="onboardStarfield"></div>
+
+  <!-- 언어 선택 버튼 -->
+  <div class="onboard-langs">
+    <button onclick="setOnboardLang('ko')" id="langKo" class="onboard-lang-btn on">🇰🇷 한</button>
+    <button onclick="setOnboardLang('en')" id="langEn" class="onboard-lang-btn">🇺🇸 EN</button>
+    <button onclick="setOnboardLang('ja')" id="langJa" class="onboard-lang-btn">🇯🇵 JP</button>
+    <button onclick="setOnboardLang('zh')" id="langZh" class="onboard-lang-btn">🇨🇳 中</button>
+    <button onclick="setOnboardLang('tw')" id="langTw" class="onboard-lang-btn">🇹🇼 繁</button>
+    <button onclick="setOnboardLang('es')" id="langEs" class="onboard-lang-btn">🇪🇸 ES</button>
+  </div>
+
+  <div class="onboard-logo" style="display:flex;align-items:center;justify-content:center;gap:10px">
+    <svg width="36" height="36" viewBox="0 0 100 100" fill="none">
+      <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="#E8A33D" stroke-width="5.5" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="8" rx="10" ry="13" fill="#E8A33D" transform="rotate(-8 50 8)"/>
+    </svg>
     <span class="onboard-logo-text">Star<span>spoon</span></span>
   </div>
-  <div class="onboard-title">연예인이 직접 간 맛집만<br>지도에서 찾아보세요!</div>
-  <div class="onboard-sub">유튜브·방송에 나온 스타 맛집을<br>큐레이터별로 탐색하고 코스도 짜요</div>
+  <div class="onboard-eyebrow" id="onboardEyebrow">그들이 앉았던, 그 자리</div>
+
   <div class="onboard-curators">
-    <span class="onboard-curator">🎵 성시경</span>
-    <span class="onboard-curator">😄 풍자</span>
-    <span class="onboard-curator">😋 이영자</span>
-    <span class="onboard-curator">🍱 히밥</span>
-    <span class="onboard-curator">🌸 입짧은햇님</span>
-    <span class="onboard-curator">🍺 김사원세끼</span>
+    <span class="onboard-curator"><span>🎵</span><span>성시경</span></span>
+    <span class="onboard-curator"><span>😋</span><span>이영자</span></span>
+    <span class="onboard-curator"><span>🍱</span><span>히밥</span></span>
+    <span class="onboard-curator"><span>😄</span><span>풍자</span></span>
+    <span class="onboard-curator"><span>🌸</span><span>입짧은햇님</span></span>
+    <span class="onboard-curator"><span>🍺</span><span>김사원세끼</span></span>
   </div>
-  <button class="onboard-start-btn" onclick="closeOnboard()">
-    🗺️ 맛집 지도 시작하기
-  </button>
-  <button class="onboard-skip" onclick="closeOnboard()">다시 보지 않기</button>
+
+  <div class="onboard-title" id="onboardTitle">스타가 머문 자리에<br><em>당신도 앉아보세요</em></div>
+  <div class="onboard-sub" id="onboardSub">유튜브와 방송에 나온 그 가게,<br>그 테이블, 그 메뉴를 그대로</div>
+
+  <button class="onboard-start-btn" id="onboardBtn" onclick="closeOnboard()">지도 펼치기</button>
+  <button class="onboard-skip" id="onboardSkip" onclick="closeOnboard()">✕ 오늘 하루 닫기</button>
 </div>
 <header class="header">
   <a class="logo" href="/">
-    <img src="/icon-192.png" style="width:32px;height:32px;border-radius:8px;" alt="스타스푼 로고">
+    <svg width="30" height="30" viewBox="0 0 100 100" fill="none" style="flex-shrink:0">
+      <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="var(--gold)" stroke-width="6" stroke-linejoin="round"/>
+      <ellipse cx="50" cy="8" rx="11" ry="14" fill="var(--gold)" transform="rotate(-8 50 8)"/>
+    </svg>
     <span class="logo-text">Star<span>spoon</span></span>
   </a>
   <button onclick="toggleRecentPanel()" id="recentBtn" title="최근 본 맛집" style="background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px;display:flex;align-items:center;color:var(--text3);position:relative;flex-shrink:0" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text3)'"><i class="ti ti-clock" style="font-size:20px"></i><span id="recentBadge" style="display:none;position:absolute;top:0;right:0;background:var(--gold);color:#fff;font-size:9px;font-weight:700;padding:1px 4px;border-radius:6px;line-height:1.5">0</span></button>
@@ -919,8 +1008,11 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     <div class="m-top-bar">
       <!-- 로고 -->
       <a href="/" style="display:flex;align-items:center;gap:6px;text-decoration:none;flex-shrink:0;background:var(--white);border-radius:10px;padding:6px 10px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.12)">
-        <img src="/icon-192.png" style="width:22px;height:22px;border-radius:5px;" alt="">
-        <span style="font-size:13px;font-weight:800;color:var(--text);letter-spacing:-0.3px">Star<span style="color:var(--gold)">spoon</span></span>
+        <svg width="20" height="20" viewBox="0 0 100 100" fill="none" style="flex-shrink:0">
+          <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="var(--gold)" stroke-width="7" stroke-linejoin="round"/>
+          <ellipse cx="50" cy="8" rx="12" ry="15" fill="var(--gold)" transform="rotate(-8 50 8)"/>
+        </svg>
+        <span style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:900;color:var(--text);letter-spacing:-0.3px">Star<span style="color:var(--gold)">spoon</span></span>
       </a>
       <!-- 검색창 -->
       <div class="m-search-box" style="cursor:pointer;position:relative">
@@ -1379,29 +1471,119 @@ window.closePlaceInfo = function(e) {
   }
 };
 
+// ── 온보딩 다국어 ──
+const ONBOARD_LANGS = {
+  ko: {
+    eyebrow: '그들이 앉았던, 그 자리',
+    title: '스타가 머문 자리에<br><em>당신도 앉아보세요</em>',
+    sub: '유튜브와 방송에 나온 그 가게,<br>그 테이블, 그 메뉴를 그대로',
+    btn: '지도 펼치기',
+    skip: '✕ 오늘 하루 닫기'
+  },
+  en: {
+    eyebrow: 'THE SEAT THEY SAT IN',
+    title: 'Sit where the stars<br><em>once sat</em>',
+    sub: 'The same restaurant, the same table,<br>the same dish — straight from YouTube & TV',
+    btn: 'Open the Map',
+    skip: '✕ Close for today'
+  },
+  ja: {
+    eyebrow: 'スターが座った、その席',
+    title: 'スターが訪れたその席に<br><em>あなたも座ってみて</em>',
+    sub: 'YouTubeやTV番組に出てきたお店、<br>テーブル、メニューをそのまま',
+    btn: '地図を見る',
+    skip: '✕ 今日は閉じる'
+  },
+  zh: {
+    eyebrow: '明星坐过的，那个座位',
+    title: '坐在明星曾坐过的位置<br><em>感受同样的氛围</em>',
+    sub: '出现在YouTube和电视节目中的<br>那家店、那张桌子、那道菜',
+    btn: '打开地图',
+    skip: '✕ 今天不再显示'
+  },
+  tw: {
+    eyebrow: '明星坐過的，那個座位',
+    title: '坐在明星曾坐過的位置<br><em>感受同樣的氛圍</em>',
+    sub: '出現在YouTube和電視節目中的<br>那家店、那張桌子、那道菜',
+    btn: '打開地圖',
+    skip: '✕ 今天不再顯示'
+  },
+  es: {
+    eyebrow: 'EL ASIENTO QUE OCUPARON',
+    title: 'Siéntate donde<br><em>las estrellas se sentaron</em>',
+    sub: 'El mismo restaurante, la misma mesa,<br>el mismo plato — directo de YouTube y TV',
+    btn: 'Abrir el mapa',
+    skip: '✕ Cerrar por hoy'
+  }
+};
+
+window.setOnboardLang = function(lang) {
+  const data = ONBOARD_LANGS[lang];
+  if (!data) return;
+  document.getElementById('onboardEyebrow').textContent = data.eyebrow;
+  document.getElementById('onboardTitle').innerHTML = data.title;
+  document.getElementById('onboardSub').innerHTML = data.sub;
+  document.getElementById('onboardBtn').textContent = data.btn;
+  document.getElementById('onboardSkip').textContent = data.skip;
+  // 선택된 언어 버튼 강조
+  ['ko','en','ja','zh','tw','es'].forEach(l => {
+    const btn = document.getElementById('lang' + l.charAt(0).toUpperCase() + l.slice(1));
+    if (!btn) return;
+    btn.classList.toggle('on', l === lang);
+  });
+  localStorage.setItem('starspoon_lang', lang);
+};
+
+// 저장된 언어 적용
+(function() {
+  const savedLang = localStorage.getItem('starspoon_lang') || 'ko';
+  if (savedLang !== 'ko') setOnboardLang(savedLang);
+})();
+
+// 별가루 생성
+(function() {
+  const field = document.getElementById('onboardStarfield');
+  if (!field) return;
+  for (let i = 0; i < 36; i++) {
+    const s = document.createElement('span');
+    s.style.left = Math.random()*100 + '%';
+    s.style.top = Math.random()*100 + '%';
+    s.style.animationDelay = (Math.random()*4) + 's';
+    const sz = (Math.random()*2+1);
+    s.style.width = s.style.height = sz + 'px';
+    field.appendChild(s);
+  }
+})();
+
 // ── 온보딩 스플래시 ──
 window.closeOnboard = function() {
   const overlay = document.getElementById('onboardOverlay');
   if (!overlay) return;
   overlay.classList.add('hide');
   setTimeout(() => overlay.remove(), 500);
-  localStorage.setItem('starspoon_onboarded', '1');
+  // ★ 오늘 날짜 저장 (내일 다시 표시)
+  const today = new Date().toISOString().slice(0,10);
+  localStorage.setItem('starspoon_onboarded', today);
 };
 
-// 첫 방문자만 스플래시 표시
+// 자동 닫힘 (날짜 저장 안 함)
+function autoCloseOnboard() {
+  const overlay = document.getElementById('onboardOverlay');
+  if (!overlay) return;
+  overlay.classList.add('hide');
+  setTimeout(() => overlay.remove(), 500);
+}
+
+// 오늘 이미 닫았으면 스플래시 표시 안 함
 (function() {
-  const onboarded = localStorage.getItem('starspoon_onboarded');
-  if (onboarded) {
-    // 재방문자: 스플래시 바로 제거
+  const saved = localStorage.getItem('starspoon_onboarded');
+  const today = new Date().toISOString().slice(0,10);
+  if (saved === today) {
+    // 오늘 이미 닫은 경우: 스플래시 제거
     const overlay = document.getElementById('onboardOverlay');
     if (overlay) overlay.remove();
-  } else {
-    // 첫 방문자: 8초 후 자동 닫기
-    setTimeout(() => {
-      const overlay = document.getElementById('onboardOverlay');
-      if (overlay) closeOnboard();
-    }, 8000);
   }
+  // 오늘 아직 안 닫은 경우: 자동으로 닫지 않음 (사용자가 버튼 눌러야 닫힘)
 })();
 
 // ── 상태 ──
@@ -2149,6 +2331,12 @@ window.mSetCat = function(el, cat) {
 };
 
 // 모바일 검색 패널 초기화
+document.addEventListener('touchstart', (e) => {
+  if (e.target.closest('.gb')) {
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
+}, {passive:true});
+
 document.addEventListener('DOMContentLoaded', () => {
   // 내 스푼 버튼 연결
   const myBtn = document.getElementById('mMyBtn');
@@ -2543,7 +2731,7 @@ function renderList() {
       <div class="rest-card-top">
         <div class="rest-rank rank-num ${rankClass}">${i+1}</div>
         <div class="rest-info">
-          <div class="rest-name" onclick="event.stopPropagation();showMapForCard('${d.id}')">${d.name}</div>
+          <div class="rest-name" onclick="event.stopPropagation();toggleCardActions('${d.id}',this)">${d.name}</div>
           <div class="rest-meta">
             ${(d.celebs||[d.celeb]).map(c => `<span class="rest-badge">${c}</span>`).join('')}
             <span class="rest-cat">${d.cat}</span>
@@ -2559,23 +2747,17 @@ function renderList() {
           ${d.avgRating ? `<span style="color:var(--gold)">★</span> ${d.avgRating.toFixed(1)}<span class="rest-rating-count">${d.ratingCount ? ` (${d.ratingCount})` : ''}</span>` : ''}
         </div>
         <div class="rest-saves"><i class="ti ti-heart" style="font-size:11px"></i> ${d.saves||0}</div>
-        <div class="rest-btns">
-          <a class="btn-sm map" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})">🗺️ 길찾기</a>
-          <button class="btn-sm${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')">
-            ${isSaved?'❤️ 저장됨':'🤍 저장'}
-          </button>
-          <a class="btn-sm" href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);if(window.innerWidth<=768){event.preventDefault();location.href=this.href;}" style="text-decoration:none;color:#FF0000;border-color:#FF0000">▶️ 영상</a>
-          <a class="btn-sm" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()" style="text-decoration:none;color:#03C75A;border-color:#03C75A">📅 예약</a>
-          <button class="btn-sm" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng},'${d.celeb}')" style="color:var(--gold);border-color:var(--gold);font-weight:700">🗺️ 코스</button>
-        </div>
       </div>
-      <div class="rest-link">
-        <button class="link-btn" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')" style="background:var(--gold);border:1px solid var(--gold);color:#fff;font-weight:700">🗺️ 코스담기</button>
-        ${d.yt ? `<a class="link-btn link-yt" href="${d.yt}" target="_blank" onclick="event.stopPropagation()">${d.yt.includes('youtube.com')||d.yt.includes('youtu.be') ? '<i class="ti ti-brand-youtube"></i> 영상' : '🔗 링크'}</a>` : ''}
-        <button class="link-btn" onclick="event.stopPropagation();openPlaceInfo('${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng})" style="background:none;border:1px solid #03C75A;border-radius:8px;padding:6px 12px;font-size:12px;color:#03C75A;cursor:pointer;font-weight:600">🍽️ 식당정보</button>
-        <button class="link-btn" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:600">💬 댓글·평점</button>
-        <button class="link-btn" onclick="event.stopPropagation();shareKakaoPC('${d.id}')" style="background:#FEE500;border:1px solid #F0D000;border-radius:8px;padding:6px 12px;font-size:12px;color:#3A1D1D;cursor:pointer;font-weight:600">💛 카카오공유</button>
-        <button class="link-btn" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')" style="background:none;border:1px solid #FECACA;border-radius:8px;padding:6px 10px;font-size:11px;color:#EF4444;cursor:pointer;font-weight:600">🚨 신고</button>
+      <div class="rest-actions" id="actions-${d.id}">
+        <a class="gb" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})"><span class="gb-ic">🗺️</span><span class="gb-tx">길찾기</span></a>
+        <button class="gb${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')"><span class="gb-ic">${isSaved?'❤️':'🤍'}</span><span class="gb-tx">${isSaved?'저장됨':'저장'}</span></button>
+        <a class="gb" href="${d.yt || ('https://www.youtube.com/results?search_query='+encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name)))}" target="_blank" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);"><span class="gb-ic">▶️</span><span class="gb-tx">영상</span></a>
+        <a class="gb" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()"><span class="gb-ic">📅</span><span class="gb-tx">예약</span></a>
+        <button class="gb primary" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')"><span class="gb-ic">🗺️</span><span class="gb-tx">코스담기</span></button>
+        <button class="gb" onclick="event.stopPropagation();openPlaceInfo('${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng})"><span class="gb-ic">🍽️</span><span class="gb-tx">식당정보</span></button>
+        <button class="gb" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><span class="gb-ic">💬</span><span class="gb-tx">댓글·평점</span></button>
+        <button class="gb" onclick="event.stopPropagation();shareKakaoPC('${d.id}')"><span class="gb-ic">💛</span><span class="gb-tx">카카오공유</span></button>
+        <button class="gb" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')"><span class="gb-ic">🚨</span><span class="gb-tx">신고</span></button>
       </div>
       <div class="card-detail" id="detail-${d.id}">
         ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
@@ -2868,6 +3050,13 @@ function renderPins() {
     markers.push(marker); overlays.push(overlay);
   });
 }
+
+window.toggleCardActions = function(id, nameEl) {
+  const el = document.getElementById('actions-' + id);
+  if (!el) return;
+  const isOpen = el.classList.toggle('open');
+  nameEl?.classList.toggle('open', isOpen);
+};
 
 window.focusCard = function(id) {
   // 이전에 열려있던 상세 박스 닫기
@@ -7409,8 +7598,11 @@ window.switchResultTab = switchResultTab;
 <div class="hamburger-drawer" id="hamburgerDrawer">
   <div class="hamburger-hd">
     <div class="hamburger-logo">
-      <img src="/icon-192.png" style="width:28px;height:28px;border-radius:7px" alt="">
-      <span style="font-size:15px;font-weight:800;color:var(--text)">Star<span style="color:var(--gold)">spoon</span></span>
+      <svg width="26" height="26" viewBox="0 0 100 100" fill="none" style="flex-shrink:0">
+        <path d="M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z" fill="none" stroke="var(--gold)" stroke-width="6" stroke-linejoin="round"/>
+        <ellipse cx="50" cy="8" rx="11" ry="14" fill="var(--gold)" transform="rotate(-8 50 8)"/>
+      </svg>
+      <span style="font-family:'Noto Serif KR',serif;font-size:15px;font-weight:900;color:var(--text)">Star<span style="color:var(--gold)">spoon</span></span>
     </div>
     <button class="hamburger-close" onclick="closeHamburger()">✕</button>
   </div>
