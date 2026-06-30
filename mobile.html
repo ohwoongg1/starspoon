@@ -342,15 +342,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .rest-rating{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);font-weight:600}
 .rest-rating-count{font-size:11px;color:var(--text3);font-weight:400}
 .rest-saves{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:2px}
-.rest-btns{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
-.btn-sm{border:1px solid var(--border2);border-radius:8px;height:30px;padding:0 11px;font-size:12px;font-weight:600;color:var(--text2);background:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap;line-height:1;text-decoration:none;box-sizing:border-box;transition:transform .12s ease,filter .12s ease,box-shadow .12s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.btn-sm:hover{background:var(--bg2)}
-.btn-sm:active,.link-btn:active{transform:scale(0.94);filter:brightness(0.93)}
-.btn-sm.saved{color:var(--gold);border-color:var(--gold);background:var(--gold-bg)}
-.btn-sm.map{color:var(--gold);border-color:var(--gold)}
-.rest-link{display:flex;align-items:center;gap:6px;margin-top:8px;flex-wrap:wrap}
-.link-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;height:30px;padding:0 12px;border-radius:8px;text-decoration:none;border:1px solid;box-sizing:border-box;line-height:1;cursor:pointer;white-space:nowrap;transition:transform .12s ease,filter .12s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.link-yt{color:#CC0000;background:rgba(204,0,0,0.05);border-color:rgba(204,0,0,0.2)}
+.rest-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.gb{height:34px;border-radius:8px;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;cursor:pointer;border:1px solid;box-sizing:border-box;background:none;color:var(--text2);transition:transform .12s ease,filter .12s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.gb:active{transform:scale(0.94);filter:brightness(0.93)}
+@media (max-width:380px){
+  .rest-actions{font-size:10px}
+  .gb{font-size:10px;height:32px;gap:2px}
+}
 .link-add{color:var(--text3);background:var(--bg2);border-color:var(--border2);cursor:pointer}
 .card-detail{display:none;margin-top:10px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
 .card-detail.open{display:block}
@@ -756,7 +754,6 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
   /* 카드 */
   .rest-card{padding:12px 14px}
-  .btn-sm{height:28px;padding:0 10px;font-size:11px}
 }
 
 /* 모바일 지도 위 UI (항상 정의, 모바일에서만 display) */
@@ -2732,23 +2729,17 @@ function renderList() {
           ${d.avgRating ? `<span style="color:var(--gold)">★</span> ${d.avgRating.toFixed(1)}<span class="rest-rating-count">${d.ratingCount ? ` (${d.ratingCount})` : ''}</span>` : ''}
         </div>
         <div class="rest-saves"><i class="ti ti-heart" style="font-size:11px"></i> ${d.saves||0}</div>
-        <div class="rest-btns">
-          <a class="btn-sm map" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})">🗺️ 길찾기</a>
-          <button class="btn-sm${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')">
-            ${isSaved?'❤️ 저장됨':'🤍 저장'}
-          </button>
-          <a class="btn-sm" href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);if(window.innerWidth<=768){event.preventDefault();location.href=this.href;}" style="color:#FF0000;border-color:#FF0000">▶️ 영상</a>
-          <a class="btn-sm" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()" style="color:#03C75A;border-color:#03C75A">📅 예약</a>
-          <button class="btn-sm" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng},'${d.celeb}')" style="color:var(--gold);border-color:var(--gold);font-weight:700">🗺️ 코스</button>
-        </div>
       </div>
-      <div class="rest-link">
-        <button class="link-btn" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')" style="background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700">🗺️ 코스담기</button>
-        ${d.yt ? `<a class="link-btn link-yt" href="${d.yt}" target="_blank" onclick="event.stopPropagation()">${d.yt.includes('youtube.com')||d.yt.includes('youtu.be') ? '<i class="ti ti-brand-youtube"></i> 영상' : '🔗 링크'}</a>` : ''}
-        <button class="link-btn" onclick="event.stopPropagation();openPlaceInfo('${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng})" style="background:none;border-color:#03C75A;color:#03C75A;font-weight:600">🍽️ 식당정보</button>
-        <button class="link-btn" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')" style="background:none;border-color:var(--border2);color:var(--text2);font-weight:600">💬 댓글·평점</button>
-        <button class="link-btn" onclick="event.stopPropagation();shareKakaoPC('${d.id}')" style="background:#FEE500;border-color:#F0D000;color:#3A1D1D;font-weight:600">💛 카카오공유</button>
-        <button class="link-btn" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')" style="background:none;border-color:#FECACA;color:#EF4444;font-weight:600">🚨 신고</button>
+      <div class="rest-actions">
+        <a class="gb" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})" style="color:var(--gold);border-color:var(--gold)">🗺️ 길찾기</a>
+        <button class="gb${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')" style="${isSaved?'color:var(--gold);border-color:var(--gold);background:var(--gold-bg)':'border-color:var(--border2)'}">${isSaved?'❤️ 저장됨':'🤍 저장'}</button>
+        <a class="gb" href="${d.yt || ('https://www.youtube.com/results?search_query='+encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name)))}" target="_blank" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);" style="color:#FF0000;border-color:#FF0000">▶️ 영상</a>
+        <a class="gb" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()" style="color:#03C75A;border-color:#03C75A">📅 예약</a>
+        <button class="gb" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')" style="background:var(--gold);border-color:var(--gold);color:#fff;font-weight:700">🗺️ 코스담기</button>
+        <button class="gb" onclick="event.stopPropagation();openPlaceInfo('${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng})" style="border-color:#03C75A;color:#03C75A">🍽️ 식당정보</button>
+        <button class="gb" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')" style="border-color:var(--border2);color:var(--text2)">💬 댓글·평점</button>
+        <button class="gb" onclick="event.stopPropagation();shareKakaoPC('${d.id}')" style="background:#FEE500;border-color:#F0D000;color:#3A1D1D">💛 카카오공유</button>
+        <button class="gb" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')" style="border-color:#FECACA;color:#EF4444">🚨 신고</button>
       </div>
       <div class="card-detail" id="detail-${d.id}">
         ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
