@@ -341,7 +341,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .rest-foot{display:flex;align-items:center;gap:6px}
 .rest-rating{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);font-weight:600}
 .rest-rating-count{font-size:11px;color:var(--text3);font-weight:400}
-.rest-saves{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:2px}
 .rest-actions{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;animation:gbIn .15s ease}
 .rest-actions.open{display:grid}
 @keyframes gbIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
@@ -2748,7 +2747,6 @@ function renderList() {
         <div class="rest-rating">
           ${d.avgRating ? `<span style="color:var(--gold)">★</span> ${d.avgRating.toFixed(1)}<span class="rest-rating-count">${d.ratingCount ? ` (${d.ratingCount})` : ''}</span>` : ''}
         </div>
-        <div class="rest-saves"><i class="ti ti-heart" style="font-size:11px"></i> ${d.saves||0}</div>
       </div>
       <div class="rest-actions" id="actions-${d.id}">
         <a class="gb" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})"><span class="gb-ic">🗺️</span><span class="gb-tx">길찾기</span></a>
