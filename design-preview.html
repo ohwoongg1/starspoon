@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Starspoon — The Seat They Sat In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --stage:#15120F;
+  --stage2:#1F1A14;
+  --spotlight:#E8A33D;
+  --spotlight2:#F4C766;
+  --paper:#F7F2E8;
+  --paper2:#EFE7D8;
+  --ink:#2A2420;
+  --ink-soft:#8A8076;
+  --ink-faint:rgba(247,242,232,0.45);
+}
+body{
+  font-family:'Inter',-apple-system,sans-serif;
+  background:var(--stage);
+  color:var(--paper);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ── 별가루 배경 ── */
+.starfield{
+  position:fixed;inset:0;z-index:0;overflow:hidden;
+}
+.starfield span{
+  position:absolute;width:2px;height:2px;background:var(--spotlight2);
+  border-radius:50%;opacity:0;
+  animation:twinkle 4s ease-in-out infinite;
+}
+@keyframes twinkle{
+  0%,100%{opacity:0}
+  50%{opacity:.8}
+}
+
+/* ── 스플래시 ── */
+.splash{
+  position:relative;z-index:1;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:40px 28px;text-align:center;
+}
+
+/* 스포트라이트 빔 */
+.spot-beam{
+  position:absolute;top:-10%;left:50%;
+  width:500px;height:700px;
+  transform:translateX(-50%);
+  background:radial-gradient(ellipse at top, rgba(232,163,61,0.18) 0%, transparent 65%);
+  pointer-events:none;
+}
+
+.brand-mark{
+  display:flex;align-items:baseline;gap:2px;margin-bottom:6px;
+  position:relative;
+}
+.brand-mark .star{
+  font-family:'Noto Serif KR',serif;
+  font-size:13px;color:var(--spotlight);
+  position:relative;top:-14px;letter-spacing:0.5px;
+}
+.brand-name{
+  font-family:'Noto Serif KR',serif;
+  font-weight:900;font-size:38px;letter-spacing:-0.5px;
+  color:var(--paper);
+}
+.brand-name .accent{color:var(--spotlight)}
+
+.brand-tagline{
+  font-size:12px;letter-spacing:3px;color:var(--ink-faint);
+  text-transform:uppercase;margin-top:10px;margin-bottom:48px;
+  font-weight:500;
+}
+
+/* 도장 카드 - 시그니처 요소 */
+.stamp-row{
+  display:flex;gap:14px;margin-bottom:44px;
+  flex-wrap:wrap;justify-content:center;
+  max-width:340px;
+}
+.stamp{
+  position:relative;
+  background:var(--paper);
+  color:var(--ink);
+  width:74px;height:74px;
+  border-radius:4px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transform:rotate(var(--r,0deg));
+  box-shadow:0 6px 16px rgba(0,0,0,0.35);
+  border:1px solid rgba(0,0,0,0.06);
+}
+.stamp::before{
+  content:'';position:absolute;inset:5px;
+  border:1px solid rgba(42,36,32,0.18);
+  border-radius:2px;
+}
+.stamp-emoji{font-size:22px;margin-bottom:2px}
+.stamp-name{
+  font-family:'Noto Serif KR',serif;
+  font-size:10px;font-weight:600;letter-spacing:-0.3px;
+}
+.stamp:nth-child(1){--r:-4deg}
+.stamp:nth-child(2){--r:3deg}
+.stamp:nth-child(3){--r:-2deg}
+.stamp:nth-child(4){--r:5deg}
+
+.headline{
+  font-family:'Noto Serif KR',serif;
+  font-size:22px;font-weight:600;line-height:1.5;
+  color:var(--paper);margin-bottom:14px;
+  max-width:300px;
+}
+.headline .em{color:var(--spotlight)}
+
+.subline{
+  font-size:14px;line-height:1.7;color:var(--ink-faint);
+  margin-bottom:40px;max-width:280px;
+}
+
+.cta{
+  width:100%;max-width:300px;
+  padding:18px;border-radius:14px;
+  background:linear-gradient(180deg, var(--spotlight2), var(--spotlight));
+  color:var(--stage);font-family:'Noto Serif KR',serif;
+  font-size:16px;font-weight:600;letter-spacing:0.5px;
+  border:none;cursor:pointer;margin-bottom:18px;
+  box-shadow:0 8px 24px rgba(232,163,61,0.35);
+}
+
+.skip{
+  font-size:12px;color:var(--ink-soft);
+  background:none;border:none;cursor:pointer;
+  letter-spacing:0.3px;
+}
+
+.footer-note{
+  position:absolute;bottom:24px;left:0;right:0;
+  text-align:center;font-size:11px;color:rgba(247,242,232,0.25);
+  letter-spacing:1px;
+}
+</style>
+</head>
+<body>
+
+<div class="starfield" id="starfield"></div>
+
+<div class="splash">
+  <div class="spot-beam"></div>
+
+  <div class="brand-mark">
+    <span class="brand-name">Star<span class="accent">spoon</span></span>
+  </div>
+  <div class="brand-tagline">그들이 앉았던, 그 자리</div>
+
+  <div class="stamp-row">
+    <div class="stamp"><span class="stamp-emoji">🎵</span><span class="stamp-name">성시경</span></div>
+    <div class="stamp"><span class="stamp-emoji">😋</span><span class="stamp-name">이영자</span></div>
+    <div class="stamp"><span class="stamp-emoji">🍱</span><span class="stamp-name">히밥</span></div>
+    <div class="stamp"><span class="stamp-emoji">😄</span><span class="stamp-name">풍자</span></div>
+  </div>
+
+  <div class="headline">스타가 머문 자리에<br><span class="em">당신도 앉아보세요</span></div>
+  <div class="subline">유튜브와 방송에 나온 그 가게,<br>그 테이블, 그 메뉴를 그대로</div>
+
+  <button class="cta">지도 펼치기</button>
+  <button class="skip">오늘은 그냥 둘러볼게요</button>
+
+  <div class="footer-note">STARSPOON · SEOUL</div>
+</div>
+
+<script>
+const field = document.getElementById('starfield');
+for (let i = 0; i < 40; i++) {
+  const s = document.createElement('span');
+  s.style.left = Math.random()*100 + '%';
+  s.style.top = Math.random()*100 + '%';
+  s.style.animationDelay = (Math.random()*4) + 's';
+  s.style.width = s.style.height = (Math.random()*2+1) + 'px';
+  field.appendChild(s);
+}
+</script>
+</body>
+</html>
