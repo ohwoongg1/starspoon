@@ -784,12 +784,21 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
 <!-- ── 온보딩 스플래시 ── -->
 <div class="onboard-overlay" id="onboardOverlay">
+  <!-- 언어 선택 버튼 -->
+  <div style="position:absolute;top:16px;right:16px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+    <button onclick="setOnboardLang('ko')" id="langKo" style="background:rgba(255,255,255,0.25);border:1.5px solid rgba(255,255,255,0.5);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:#fff;cursor:pointer">🇰🇷 한</button>
+    <button onclick="setOnboardLang('en')" id="langEn" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇺🇸 EN</button>
+    <button onclick="setOnboardLang('ja')" id="langJa" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇯🇵 JP</button>
+    <button onclick="setOnboardLang('zh')" id="langZh" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇨🇳 中</button>
+    <button onclick="setOnboardLang('tw')" id="langTw" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇹🇼 繁</button>
+    <button onclick="setOnboardLang('es')" id="langEs" style="background:rgba(255,255,255,0.1);border:1.5px solid rgba(255,255,255,0.3);border-radius:16px;padding:4px 10px;font-size:11px;font-weight:700;color:rgba(255,255,255,0.7);cursor:pointer">🇪🇸 ES</button>
+  </div>
   <div class="onboard-logo">
     <div class="onboard-logo-icon">🥄</div>
     <span class="onboard-logo-text">Star<span>spoon</span></span>
   </div>
-  <div class="onboard-title">연예인이 직접 간 맛집만<br>지도에서 찾아보세요!</div>
-  <div class="onboard-sub">유튜브·방송에 나온 스타 맛집을<br>큐레이터별로 탐색하고 코스도 짜요</div>
+  <div class="onboard-title" id="onboardTitle">연예인이 직접 간 맛집만<br>지도에서 찾아보세요!</div>
+  <div class="onboard-sub" id="onboardSub">유튜브·방송에 나온 스타 맛집을<br>큐레이터별로 탐색하고 코스도 짜요</div>
   <div class="onboard-curators">
     <span class="onboard-curator">🎵 성시경</span>
     <span class="onboard-curator">😄 풍자</span>
@@ -798,10 +807,10 @@ input::placeholder{color:var(--text3) !important;opacity:1}
     <span class="onboard-curator">🌸 입짧은햇님</span>
     <span class="onboard-curator">🍺 김사원세끼</span>
   </div>
-  <button class="onboard-start-btn" onclick="closeOnboard()">
+  <button class="onboard-start-btn" id="onboardBtn" onclick="closeOnboard()">
     🗺️ 맛집 지도 시작하기
   </button>
-  <button class="onboard-skip" onclick="closeOnboard()">✕ 오늘 하루 닫기</button>
+  <button class="onboard-skip" id="onboardSkip" onclick="closeOnboard()">✕ 오늘 하루 닫기</button>
 </div>
 <header class="header">
   <a class="logo" href="/">
@@ -1378,6 +1387,76 @@ window.closePlaceInfo = function(e) {
     document.getElementById('placeInfoOverlay').classList.remove('show');
   }
 };
+
+// ── 온보딩 다국어 ──
+const ONBOARD_LANGS = {
+  ko: {
+    title: '연예인이 직접 간 맛집만<br>지도에서 찾아보세요!',
+    sub: '유튜브·방송에 나온 스타 맛집을<br>큐레이터별로 탐색하고 코스도 짜요',
+    btn: '🗺️ 맛집 지도 시작하기',
+    skip: '✕ 오늘 하루 닫기'
+  },
+  en: {
+    title: 'Find K-Celebrity Restaurants<br>on the Map!',
+    sub: 'Explore restaurants visited by K-stars<br>from YouTube & TV shows',
+    btn: '🗺️ Start Exploring',
+    skip: '✕ Close for today'
+  },
+  ja: {
+    title: '韓国スターが訪れたお店を<br>地図で探そう！',
+    sub: 'YouTubeやTV番組に登場した<br>スターグルメスポットを探索',
+    btn: '🗺️ 地図を見る',
+    skip: '✕ 今日は閉じる'
+  },
+  zh: {
+    title: '探索韩国明星光顾的餐厅<br>就在地图上！',
+    sub: '发现出现在YouTube和电视节目中<br>的明星美食打卡地',
+    btn: '🗺️ 开始探索',
+    skip: '✕ 今天不再显示'
+  },
+  tw: {
+    title: '探索韓國明星光顧的餐廳<br>就在地圖上！',
+    sub: '發現出現在YouTube和電視節目中<br>的明星美食打卡地',
+    btn: '🗺️ 開始探索',
+    skip: '✕ 今天不再顯示'
+  },
+  es: {
+    title: '¡Encuentra restaurantes de<br>celebridades coreanas en el mapa!',
+    sub: 'Explora restaurantes visitados por<br>K-estrellas de YouTube y TV',
+    btn: '🗺️ Comenzar a explorar',
+    skip: '✕ Cerrar por hoy'
+  }
+};
+
+window.setOnboardLang = function(lang) {
+  const data = ONBOARD_LANGS[lang];
+  if (!data) return;
+  document.getElementById('onboardTitle').innerHTML = data.title;
+  document.getElementById('onboardSub').innerHTML = data.sub;
+  document.getElementById('onboardBtn').textContent = data.btn;
+  document.getElementById('onboardSkip').textContent = data.skip;
+  // 선택된 언어 버튼 강조
+  ['ko','en','ja','zh','tw','es'].forEach(l => {
+    const btn = document.getElementById('lang' + l.charAt(0).toUpperCase() + l.slice(1));
+    if (!btn) return;
+    if (l === lang) {
+      btn.style.background = 'rgba(255,255,255,0.25)';
+      btn.style.borderColor = 'rgba(255,255,255,0.5)';
+      btn.style.color = '#fff';
+    } else {
+      btn.style.background = 'rgba(255,255,255,0.1)';
+      btn.style.borderColor = 'rgba(255,255,255,0.3)';
+      btn.style.color = 'rgba(255,255,255,0.7)';
+    }
+  });
+  localStorage.setItem('starspoon_lang', lang);
+};
+
+// 저장된 언어 적용
+(function() {
+  const savedLang = localStorage.getItem('starspoon_lang') || 'ko';
+  if (savedLang !== 'ko') setOnboardLang(savedLang);
+})();
 
 // ── 온보딩 스플래시 ──
 window.closeOnboard = function() {
