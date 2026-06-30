@@ -343,11 +343,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .rest-rating-count{font-size:11px;color:var(--text3);font-weight:400}
 .rest-saves{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:2px}
 .rest-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
-.gb{height:62px;border-radius:12px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;text-decoration:none;cursor:pointer;border:1px solid var(--border);box-sizing:border-box;background:var(--bg2);color:var(--text2);transition:transform .12s ease,filter .12s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.gb .gb-ic{font-size:18px;line-height:1}
+.gb{height:62px;border-radius:12px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;text-decoration:none;cursor:pointer;border:1px solid var(--border);box-sizing:border-box;background:var(--bg2);color:var(--text2);transition:transform .08s cubic-bezier(.2,0,.4,1),filter .08s ease,box-shadow .08s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation;will-change:transform}
+.gb .gb-ic{font-size:18px;line-height:1;transition:transform .08s ease}
 .gb .gb-tx{font-size:10.5px;line-height:1}
-.gb:active{transform:scale(0.95);filter:brightness(0.96)}
+.gb:active{transform:scale(0.90);filter:brightness(0.90);box-shadow:inset 0 2px 5px rgba(0,0,0,0.18);transition:transform .05s ease,filter .05s ease,box-shadow .05s ease}
+.gb:active .gb-ic{transform:scale(0.85)}
 .gb.primary{background:var(--gold);border-color:var(--gold);color:#fff}
+.gb.primary:active{filter:brightness(0.82)}
 .gb.saved{background:var(--gold-bg);border-color:var(--gold);color:var(--gold)}
 @media (max-width:380px){
   .gb{height:56px}
@@ -2324,6 +2326,12 @@ window.mSetCat = function(el, cat) {
 };
 
 // 모바일 검색 패널 초기화
+document.addEventListener('touchstart', (e) => {
+  if (e.target.closest('.gb')) {
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
+}, {passive:true});
+
 document.addEventListener('DOMContentLoaded', () => {
   // 내 스푼 버튼 연결
   const myBtn = document.getElementById('mMyBtn');
