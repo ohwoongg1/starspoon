@@ -329,7 +329,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 }
 .rest-card:hover,.rest-card.on{background:var(--bg2)}
 .rest-card-top{display:flex;gap:10px;margin-bottom:8px}
-.rest-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
+.rest-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .rest-info{flex:1;min-width:0}
 .rest-name{font-weight:700;font-size:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .rest-name:hover{color:var(--gold)}
@@ -341,8 +341,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .rest-foot{display:flex;align-items:center;gap:6px}
 .rest-rating{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);font-weight:600}
 .rest-rating-count{font-size:11px;color:var(--text3);font-weight:400}
-.rest-saves{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:2px}
-.rest-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.rest-actions{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;animation:gbIn .15s ease}
+.rest-actions.open{display:grid}
+@keyframes gbIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.rest-name{position:relative;padding-right:16px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.rest-name::after{content:'▾';position:absolute;right:0;top:1px;font-size:11px;color:var(--text3);transition:transform .15s ease}
+.rest-name.open::after{transform:rotate(180deg)}
 .gb{height:62px;border-radius:12px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;text-decoration:none;cursor:pointer;border:1px solid var(--border);box-sizing:border-box;background:var(--bg2);color:var(--text2);transition:transform .08s cubic-bezier(.2,0,.4,1),filter .08s ease,box-shadow .08s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation;will-change:transform}
 .gb .gb-ic{font-size:18px;line-height:1;transition:transform .08s ease}
 .gb .gb-tx{font-size:10.5px;line-height:1}
@@ -364,7 +368,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .detail-text{line-height:1.4;word-break:keep-all}
 .detail-phone{color:var(--gold);text-decoration:none;font-weight:600}
 .detail-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.detail-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;text-decoration:none;border:none;cursor:pointer}
+.detail-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;transition:transform .08s ease,filter .08s ease;-webkit-tap-highlight-color:transparent}
+.detail-btn:active{transform:scale(0.96);filter:brightness(0.92)}
+.rest-actions-sub{grid-column:1/-1;background:var(--bg2);border-radius:8px;padding:8px 10px;margin-top:2px}
 .detail-kakao{background:#FEE500;color:#3A1D1D}
 .detail-naver{background:#03C75A;color:#fff}
 
@@ -2724,9 +2730,9 @@ function renderList() {
     const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
     return `<div class="rest-card" id="card-${d.id}" onclick="focusCard('${d.id}')" onmouseenter="hoverCard('${d.id}')" onmouseleave="unhoverCard('${d.id}')">
       <div class="rest-card-top">
-        <div class="rest-rank rank-num ${rankClass}">${i+1}</div>
+        <div class="rest-rank rank-num ${rankClass}" onclick="event.stopPropagation();toggleCardActions('${d.id}',document.querySelector('#card-${d.id} .rest-name'))">${i+1}</div>
         <div class="rest-info">
-          <div class="rest-name" onclick="event.stopPropagation();showMapForCard('${d.id}')">${d.name}</div>
+          <div class="rest-name" onclick="event.stopPropagation();toggleCardActions('${d.id}',this)">${d.name}</div>
           <div class="rest-meta">
             ${(d.celebs||[d.celeb]).map(c => `<span class="rest-badge">${c}</span>`).join('')}
             <span class="rest-cat">${d.cat}</span>
@@ -2741,9 +2747,8 @@ function renderList() {
         <div class="rest-rating">
           ${d.avgRating ? `<span style="color:var(--gold)">★</span> ${d.avgRating.toFixed(1)}<span class="rest-rating-count">${d.ratingCount ? ` (${d.ratingCount})` : ''}</span>` : ''}
         </div>
-        <div class="rest-saves"><i class="ti ti-heart" style="font-size:11px"></i> ${d.saves||0}</div>
       </div>
-      <div class="rest-actions">
+      <div class="rest-actions" id="actions-${d.id}">
         <a class="gb" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})"><span class="gb-ic">🗺️</span><span class="gb-tx">길찾기</span></a>
         <button class="gb${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')"><span class="gb-ic">${isSaved?'❤️':'🤍'}</span><span class="gb-tx">${isSaved?'저장됨':'저장'}</span></button>
         <a class="gb" href="${d.yt || ('https://www.youtube.com/results?search_query='+encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name)))}" target="_blank" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);"><span class="gb-ic">▶️</span><span class="gb-tx">영상</span></a>
@@ -2753,13 +2758,10 @@ function renderList() {
         <button class="gb" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><span class="gb-ic">💬</span><span class="gb-tx">댓글·평점</span></button>
         <button class="gb" onclick="event.stopPropagation();shareKakaoPC('${d.id}')"><span class="gb-ic">💛</span><span class="gb-tx">카카오공유</span></button>
         <button class="gb" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')"><span class="gb-ic">🚨</span><span class="gb-tx">신고</span></button>
-      </div>
-      <div class="card-detail" id="detail-${d.id}">
-        ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
-        ${d.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><a class="detail-text detail-phone" href="tel:${d.phone}" onclick="event.stopPropagation()">${d.phone}</a></div>` : ''}
-        <div class="detail-actions">
-          <a class="detail-btn detail-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(d.name + ' ' + d.area)}" target="_blank" onclick="event.stopPropagation()">🟢 네이버지도에서 보기</a>
-        </div>
+        ${d.address || d.phone ? `<div class="rest-actions-sub">
+          ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
+          ${d.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><a class="detail-text detail-phone" href="tel:${d.phone}" onclick="event.stopPropagation()">${d.phone}</a></div>` : ''}
+        </div>` : ''}
       </div>
     </div>`;
   }).join('');
@@ -3045,6 +3047,17 @@ function renderPins() {
     markers.push(marker); overlays.push(overlay);
   });
 }
+
+let _lastToggleTime = {};
+window.toggleCardActions = function(id, nameEl) {
+  const now = Date.now();
+  if (_lastToggleTime[id] && now - _lastToggleTime[id] < 300) return; // 짧은 시간내 중복 호출 무시
+  _lastToggleTime[id] = now;
+  const el = document.getElementById('actions-' + id);
+  if (!el) return;
+  const isOpen = el.classList.toggle('open');
+  nameEl?.classList.toggle('open', isOpen);
+};
 
 window.focusCard = function(id) {
   // 이전에 열려있던 상세 박스 닫기
@@ -4428,10 +4441,10 @@ window.mspSelectPlace = async function(idx) {
   _mspStarResults = allData.filter(d => {
     const dlat = d.lat - place.lat, dlng = d.lng - place.lng;
     const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
-    d._nearbyDist = dist;
+    d.dist = dist;
     d._type = 'star';
     return dist <= RADIUS;
-  }).sort((a,b) => (a._nearbyDist||0) - (b._nearbyDist||0)).slice(0, 20);
+  }).sort((a,b) => (a.dist||0) - (b.dist||0)).slice(0, 20);
 
   // ★ 지도 이동 + 지도순 전환
   if (map) {
@@ -5674,7 +5687,7 @@ window.shareMCourse = async function() {
     });
 
     const courseId = courseRef.id;
-    const shareUrl = 'https://www.starspoon.co.kr/mobile.html?courseId=' + courseId;
+    const shareUrl = 'https://www.starspoon.co.kr/mobile.html#courseId=' + courseId;
 
     const placeNames = places.slice(0,3).map((p,i) => (i+1) + '. ' + p.name).join('\n');
     const desc = placeNames + (places.length > 3 ? '\n외 ' + (places.length-3) + '곳' : '')
@@ -6179,7 +6192,7 @@ window.shareCourseKakao = async function() {
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 30*24*60*60*1000).toISOString()
     });
-    const shareUrl = 'https://www.starspoon.co.kr/mobile.html?courseId=' + courseRef.id;
+    const shareUrl = 'https://www.starspoon.co.kr/mobile.html#courseId=' + courseRef.id;
     const placeNames = _animPlaces.slice(0,3).map((p,i) => (i+1)+'. '+p.name).join('\n');
     const desc = placeNames + (_animPlaces.length > 3 ? '\n외 '+(_animPlaces.length-3)+'곳' : '')
                + '\n\n지도에서 코스 길 안내 바로 실행!';
@@ -6995,9 +7008,11 @@ initKakaoLogin();
   }
 
   // URL에 courseId 있으면 공유받은 코스 표시
+  // URL 파라미터 또는 해시에서 courseId/restId 추출 (iOS PWA는 ?파라미터를 잘라내는 경우 있어 해시도 같이 확인)
   const _urlParams = new URLSearchParams(window.location.search);
-  const _courseId = _urlParams.get('courseId');
-  const _restId = _urlParams.get('restId');
+  const _hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const _courseId = _urlParams.get('courseId') || _hashParams.get('courseId');
+  const _restId = _urlParams.get('restId') || _hashParams.get('restId');
   if (_courseId) {
     await loadSharedCourse(_courseId);
   } else if (_restId) {
