@@ -3150,10 +3150,68 @@ async function initPilgrimPage() {
         center: new kakao.maps.LatLng(37.5665, 126.9780),
         level: 7
       });
-      // 지도 크기 보정 (flex 컨테이너 안에서 height가 0일 수 있음)
       setTimeout(() => {
         try { _pilgrimMap.relayout(); } catch(e) {}
       }, 200);
+    }
+
+    // ── 바텀시트 드래그 (최초 1회만) ──
+    const pSheet = document.getElementById('pilgrimSheet');
+    const pBody  = document.getElementById('pilgrimListBody');
+    if (pSheet) {
+      const SNAP_S = Math.round(window.innerHeight * 0.22);
+      const SNAP_M = Math.round(window.innerHeight * 0.42);
+      const SNAP_L = Math.round(window.innerHeight * 0.80);
+      let pStartY = 0, pStartH = 0, pDragging = false, pLastY = 0, pVelocity = 0;
+
+      function pSnapTo(h) {
+        pSheet.style.transition = 'height .3s cubic-bezier(.25,.46,.45,.94)';
+        pSheet.style.height = h + 'px';
+        setTimeout(() => { pSheet.style.transition = ''; try { _pilgrimMap && _pilgrimMap.relayout(); } catch(e){} }, 320);
+      }
+
+      pSheet.addEventListener('touchstart', e => {
+        const rect = pSheet.getBoundingClientRect();
+        if (e.touches[0].clientY - rect.top > 40) return; // 핸들 영역만
+        pStartY = pLastY = e.touches[0].clientY;
+        pStartH = pSheet.getBoundingClientRect().height;
+        pDragging = true; pVelocity = 0;
+        pSheet.style.transition = 'none';
+      }, {passive:true});
+
+      document.addEventListener('touchmove', e => {
+        if (!pDragging) return;
+        const y = e.touches[0].clientY;
+        pVelocity = pLastY - y; pLastY = y;
+        const newH = Math.min(Math.max(pStartH + (pStartY - y), 60), window.innerHeight * 0.85);
+        pSheet.style.height = newH + 'px';
+      }, {passive:true});
+
+      document.addEventListener('touchend', () => {
+        if (!pDragging) return;
+        pDragging = false;
+        const curH = pSheet.getBoundingClientRect().height;
+        if (pVelocity > 8) pSnapTo(SNAP_L);
+        else if (pVelocity < -8) pSnapTo(SNAP_S);
+        else {
+          const nearest = [SNAP_S, SNAP_M, SNAP_L].reduce((a,b) => Math.abs(a-curH) < Math.abs(b-curH) ? a : b);
+          pSnapTo(nearest);
+        }
+      });
+
+      // 리스트 스크롤 시 지도로 이벤트 전파 차단
+      if (pBody) {
+        pBody.addEventListener('touchstart', e => {
+          pBody._ty = e.touches[0].clientY;
+          pBody._st = pBody.scrollTop;
+        }, {passive:true});
+        pBody.addEventListener('touchmove', e => {
+          const dy = pBody._ty - e.touches[0].clientY;
+          const atTop    = pBody.scrollTop <= 0 && dy < 0;
+          const atBottom = pBody.scrollTop + pBody.clientHeight >= pBody.scrollHeight && dy > 0;
+          if (!atTop && !atBottom) e.stopPropagation();
+        }, {passive:true});
+      }
     }
   }
 
