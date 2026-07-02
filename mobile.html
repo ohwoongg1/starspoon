@@ -1099,12 +1099,14 @@ input::placeholder{color:var(--text3) !important;opacity:1}
       </svg>
       <span style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:900;color:var(--text)">Star<span style="color:var(--gold)">spoon</span></span>
     </a>
-    <div style="flex:1;display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:0 12px;height:34px">
+    <div style="flex:1;display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:0 4px 0 12px;height:34px">
       <i class="ti ti-search" style="font-size:14px;color:var(--text3);flex-shrink:0"></i>
-      <input id="pilgrimSearch" type="text" placeholder="드라마명, 배우명, 장소명 검색"
-        style="border:none;background:none;flex:1;padding:0 8px;font-size:13px;color:var(--text);outline:none"
-        oninput="doPilgrimSearch(this.value)">
-      <button id="pilgrimSearchClear" onclick="clearPilgrimSearch()" style="display:none;background:none;border:none;color:var(--text3);cursor:pointer;padding:0;font-size:16px">✕</button>
+      <input id="pilgrimSearch" type="search" placeholder="드라마명, 배우명, 장소명 검색"
+        style="border:none;background:none;flex:1;padding:0 8px;font-size:13px;color:var(--text);outline:none;-webkit-appearance:none"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();doPilgrimSearch(this.value)}"
+        oninput="if(!this.value){clearPilgrimSearch()}">
+      <button id="pilgrimSearchClear" onclick="clearPilgrimSearch()" style="display:none;background:none;border:none;color:var(--text3);cursor:pointer;padding:0 4px;font-size:16px;touch-action:manipulation">✕</button>
+      <button onclick="doPilgrimSearch(document.getElementById('pilgrimSearch').value)" style="background:var(--gold);border:none;border-radius:7px;height:26px;padding:0 10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent">검색</button>
     </div>
     <button onclick="openHamburger()" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text2)"><i class="ti ti-menu-2" style="font-size:20px"></i></button>
   </div>
@@ -3265,18 +3267,20 @@ window.setPilgrimFilter = function(type, el) {
 };
 
 // 콘텐츠 pill 바 생성 (드라마별/스타별)
-// 콘텐츠 영향력 순위 (전세계 인지도 기준)
+// 콘텐츠 영향력 순위 (전세계 인지도 기준, 실제 데이터 title 필드명과 일치)
 const PILGRIM_PRIORITY = [
-  // 한류스타
-  '방탄소년단','BTS','블랙핑크','BLACKPINK','아이유','IU','싸이','PSY',
-  '세븐틴','스트레이키즈','트와이스','TWICE','뉴진스','NewJeans','엑소','EXO',
-  // 드라마 (글로벌 히트작)
+  // 한류스타 (아티스트 타입)
+  '방탄소년단','슈퍼주니어','소녀시대','빅뱅','엑소','샤이니','투피엠','2PM',
+  '블랙핑크','아이유','세븐틴','스트레이키즈','트와이스','뉴진스','에스파',
+  // 드라마 (글로벌 히트작 우선)
   '오징어게임','도깨비','사랑의 불시착','이태원 클라쓰','별에서 온 그대',
-  '태양의 후예','킹덤','이상한 변호사 우영우','마이 디어 미스터','눈물의 여왕',
-  '스물다섯 스물하나','지금 우리 학교는','좋아하면 울리는','힘쎈여자 강남순',
-  '무빙','악마판사','빈센조','갯마을 차차차','청춘기록','스타트업',
+  '태양의 후예','킹덤','이상한 변호사 우영우','눈물의 여왕','무빙',
+  '지금 우리 학교는','스물다섯 스물하나','청춘기록','스타트업','빈센조',
+  '갯마을 차차차','악마판사','힘쎈여자 강남순','나의 아저씨','미스터 션샤인',
+  // 예능
+  '런닝맨','무한도전','1박2일','꽃보다 할배','우리 결혼했어요',
   // 영화
-  '기생충','부산행','헤어질 결심','범죄도시','올드보이',
+  '기생충','부산행','헤어질 결심','범죄도시','올드보이','아가씨',
 ];
 
 function buildPilgrimContentBar() {
@@ -3372,22 +3376,38 @@ window.doPilgrimSearch = function(q) {
   const clearBtn = document.getElementById('pilgrimSearchClear');
   if (clearBtn) clearBtn.style.display = _pilgrimSearchQ ? '' : 'none';
   if (!_pilgrimSearchQ) { filterPilgrim(); return; }
-  _pilgrimSearchResults = _pilgrimData.filter(d =>
-    (d.title||'').includes(_pilgrimSearchQ) ||
-    (d.placeName||'').includes(_pilgrimSearchQ) ||
-    (d.story||'').includes(_pilgrimSearchQ) ||
-    (d.area||'').includes(_pilgrimSearchQ)
-  );
+
+  // 데이터 미로드 시 안내
+  if (!_pilgrimData || _pilgrimData.length === 0) {
+    const lb = document.getElementById('pilgrimListBody');
+    if (lb) lb.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--text3)">데이터 불러오는 중...<br>잠시 후 다시 검색해주세요</div>';
+    return;
+  }
+
+  // 공백 제거 + 소문자로 통일해서 검색
+  const lq = _pilgrimSearchQ.replace(/\s/g,'').toLowerCase();
+
+  _pilgrimSearchResults = _pilgrimData.filter(d => {
+    const title = (d.title||'').replace(/\s/g,'').toLowerCase();
+    const place = (d.placeName||'').replace(/\s/g,'').toLowerCase();
+    const story = (d.story||'').replace(/\s/g,'').toLowerCase();
+    const area  = (d.area||'').replace(/\s/g,'').toLowerCase();
+    const type  = (d.typeLabel||'').replace(/\s/g,'').toLowerCase();
+    return title.includes(lq) || place.includes(lq) || story.includes(lq) || area.includes(lq) || type.includes(lq);
+  });
+
+  // 거리순 정렬
   if (myLat && myLng) {
     _pilgrimSearchResults = _pilgrimSearchResults.map(d => {
       const dlat=(d.lat||0)-myLat, dlng=(d.lng||0)-myLng;
       d._dist = Math.round(Math.sqrt(dlat*dlat+dlng*dlng)*111320);
       return d;
-    }).sort((a,b)=>a._dist-b._dist);
+    }).sort((a,b) => a._dist - b._dist);
   }
+
   const titleEl = document.getElementById('pilgrimListTitle');
   const countEl = document.getElementById('pilgrimListCount');
-  if (titleEl) titleEl.textContent = `"${_pilgrimSearchQ}" 검색`;
+  if (titleEl) titleEl.textContent = '"' + _pilgrimSearchQ + '" 검색';
   if (countEl) countEl.textContent = _pilgrimSearchResults.length + '곳';
   _pilgrimPage = 0;
   renderPilgrimList(_pilgrimSearchResults.slice(0, PILGRIM_PER_PAGE));
