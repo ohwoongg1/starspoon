@@ -319,17 +319,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 /* ── 맛집 카드 ── */
 .rest-card{padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;position:relative}
 .rest-card::after{
-  content:'';position:absolute;top:12px;right:14px;
-  width:26px;height:26px;border-radius:50%;
-  background:var(--gold);
-  box-shadow:0 2px 6px rgba(181,121,15,0.4);
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z' fill='%23FBF8F2'/%3E%3C/svg%3E");
-  background-size:13px 13px;background-repeat:no-repeat;background-position:center;
-  pointer-events:none;opacity:1;z-index:2;
+  content:'';position:absolute;top:14px;right:16px;
+  width:20px;height:20px;border-radius:50%;
+  border:1.2px solid var(--gold2);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 8 L61 38 L93 38 L67 57 L77 88 L50 70 L23 88 L33 57 L7 38 L39 38 Z' fill='%23D9B65C'/%3E%3C/svg%3E");
+  background-size:9px 9px;background-repeat:no-repeat;background-position:center;
+  pointer-events:none;opacity:0.55;
 }
 .rest-card:hover,.rest-card.on{background:var(--bg2)}
 .rest-card-top{display:flex;gap:10px;margin-bottom:8px}
-.rest-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.rest-rank{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
 .rest-info{flex:1;min-width:0}
 .rest-name{font-weight:700;font-size:14px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .rest-name:hover{color:var(--gold)}
@@ -341,25 +340,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .rest-foot{display:flex;align-items:center;gap:6px}
 .rest-rating{display:flex;align-items:center;gap:3px;font-size:12px;color:var(--gold);font-weight:600}
 .rest-rating-count{font-size:11px;color:var(--text3);font-weight:400}
-.rest-actions{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;animation:gbIn .15s ease}
-.rest-actions.open{display:grid}
-@keyframes gbIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
-.rest-name{position:relative;padding-right:16px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.rest-name::after{content:'▾';position:absolute;right:0;top:1px;font-size:11px;color:var(--text3);transition:transform .15s ease}
-.rest-name.open::after{transform:rotate(180deg)}
-.gb{height:62px;border-radius:12px;font-size:11px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;white-space:nowrap;overflow:hidden;text-decoration:none;cursor:pointer;border:1px solid var(--border);box-sizing:border-box;background:var(--bg2);color:var(--text2);transition:transform .08s cubic-bezier(.2,0,.4,1),filter .08s ease,box-shadow .08s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation;will-change:transform}
-.gb .gb-ic{font-size:18px;line-height:1;transition:transform .08s ease}
-.gb .gb-tx{font-size:10.5px;line-height:1}
-.gb:active{transform:scale(0.90);filter:brightness(0.90);box-shadow:inset 0 2px 5px rgba(0,0,0,0.18);transition:transform .05s ease,filter .05s ease,box-shadow .05s ease}
-.gb:active .gb-ic{transform:scale(0.85)}
-.gb.primary{background:var(--gold);border-color:var(--gold);color:#fff}
-.gb.primary:active{filter:brightness(0.82)}
-.gb.saved{background:var(--gold-bg);border-color:var(--gold);color:var(--gold)}
-@media (max-width:380px){
-  .gb{height:56px}
-  .gb .gb-ic{font-size:16px}
-  .gb .gb-tx{font-size:10px}
-}
+.rest-saves{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:2px}
+.rest-btns{margin-left:auto;display:flex;gap:4px}
+.btn-sm{border:1px solid var(--border2);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text2);background:none;cursor:pointer;display:flex;align-items:center;gap:3px;transition:all .15s;white-space:nowrap}
+.btn-sm:hover{background:var(--bg2)}
+.btn-sm.saved{color:var(--gold);border-color:var(--gold);background:var(--gold-bg)}
+.btn-sm.map{color:var(--gold);border-color:var(--gold)}
+.rest-link{display:flex;align-items:center;gap:4px;margin-top:6px}
+.link-btn{display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:3px 8px;border-radius:5px;text-decoration:none;font-weight:500;border:1px solid}
+.link-yt{color:#CC0000;background:rgba(204,0,0,0.05);border-color:rgba(204,0,0,0.2)}
 .link-add{color:var(--text3);background:var(--bg2);border-color:var(--border2);cursor:pointer}
 .card-detail{display:none;margin-top:10px;padding:10px 12px;background:var(--bg2);border-radius:8px;border:1px solid var(--border)}
 .card-detail.open{display:block}
@@ -368,9 +357,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Malgun Gothic',san
 .detail-text{line-height:1.4;word-break:keep-all}
 .detail-phone{color:var(--gold);text-decoration:none;font-weight:600}
 .detail-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
-.detail-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;padding:9px 10px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;transition:transform .08s ease,filter .08s ease;-webkit-tap-highlight-color:transparent}
-.detail-btn:active{transform:scale(0.96);filter:brightness(0.92)}
-.rest-actions-sub{grid-column:1/-1;background:var(--bg2);border-radius:8px;padding:8px 10px;margin-top:2px}
+.detail-btn{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;text-decoration:none;border:none;cursor:pointer}
 .detail-kakao{background:#FEE500;color:#3A1D1D}
 .detail-naver{background:#03C75A;color:#fff}
 
@@ -651,6 +638,23 @@ input[type=range].m-radius-input{width:100%;height:4px;accent-color:var(--gold);
 }
 
 /* 토스트 ── */
+.p-filter{height:28px;padding:0 12px;border-radius:14px;border:1px solid var(--border2);background:var(--bg);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .12s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;flex-shrink:0}
+.p-filter.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.p-filter:active{transform:scale(0.95)}
+.p-content-pill{height:26px;padding:0 10px;border-radius:13px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.p-content-pill.on{background:var(--gold-bg);border-color:var(--gold);color:var(--gold)}
+.p-card{padding:12px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.p-card:active{background:var(--bg2)}
+.p-card-head{display:flex;align-items:flex-start;gap:10px}
+.p-card-badge{height:20px;padding:0 8px;border-radius:10px;font-size:10px;font-weight:700;display:inline-flex;align-items:center;flex-shrink:0;margin-bottom:4px}
+.p-badge-drama{background:rgba(139,92,246,0.12);color:#7C3AED}
+.p-badge-artist{background:var(--gold-bg);color:var(--gold)}
+.p-badge-movie{background:rgba(239,68,68,0.1);color:#DC2626}
+.p-card-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px}
+.p-card-sub{font-size:11px;color:var(--text3)}
+.p-card-story{font-size:12px;color:var(--text2);line-height:1.5;margin-top:6px;padding:6px 10px;background:var(--bg2);border-radius:6px;border-left:3px solid var(--gold)}
+.p-card-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;display:none}
+.p-card-actions.open{display:grid}
 .toast{position:fixed;bottom:20px;right:20px;background:#1A1A18;color:#fff;padding:11px 18px;border-radius:10px;font-size:13px;display:none;align-items:center;gap:8px;z-index:999;box-shadow:var(--shadow-lg);max-width:320px}
 .toast.show{display:flex}
 
@@ -767,6 +771,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
   /* 카드 */
   .rest-card{padding:12px 14px}
+  .btn-sm{font-size:11px;padding:4px 8px}
 }
 
 /* 모바일 지도 위 UI (항상 정의, 모바일에서만 display) */
@@ -958,7 +963,11 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
 <!-- ── 페이지 네비 ── -->
 <div class="page-nav">
-  <div class="pnav on" onclick="setPage('main',this)">
+  <div class="pnav on" onclick="setPage('pilgrim',this)">
+    <i class="ti ti-movie" style="font-size:18px"></i>
+    <span>성지순례</span>
+  </div>
+  <div class="pnav" onclick="setPage('main',this)">
     <i class="ti ti-map" style="font-size:18px"></i>
     <span>맛집지도</span>
   </div>
@@ -968,7 +977,7 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   </div>
   <div class="pnav" onclick="setPage('saved',this)">
     <i class="ti ti-heart" style="font-size:18px"></i>
-    <span>저장한 장소</span>
+    <span>저장</span>
   </div>
 </div>
 
@@ -1080,6 +1089,44 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
 <!-- ── 순위 페이지 ── -->
 <!-- ── 저장한 장소 페이지 ── -->
+<!-- ── 성지순례 페이지 ── -->
+<div id="pilgrimPage" style="display:none;position:fixed;inset:0;bottom:52px;z-index:300;background:var(--bg);flex-direction:column;overflow:hidden">
+
+  <!-- 상단 필터바 -->
+  <div style="padding:10px 14px 6px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0">
+    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch" id="pilgrimFilterBar">
+      <button class="p-filter on" data-type="all" onclick="setPilgrimFilter('all',this)">🎬 전체</button>
+      <button class="p-filter" data-type="drama" onclick="setPilgrimFilter('drama',this)">📺 드라마</button>
+      <button class="p-filter" data-type="artist" onclick="setPilgrimFilter('artist',this)">⭐ 한류스타</button>
+      <button class="p-filter" data-type="movie" onclick="setPilgrimFilter('movie',this)">🎥 영화</button>
+    </div>
+    <!-- 콘텐츠 선택 pill -->
+    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin-top:6px;-webkit-overflow-scrolling:touch" id="pilgrimContentBar"></div>
+  </div>
+
+  <!-- 지도 -->
+  <div id="pilgrimMap" style="flex:1;min-height:0;position:relative">
+    <div id="pilgrimMapContainer" style="width:100%;height:100%"></div>
+    <!-- 내 주변 버튼 -->
+    <button onclick="pilgrimNearby()" style="position:absolute;top:10px;right:10px;z-index:10;background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--gold);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.12)">📍 내 주변</button>
+  </div>
+
+  <!-- 리스트 바텀시트 -->
+  <div id="pilgrimSheet" style="height:42vh;background:var(--bg);border-top:1px solid var(--border);overflow-y:auto;flex-shrink:0;-webkit-overflow-scrolling:touch">
+    <div style="text-align:center;padding:6px"><div style="width:36px;height:4px;background:var(--border2);border-radius:2px;display:inline-block"></div></div>
+    <div style="padding:0 14px 6px;display:flex;align-items:center;justify-content:space-between">
+      <span id="pilgrimListTitle" style="font-size:13px;font-weight:700;color:var(--text)">성지순례</span>
+      <span id="pilgrimListCount" style="font-size:12px;color:var(--text3)"></span>
+    </div>
+    <div id="pilgrimListBody" style="padding:0 14px 80px">
+      <div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px">
+        <div style="font-size:32px;margin-bottom:8px">🎬</div>
+        불러오는 중...
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="rank-page" id="savedPage" style="display:none">
   <!-- 탭 -->
   <div style="display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:0">
@@ -2332,12 +2379,6 @@ window.mSetCat = function(el, cat) {
 };
 
 // 모바일 검색 패널 초기화
-document.addEventListener('touchstart', (e) => {
-  if (e.target.closest('.gb')) {
-    if (navigator.vibrate) navigator.vibrate(8);
-  }
-}, {passive:true});
-
 document.addEventListener('DOMContentLoaded', () => {
   // 내 스푼 버튼 연결
   const myBtn = document.getElementById('mMyBtn');
@@ -2730,9 +2771,9 @@ function renderList() {
     const rankClass = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'rank-n';
     return `<div class="rest-card" id="card-${d.id}" onclick="focusCard('${d.id}')" onmouseenter="hoverCard('${d.id}')" onmouseleave="unhoverCard('${d.id}')">
       <div class="rest-card-top">
-        <div class="rest-rank rank-num ${rankClass}" onclick="event.stopPropagation();toggleCardActions('${d.id}',document.querySelector('#card-${d.id} .rest-name'))">${i+1}</div>
+        <div class="rest-rank rank-num ${rankClass}">${i+1}</div>
         <div class="rest-info">
-          <div class="rest-name" onclick="event.stopPropagation();toggleCardActions('${d.id}',this)">${d.name}</div>
+          <div class="rest-name" onclick="event.stopPropagation();showMapForCard('${d.id}')">${d.name}</div>
           <div class="rest-meta">
             ${(d.celebs||[d.celeb]).map(c => `<span class="rest-badge">${c}</span>`).join('')}
             <span class="rest-cat">${d.cat}</span>
@@ -2747,21 +2788,31 @@ function renderList() {
         <div class="rest-rating">
           ${d.avgRating ? `<span style="color:var(--gold)">★</span> ${d.avgRating.toFixed(1)}<span class="rest-rating-count">${d.ratingCount ? ` (${d.ratingCount})` : ''}</span>` : ''}
         </div>
+        <div class="rest-saves"><i class="ti ti-heart" style="font-size:11px"></i> ${d.saves||0}</div>
+        <div class="rest-btns">
+          <a class="btn-sm map" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})">🗺️ 길찾기</a>
+          <button class="btn-sm${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')">
+            ${isSaved?'❤️ 저장됨':'🤍 저장'}
+          </button>
+          <a class="btn-sm" href="https://www.youtube.com/results?search_query=${encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name))}" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);if(window.innerWidth<=768){event.preventDefault();location.href=this.href;}" style="text-decoration:none;color:#FF0000;border-color:#FF0000">▶️ 영상</a>
+          <a class="btn-sm" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()" style="text-decoration:none;color:#03C75A;border-color:#03C75A">📅 예약</a>
+          <button class="btn-sm" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng},'${d.celeb}')" style="color:var(--gold);border-color:var(--gold);font-weight:700">🗺️ 코스</button>
+        </div>
       </div>
-      <div class="rest-actions" id="actions-${d.id}">
-        <a class="gb" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng})"><span class="gb-ic">🗺️</span><span class="gb-tx">길찾기</span></a>
-        <button class="gb${isSaved?' saved':''}" onclick="event.stopPropagation();toggleSave('${d.id}')"><span class="gb-ic">${isSaved?'❤️':'🤍'}</span><span class="gb-tx">${isSaved?'저장됨':'저장'}</span></button>
-        <a class="gb" href="${d.yt || ('https://www.youtube.com/results?search_query='+encodeURIComponent((['투스타','쓰리스타','대장','사령관'].includes(d.celeb) ? (d.celebs||[d.celeb]).join(' ')+' '+d.name : (d.celeb||'')+' '+d.name)))}" target="_blank" onclick="event.stopPropagation();logVideoClick(d.celeb,d.name,d.id);"><span class="gb-ic">▶️</span><span class="gb-tx">영상</span></a>
-        <a class="gb" href="https://map.naver.com/p/search/${encodeURIComponent(d.name+' 예약')}" target="_blank" onclick="event.stopPropagation()"><span class="gb-ic">📅</span><span class="gb-tx">예약</span></a>
-        <button class="gb primary" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')"><span class="gb-ic">🗺️</span><span class="gb-tx">코스담기</span></button>
-        <button class="gb" onclick="event.stopPropagation();openPlaceInfo('${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng})"><span class="gb-ic">🍽️</span><span class="gb-tx">식당정보</span></button>
-        <button class="gb" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')"><span class="gb-ic">💬</span><span class="gb-tx">댓글·평점</span></button>
-        <button class="gb" onclick="event.stopPropagation();shareKakaoPC('${d.id}')"><span class="gb-ic">💛</span><span class="gb-tx">카카오공유</span></button>
-        <button class="gb" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')"><span class="gb-ic">🚨</span><span class="gb-tx">신고</span></button>
-        ${d.address || d.phone ? `<div class="rest-actions-sub">
-          ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
-          ${d.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><a class="detail-text detail-phone" href="tel:${d.phone}" onclick="event.stopPropagation()">${d.phone}</a></div>` : ''}
-        </div>` : ''}
+      <div class="rest-link">
+        <button class="link-btn" onclick="event.stopPropagation();addCardToCourse('${d.id}','${d.name.replace(/'/g,"\\'")}',${d.lat},${d.lng},'${d.celeb}')" style="background:var(--gold);border:1px solid var(--gold);color:#fff;font-weight:700">🗺️ 코스담기</button>
+        ${d.yt ? `<a class="link-btn link-yt" href="${d.yt}" target="_blank" onclick="event.stopPropagation()">${d.yt.includes('youtube.com')||d.yt.includes('youtu.be') ? '<i class="ti ti-brand-youtube"></i> 영상' : '🔗 링크'}</a>` : ''}
+        <button class="link-btn" onclick="event.stopPropagation();openPlaceInfo('${d.name.replace(/'/g,"\'")}',${d.lat},${d.lng})" style="background:none;border:1px solid #03C75A;border-radius:8px;padding:6px 12px;font-size:12px;color:#03C75A;cursor:pointer;font-weight:600">🍽️ 식당정보</button>
+        <button class="link-btn" onclick="event.stopPropagation();openCommentModal('${d.id}','${d.name.replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text2);cursor:pointer;font-weight:600">💬 댓글·평점</button>
+        <button class="link-btn" onclick="event.stopPropagation();shareKakaoPC('${d.id}')" style="background:#FEE500;border:1px solid #F0D000;border-radius:8px;padding:6px 12px;font-size:12px;color:#3A1D1D;cursor:pointer;font-weight:600">💛 카카오공유</button>
+        <button class="link-btn" onclick="event.stopPropagation();openRestReportModal('${d.id}','${d.name.replace(/'/g,"\\'")}','${d.registeredBy||''}')" style="background:none;border:1px solid #FECACA;border-radius:8px;padding:6px 10px;font-size:11px;color:#EF4444;cursor:pointer;font-weight:600">🚨 신고</button>
+      </div>
+      <div class="card-detail" id="detail-${d.id}">
+        ${d.address ? `<div class="detail-row"><span class="detail-icon">📍</span><span class="detail-text">${d.address}</span></div>` : ''}
+        ${d.phone ? `<div class="detail-row"><span class="detail-icon">📞</span><a class="detail-text detail-phone" href="tel:${d.phone}" onclick="event.stopPropagation()">${d.phone}</a></div>` : ''}
+        <div class="detail-actions">
+          <a class="detail-btn detail-naver" href="https://map.naver.com/v5/search/${encodeURIComponent(d.name + ' ' + d.area)}" target="_blank" onclick="event.stopPropagation()">🟢 네이버지도에서 보기</a>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -3048,16 +3099,242 @@ function renderPins() {
   });
 }
 
-let _lastToggleTime = {};
-window.toggleCardActions = function(id, nameEl) {
-  const now = Date.now();
-  if (_lastToggleTime[id] && now - _lastToggleTime[id] < 300) return; // 짧은 시간내 중복 호출 무시
-  _lastToggleTime[id] = now;
-  const el = document.getElementById('actions-' + id);
-  if (!el) return;
-  const isOpen = el.classList.toggle('open');
-  nameEl?.classList.toggle('open', isOpen);
+// ══════════════════════════════════════════
+// 🎬 성지순례 (Pilgrim) 기능
+// ══════════════════════════════════════════
+let _pilgrimData = [];        // 전체 로드된 데이터
+let _pilgrimFiltered = [];    // 현재 필터 결과
+let _pilgrimLoaded = false;   // 최초 1회 로드 여부
+let _pilgrimMap = null;       // 성지순례 지도
+let _pilgrimMarkers = [];     // 지도 핀
+let _pilgrimType = 'all';     // 현재 필터 타입
+let _pilgrimContent = null;   // 선택된 콘텐츠 (드라마명/스타명)
+let _pilgrimOpenId = null;    // 펼쳐진 카드 id
+
+// 성지순례 탭 진입 시 호출
+async function initPilgrimPage() {
+  // 지도 초기화 (최초 1회)
+  if (!_pilgrimMap) {
+    const container = document.getElementById('pilgrimMapContainer');
+    if (container && window.kakao?.maps) {
+      _pilgrimMap = new kakao.maps.Map(container, {
+        center: new kakao.maps.LatLng(37.5665, 126.9780),
+        level: 7
+      });
+    }
+  }
+
+  // 데이터 최초 로드
+  if (!_pilgrimLoaded) {
+    await loadPilgrimData();
+  } else {
+    renderPilgrimList(_pilgrimFiltered);
+  }
+}
+
+// Firebase에서 pilgrimages 로드 (지연 로딩)
+async function loadPilgrimData() {
+  const listBody = document.getElementById('pilgrimListBody');
+  if (listBody) listBody.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px"><div style="font-size:32px;margin-bottom:8px">🎬</div>성지 데이터 불러오는 중...</div>';
+
+  try {
+    const { collection, getDocs, query, limit } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
+    // 처음엔 500개만 로드 (속도 우선)
+    const q = query(collection(db, 'pilgrimages'), limit(500));
+    const snap = await getDocs(q);
+    _pilgrimData = snap.docs.map(d => ({...d.data(), _id: d.id}));
+    _pilgrimLoaded = true;
+    showToast(`🎬 성지 ${_pilgrimData.length}곳 로드 완료!`);
+    buildPilgrimContentBar();
+    filterPilgrim();
+  } catch(e) {
+    console.log('pilgrim 로드 오류:', e);
+    if (listBody) listBody.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)">데이터를 불러올 수 없어요</div>';
+  }
+}
+
+// 필터 타입 변경
+window.setPilgrimFilter = function(type, el) {
+  _pilgrimType = type;
+  _pilgrimContent = null;
+  document.querySelectorAll('.p-filter').forEach(b => b.classList.remove('on'));
+  el?.classList.add('on');
+  buildPilgrimContentBar();
+  filterPilgrim();
 };
+
+// 콘텐츠 pill 바 생성 (드라마별/스타별)
+function buildPilgrimContentBar() {
+  const bar = document.getElementById('pilgrimContentBar');
+  if (!bar) return;
+
+  const filtered = _pilgrimType === 'all' ? _pilgrimData : _pilgrimData.filter(d => d.mediaType === _pilgrimType);
+
+  // 콘텐츠별 개수 집계
+  const counts = {};
+  filtered.forEach(d => {
+    const t = d.title || '';
+    if (t) counts[t] = (counts[t] || 0) + 1;
+  });
+
+  // 많은 순 상위 15개
+  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 15);
+
+  bar.innerHTML = top.map(([title, cnt]) =>
+    `<button class="p-content-pill${_pilgrimContent===title?' on':''}" onclick="selectPilgrimContent('${title.replace(/'/g,"\\'")}',this)">${title} <span style="opacity:0.6">${cnt}</span></button>`
+  ).join('');
+}
+
+// 콘텐츠 선택 (드라마명/스타명)
+window.selectPilgrimContent = function(title, el) {
+  if (_pilgrimContent === title) {
+    _pilgrimContent = null;
+    document.querySelectorAll('.p-content-pill').forEach(b => b.classList.remove('on'));
+  } else {
+    _pilgrimContent = title;
+    document.querySelectorAll('.p-content-pill').forEach(b => b.classList.remove('on'));
+    el?.classList.add('on');
+  }
+  filterPilgrim();
+};
+
+// 필터 적용 + 리스트 렌더
+function filterPilgrim() {
+  let data = _pilgrimData;
+  if (_pilgrimType !== 'all') data = data.filter(d => d.mediaType === _pilgrimType);
+  if (_pilgrimContent) data = data.filter(d => d.title === _pilgrimContent);
+
+  // 내 위치 기준 거리순
+  if (myLat && myLng) {
+    data = data.map(d => {
+      const dlat = (d.lat||0) - myLat, dlng = (d.lng||0) - myLng;
+      d._dist = Math.round(Math.sqrt(dlat*dlat + dlng*dlng) * 111320);
+      return d;
+    }).sort((a,b) => a._dist - b._dist);
+  }
+
+  _pilgrimFiltered = data;
+  const title = _pilgrimContent || (_pilgrimType === 'all' ? '성지순례' : _pilgrimType === 'drama' ? '드라마 촬영지' : _pilgrimType === 'artist' ? '한류스타 방문지' : '영화 촬영지');
+  const countEl = document.getElementById('pilgrimListCount');
+  const titleEl = document.getElementById('pilgrimListTitle');
+  if (titleEl) titleEl.textContent = title;
+  if (countEl) countEl.textContent = data.length + '곳';
+  renderPilgrimList(data.slice(0, 50));
+  renderPilgrimPins(data.slice(0, 100));
+}
+
+// 리스트 렌더
+function renderPilgrimList(items) {
+  const body = document.getElementById('pilgrimListBody');
+  if (!body) return;
+  if (!items.length) {
+    body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)">결과가 없어요</div>';
+    return;
+  }
+
+  body.innerHTML = items.map(d => {
+    const badgeClass = d.mediaType === 'artist' ? 'p-badge-artist' : d.mediaType === 'movie' ? 'p-badge-movie' : 'p-badge-drama';
+    const badgeText = d.typeLabel || (d.mediaType === 'artist' ? '한류스타' : d.mediaType === 'movie' ? '영화' : '드라마');
+    const distStr = d._dist ? (d._dist < 1000 ? d._dist+'m' : (d._dist/1000).toFixed(1)+'km') : '';
+    const placeName = d.placeName || d.name || '';
+    const story = d.story || '';
+
+    return `<div class="p-card" id="pcard-${d._id}" onclick="togglePilgrimCard('${d._id}',this)">
+      <div class="p-card-head">
+        <div style="flex:1;min-width:0">
+          <div><span class="p-card-badge ${badgeClass}">${badgeText}</span></div>
+          <div class="p-card-name">${d.title || ''}</div>
+          <div class="p-card-sub">${placeName}${distStr ? ' · '+distStr : ''}${d.area ? ' · '+d.area : ''}</div>
+        </div>
+        <div style="font-size:22px;flex-shrink:0">${d.placeIcon || '📍'}</div>
+      </div>
+      ${story ? `<div class="p-card-story">"${story}"</div>` : ''}
+      <div class="p-card-actions" id="pactions-${d._id}">
+        <a class="gb" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${placeName.replace(/'/g,"\\'")}',${d.lat||0},${d.lng||0})"><span class="gb-ic">🗺️</span><span class="gb-tx">길찾기</span></a>
+        <button class="gb" onclick="event.stopPropagation();addToGlobalBasket({id:'${d._id}',name:'${placeName.replace(/'/g,"\\'")}',lat:${d.lat||0},lng:${d.lng||0},type:'pilgrim',icon:'${d.placeIcon||'📍'}',celeb:''})"><span class="gb-ic">🗺️</span><span class="gb-tx">코스담기</span></button>
+        <button class="gb" onclick="event.stopPropagation();openPlaceInfo('${placeName.replace(/'/g,"\\'")}',${d.lat||0},${d.lng||0})"><span class="gb-ic">🍽️</span><span class="gb-tx">식당정보</span></button>
+        <a class="gb" href="https://map.naver.com/p/search/${encodeURIComponent(placeName)}" target="_blank" onclick="event.stopPropagation()"><span class="gb-ic">🔍</span><span class="gb-tx">네이버</span></a>
+        <button class="gb" onclick="event.stopPropagation();shareKakaoPilgrim('${d._id}','${placeName.replace(/'/g,"\\'")}')"><span class="gb-ic">💛</span><span class="gb-tx">공유</span></button>
+        <button class="gb" onclick="event.stopPropagation();pilgrimGoMap(${d.lat||0},${d.lng||0})"><span class="gb-ic">🗺️</span><span class="gb-tx">지도보기</span></button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// 카드 탭 → 버튼 토글
+let _lastPToggle = {};
+window.togglePilgrimCard = function(id, cardEl) {
+  const now = Date.now();
+  if (_lastPToggle[id] && now - _lastPToggle[id] < 300) return;
+  _lastPToggle[id] = now;
+  const el = document.getElementById('pactions-' + id);
+  if (!el) return;
+  el.classList.toggle('open');
+  // 지도 이동
+  const d = _pilgrimFiltered.find(x => x._id === id);
+  if (d?.lat && _pilgrimMap) {
+    _pilgrimMap.panTo(new kakao.maps.LatLng(d.lat, d.lng));
+  }
+};
+
+// 지도 핀 그리기
+function renderPilgrimPins(items) {
+  if (!_pilgrimMap) return;
+  _pilgrimMarkers.forEach(m => { try { m.setMap(null); } catch(e) {} });
+  _pilgrimMarkers = [];
+  items.forEach(d => {
+    if (!d.lat || !d.lng) return;
+    const color = d.mediaType === 'artist' ? '#B5790F' : d.mediaType === 'movie' ? '#EF4444' : '#7C3AED';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="34" viewBox="0 0 36 42"><path d="M18 0C8 0 0 8 0 18c0 12 18 24 18 24S36 30 36 18C36 8 28 0 18 0z" fill="${color}"/><text x="18" y="24" text-anchor="middle" font-size="14" fill="white">${d.placeIcon||'📍'}</text></svg>`;
+    const marker = new kakao.maps.Marker({
+      map: _pilgrimMap,
+      position: new kakao.maps.LatLng(d.lat, d.lng),
+      image: new kakao.maps.MarkerImage('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg), new kakao.maps.Size(28,34), {offset: new kakao.maps.Point(14,34)}),
+      title: d.placeName || ''
+    });
+    kakao.maps.event.addListener(marker, 'click', () => {
+      const card = document.getElementById('pcard-'+d._id);
+      if (card) card.scrollIntoView({behavior:'smooth', block:'center'});
+      togglePilgrimCard(d._id, card);
+    });
+    _pilgrimMarkers.push(marker);
+  });
+}
+
+// 내 주변 버튼
+window.pilgrimNearby = function() {
+  if (!myLat || !myLng) { showToast('위치 정보가 없어요'); return; }
+  if (_pilgrimMap) _pilgrimMap.setCenter(new kakao.maps.LatLng(myLat, myLng));
+  filterPilgrim();
+  showToast('📍 내 주변 성지를 표시했어요');
+};
+
+// 지도보기 버튼
+window.pilgrimGoMap = function(lat, lng) {
+  if (!_pilgrimMap || !lat || !lng) return;
+  _pilgrimMap.setCenter(new kakao.maps.LatLng(lat, lng));
+  _pilgrimMap.setLevel(4);
+  // 지도 쪽으로 시트 줄이기
+  const sheet = document.getElementById('pilgrimSheet');
+  if (sheet) sheet.style.height = '25vh';
+};
+
+// 카카오 공유
+window.shareKakaoPilgrim = function(id, name) {
+  const shareUrl = 'https://www.starspoon.co.kr/mobile.html';
+  safeKakaoShare({
+    objectType: 'feed',
+    content: {
+      title: '🎬 ' + name + ' — 한류 성지',
+      description: '스타스푼에서 성지순례 코스를 만들어보세요!',
+      imageUrl: 'https://www.starspoon.co.kr/og-image.png',
+      link: {mobileWebUrl: shareUrl, webUrl: shareUrl}
+    },
+    buttons: [{title: '성지 지도 보기', link: {mobileWebUrl: shareUrl, webUrl: shareUrl}}]
+  });
+};
+
+// ══════════════════════════════════════════
 
 window.focusCard = function(id) {
   // 이전에 열려있던 상세 박스 닫기
@@ -3994,8 +4271,18 @@ window.setPage = function(page, el) {
   if (nav) nav.style.display = '';
   restoreTabBar();
 
+  // 성지순례 페이지
+  const pilgrimPageEl = document.getElementById('pilgrimPage');
+  if (pilgrimPageEl) {
+    if (page === 'pilgrim') {
+      pilgrimPageEl.style.display = 'flex';
+      initPilgrimPage();
+    } else {
+      pilgrimPageEl.style.display = 'none';
+    }
+  }
+
   document.getElementById('mainLayout').style.display = page==='main' ? 'flex' : 'none';
-  // ★ 모바일: map-panel이 position:absolute로 화면 전체를 덮으므로 함께 제어
   const mapPanel = document.querySelector('.map-panel');
   if (mapPanel && window.innerWidth <= 768) {
     mapPanel.style.display = page==='main' ? '' : 'none';
@@ -4006,7 +4293,6 @@ window.setPage = function(page, el) {
   const savedPageEl = document.getElementById('savedPage');
   if (savedPageEl) {
     if (page === 'saved') {
-      // ★ 모바일: 화면 전체를 덮는 overlay로 표시
       savedPageEl.style.display = 'block';
       savedPageEl.style.position = 'fixed';
       savedPageEl.style.top = '0';
@@ -4017,7 +4303,6 @@ window.setPage = function(page, el) {
       savedPageEl.style.overflowY = 'auto';
       savedPageEl.style.background = 'var(--bg)';
       savedPageEl.style.WebkitOverflowScrolling = 'touch';
-      // 스크롤 강제 최상단
       savedPageEl.scrollTop = 0;
       setTimeout(() => { savedPageEl.scrollTop = 0; }, 50);
       renderSavedPage();
@@ -4441,10 +4726,10 @@ window.mspSelectPlace = async function(idx) {
   _mspStarResults = allData.filter(d => {
     const dlat = d.lat - place.lat, dlng = d.lng - place.lng;
     const dist = Math.sqrt(dlat*dlat + dlng*dlng) * 111320;
-    d.dist = dist;
+    d._nearbyDist = dist;
     d._type = 'star';
     return dist <= RADIUS;
-  }).sort((a,b) => (a.dist||0) - (b.dist||0)).slice(0, 20);
+  }).sort((a,b) => (a._nearbyDist||0) - (b._nearbyDist||0)).slice(0, 20);
 
   // ★ 지도 이동 + 지도순 전환
   if (map) {
@@ -5687,7 +5972,7 @@ window.shareMCourse = async function() {
     });
 
     const courseId = courseRef.id;
-    const shareUrl = 'https://www.starspoon.co.kr/mobile.html#courseId=' + courseId;
+    const shareUrl = 'https://www.starspoon.co.kr/mobile.html?courseId=' + courseId;
 
     const placeNames = places.slice(0,3).map((p,i) => (i+1) + '. ' + p.name).join('\n');
     const desc = placeNames + (places.length > 3 ? '\n외 ' + (places.length-3) + '곳' : '')
@@ -6192,7 +6477,7 @@ window.shareCourseKakao = async function() {
       createdAt: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 30*24*60*60*1000).toISOString()
     });
-    const shareUrl = 'https://www.starspoon.co.kr/mobile.html#courseId=' + courseRef.id;
+    const shareUrl = 'https://www.starspoon.co.kr/mobile.html?courseId=' + courseRef.id;
     const placeNames = _animPlaces.slice(0,3).map((p,i) => (i+1)+'. '+p.name).join('\n');
     const desc = placeNames + (_animPlaces.length > 3 ? '\n외 '+(_animPlaces.length-3)+'곳' : '')
                + '\n\n지도에서 코스 길 안내 바로 실행!';
@@ -7008,7 +7293,6 @@ initKakaoLogin();
   }
 
   // URL에 courseId 있으면 공유받은 코스 표시
-  // URL 파라미터 또는 해시에서 courseId/restId 추출 (iOS PWA는 ?파라미터를 잘라내는 경우 있어 해시도 같이 확인)
   const _urlParams = new URLSearchParams(window.location.search);
   const _hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const _courseId = _urlParams.get('courseId') || _hashParams.get('courseId');
@@ -7016,10 +7300,11 @@ initKakaoLogin();
   if (_courseId) {
     await loadSharedCourse(_courseId);
   } else if (_restId) {
-    // ★ 공유받은 음식점 바로 표시
     await loadSharedRest(_restId);
   } else {
-    await loadRests('성시경'); // 성시경 맛집 (거리순 정렬)
+    // ★ 성지순례가 첫 탭
+    setPage('pilgrim', document.querySelector('.pnav'));
+    loadRests('성시경').catch(() => {}); // 맛집 백그라운드 로드
   }
 })();
 
