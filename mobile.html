@@ -881,18 +881,16 @@ input::placeholder{color:var(--text3) !important;opacity:1}
   <div class="onboard-eyebrow" id="onboardEyebrow">그들이 앉았던, 그 자리</div>
 
   <div class="onboard-curators">
-    <span class="onboard-curator"><span>🎵</span><span>성시경</span></span>
-    <span class="onboard-curator"><span>😋</span><span>이영자</span></span>
-    <span class="onboard-curator"><span>🍱</span><span>히밥</span></span>
-    <span class="onboard-curator"><span>😄</span><span>풍자</span></span>
-    <span class="onboard-curator"><span>🌸</span><span>입짧은햇님</span></span>
-    <span class="onboard-curator"><span>🍺</span><span>김사원세끼</span></span>
+    <span class="onboard-curator"><span>🎬</span><span>드라마</span></span>
+    <span class="onboard-curator"><span>⭐</span><span>한류스타</span></span>
+    <span class="onboard-curator"><span>🎥</span><span>영화</span></span>
+    <span class="onboard-curator"><span>🍽️</span><span>맛집</span></span>
   </div>
 
-  <div class="onboard-title" id="onboardTitle">스타가 머문 자리에<br><em>당신도 앉아보세요</em></div>
-  <div class="onboard-sub" id="onboardSub">유튜브와 방송에 나온 그 가게,<br>그 테이블, 그 메뉴를 그대로</div>
+  <div class="onboard-title" id="onboardTitle">한류 성지를 직접<br><em>걸어보세요</em></div>
+  <div class="onboard-sub" id="onboardSub">드라마 촬영지, 스타 방문지, 영화 로케이션<br>모두 한 곳에서 코스로 만들어보세요</div>
 
-  <button class="onboard-start-btn" id="onboardBtn" onclick="closeOnboard()">지도 펼치기</button>
+  <button class="onboard-start-btn" id="onboardBtn" onclick="closeOnboard()">성지 지도 펼치기</button>
   <button class="onboard-skip" id="onboardSkip" onclick="closeOnboard()">✕ 오늘 하루 닫기</button>
 </div>
 <header class="header">
@@ -1094,7 +1092,14 @@ input::placeholder{color:var(--text3) !important;opacity:1}
 
   <!-- 상단 필터바 -->
   <div style="padding:10px 14px 6px;background:var(--bg);border-bottom:1px solid var(--border);flex-shrink:0">
-    <div style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch" id="pilgrimFilterBar">
+    <!-- 검색창 -->
+    <div style="display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:0 12px;height:36px;margin-bottom:8px">
+      <i class="ti ti-search" style="font-size:15px;color:var(--text3);flex-shrink:0"></i>
+      <input id="pilgrimSearch" type="text" placeholder="드라마명, 배우명, 장소명 검색"
+        style="border:none;background:none;flex:1;padding:0 8px;font-size:13px;color:var(--text);outline:none"
+        oninput="doPilgrimSearch(this.value)">
+      <button id="pilgrimSearchClear" onclick="clearPilgrimSearch()" style="display:none;background:none;border:none;color:var(--text3);cursor:pointer;padding:0;font-size:16px">✕</button>
+    </div>
       <button class="p-filter on" data-type="all" onclick="setPilgrimFilter('all',this)">🎬 전체</button>
       <button class="p-filter" data-type="drama" onclick="setPilgrimFilter('drama',this)">📺 드라마</button>
       <button class="p-filter" data-type="artist" onclick="setPilgrimFilter('artist',this)">⭐ 한류스타</button>
@@ -1522,45 +1527,45 @@ window.closePlaceInfo = function(e) {
 // ── 온보딩 다국어 ──
 const ONBOARD_LANGS = {
   ko: {
-    eyebrow: '그들이 앉았던, 그 자리',
-    title: '스타가 머문 자리에<br><em>당신도 앉아보세요</em>',
-    sub: '유튜브와 방송에 나온 그 가게,<br>그 테이블, 그 메뉴를 그대로',
-    btn: '지도 펼치기',
+    eyebrow: '드라마 · 스타 · 영화 · 맛집',
+    title: '한류 성지를 직접<br><em>걸어보세요</em>',
+    sub: '드라마 촬영지, 스타 방문지, 영화 로케이션<br>모두 한 곳에서 코스로 만들어보세요',
+    btn: '성지 지도 펼치기',
     skip: '✕ 오늘 하루 닫기'
   },
   en: {
-    eyebrow: 'THE SEAT THEY SAT IN',
-    title: 'Sit where the stars<br><em>once sat</em>',
-    sub: 'The same restaurant, the same table,<br>the same dish — straight from YouTube & TV',
-    btn: 'Open the Map',
+    eyebrow: 'K-Drama · K-Star · K-Movie · K-Food',
+    title: 'Walk the<br><em>Hallyu Pilgrimage</em>',
+    sub: 'Drama filming locations, star-visited spots,<br>movie sets — all in one map with guided tours',
+    btn: 'Open Pilgrim Map',
     skip: '✕ Close for today'
   },
   ja: {
-    eyebrow: 'スターが座った、その席',
-    title: 'スターが訪れたその席に<br><em>あなたも座ってみて</em>',
-    sub: 'YouTubeやTV番組に出てきたお店、<br>テーブル、メニューをそのまま',
-    btn: '地図を見る',
+    eyebrow: 'Kドラマ · Kスター · K映画 · K-Food',
+    title: '韓流の聖地を<br><em>直接歩いてみよう</em>',
+    sub: 'ドラマ撮影地・スター訪問地・映画ロケ地<br>すべてを一つのマップでコースに',
+    btn: '聖地マップを開く',
     skip: '✕ 今日は閉じる'
   },
   zh: {
-    eyebrow: '明星坐过的，那个座位',
-    title: '坐在明星曾坐过的位置<br><em>感受同样的氛围</em>',
-    sub: '出现在YouTube和电视节目中的<br>那家店、那张桌子、那道菜',
-    btn: '打开地图',
+    eyebrow: 'K剧 · 韩星 · 韩影 · 韩食',
+    title: '亲自走一遍<br><em>韩流圣地</em>',
+    sub: '韩剧拍摄地、明星到访处、电影取景地<br>全部集中在一张地图，定制专属路线',
+    btn: '打开圣地地图',
     skip: '✕ 今天不再显示'
   },
   tw: {
-    eyebrow: '明星坐過的，那個座位',
-    title: '坐在明星曾坐過的位置<br><em>感受同樣的氛圍</em>',
-    sub: '出現在YouTube和電視節目中的<br>那家店、那張桌子、那道菜',
-    btn: '打開地圖',
+    eyebrow: 'K劇 · 韓星 · 韓影 · 韓食',
+    title: '親自走一遍<br><em>韓流聖地</em>',
+    sub: '韓劇拍攝地、明星到訪處、電影取景地<br>全部集中在一張地圖，打造專屬路線',
+    btn: '打開聖地地圖',
     skip: '✕ 今天不再顯示'
   },
   es: {
-    eyebrow: 'EL ASIENTO QUE OCUPARON',
-    title: 'Siéntate donde<br><em>las estrellas se sentaron</em>',
-    sub: 'El mismo restaurante, la misma mesa,<br>el mismo plato — directo de YouTube y TV',
-    btn: 'Abrir el mapa',
+    eyebrow: 'K-Drama · K-Star · K-Cine · K-Food',
+    title: 'Camina por los<br><em>lugares del Hallyu</em>',
+    sub: 'Locaciones de dramas, lugares visitados por estrellas<br>y sets de películas — todo en un mapa con rutas',
+    btn: 'Abrir mapa de peregrinación',
     skip: '✕ Cerrar por hoy'
   }
 };
@@ -3167,99 +3172,117 @@ window.setPilgrimFilter = function(type, el) {
 function buildPilgrimContentBar() {
   const bar = document.getElementById('pilgrimContentBar');
   if (!bar) return;
-
   const filtered = _pilgrimType === 'all' ? _pilgrimData : _pilgrimData.filter(d => d.mediaType === _pilgrimType);
-
-  // 콘텐츠별 개수 집계
   const counts = {};
-  filtered.forEach(d => {
-    const t = d.title || '';
-    if (t) counts[t] = (counts[t] || 0) + 1;
-  });
-
-  // 많은 순 상위 15개
+  filtered.forEach(d => { const t = d.title || ''; if (t) counts[t] = (counts[t] || 0) + 1; });
   const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 15);
-
-  bar.innerHTML = top.map(([title, cnt]) =>
-    `<button class="p-content-pill${_pilgrimContent===title?' on':''}" onclick="selectPilgrimContent('${title.replace(/'/g,"\\'")}',this)">${title} <span style="opacity:0.6">${cnt}</span></button>`
-  ).join('');
+  bar.innerHTML = top.map(([title, cnt]) => {
+    const short = title.length > 12 ? title.slice(0, 12) + '…' : title;
+    return `<button class="p-content-pill${_pilgrimContent===title?' on':''}" onclick="selectPilgrimContent('${title.replace(/'/g,"\\'")}',this)" title="${title}">${short} <span style="opacity:0.6">${cnt}</span></button>`;
+  }).join('');
 }
 
-// 콘텐츠 선택 (드라마명/스타명)
-window.selectPilgrimContent = function(title, el) {
-  if (_pilgrimContent === title) {
-    _pilgrimContent = null;
-    document.querySelectorAll('.p-content-pill').forEach(b => b.classList.remove('on'));
-  } else {
-    _pilgrimContent = title;
-    document.querySelectorAll('.p-content-pill').forEach(b => b.classList.remove('on'));
-    el?.classList.add('on');
-  }
-  filterPilgrim();
-};
+// 더보기 페이지
+let _pilgrimPage = 0;
+const PILGRIM_PER_PAGE = 30;
+let _pilgrimSearchQ = '';
+let _pilgrimSearchResults = [];
 
-// 필터 적용 + 리스트 렌더
-function filterPilgrim() {
-  let data = _pilgrimData;
-  if (_pilgrimType !== 'all') data = data.filter(d => d.mediaType === _pilgrimType);
-  if (_pilgrimContent) data = data.filter(d => d.title === _pilgrimContent);
-
-  // 내 위치 기준 거리순
-  if (myLat && myLng) {
-    data = data.map(d => {
-      const dlat = (d.lat||0) - myLat, dlng = (d.lng||0) - myLng;
-      d._dist = Math.round(Math.sqrt(dlat*dlat + dlng*dlng) * 111320);
-      return d;
-    }).sort((a,b) => a._dist - b._dist);
-  }
-
-  _pilgrimFiltered = data;
-  const title = _pilgrimContent || (_pilgrimType === 'all' ? '성지순례' : _pilgrimType === 'drama' ? '드라마 촬영지' : _pilgrimType === 'artist' ? '한류스타 방문지' : '영화 촬영지');
-  const countEl = document.getElementById('pilgrimListCount');
-  const titleEl = document.getElementById('pilgrimListTitle');
-  if (titleEl) titleEl.textContent = title;
-  if (countEl) countEl.textContent = data.length + '곳';
-  renderPilgrimList(data.slice(0, 50));
-  renderPilgrimPins(data.slice(0, 100));
-}
-
-// 리스트 렌더
-function renderPilgrimList(items) {
+// 리스트 렌더 (페이지네이션)
+function renderPilgrimList(items, append = false) {
   const body = document.getElementById('pilgrimListBody');
   if (!body) return;
-  if (!items.length) {
+  if (!items.length && !append) {
     body.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)">결과가 없어요</div>';
     return;
   }
-
-  body.innerHTML = items.map(d => {
+  const html = items.map(d => {
     const badgeClass = d.mediaType === 'artist' ? 'p-badge-artist' : d.mediaType === 'movie' ? 'p-badge-movie' : 'p-badge-drama';
     const badgeText = d.typeLabel || (d.mediaType === 'artist' ? '한류스타' : d.mediaType === 'movie' ? '영화' : '드라마');
     const distStr = d._dist ? (d._dist < 1000 ? d._dist+'m' : (d._dist/1000).toFixed(1)+'km') : '';
     const placeName = d.placeName || d.name || '';
     const story = d.story || '';
-
+    const titleShort = (d.title||'').length > 16 ? (d.title||'').slice(0,16)+'…' : (d.title||'');
     return `<div class="p-card" id="pcard-${d._id}" onclick="togglePilgrimCard('${d._id}',this)">
       <div class="p-card-head">
         <div style="flex:1;min-width:0">
-          <div><span class="p-card-badge ${badgeClass}">${badgeText}</span></div>
-          <div class="p-card-name">${d.title || ''}</div>
-          <div class="p-card-sub">${placeName}${distStr ? ' · '+distStr : ''}${d.area ? ' · '+d.area : ''}</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+            <span class="p-card-badge ${badgeClass}">${badgeText}</span>
+            <span style="font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${titleShort}</span>
+          </div>
+          <div class="p-card-name">${placeName}</div>
+          <div class="p-card-sub">${distStr ? distStr+' · ' : ''}${d.area || ''}</div>
         </div>
         <div style="font-size:22px;flex-shrink:0">${d.placeIcon || '📍'}</div>
       </div>
       ${story ? `<div class="p-card-story">"${story}"</div>` : ''}
       <div class="p-card-actions" id="pactions-${d._id}">
         <a class="gb" href="#" onclick="event.preventDefault();event.stopPropagation();openNavigation('${placeName.replace(/'/g,"\\'")}',${d.lat||0},${d.lng||0})"><span class="gb-ic">🗺️</span><span class="gb-tx">길찾기</span></a>
-        <button class="gb" onclick="event.stopPropagation();addToGlobalBasket({id:'${d._id}',name:'${placeName.replace(/'/g,"\\'")}',lat:${d.lat||0},lng:${d.lng||0},type:'pilgrim',icon:'${d.placeIcon||'📍'}',celeb:''})"><span class="gb-ic">🗺️</span><span class="gb-tx">코스담기</span></button>
+        <button class="gb" onclick="event.stopPropagation();addToGlobalBasket({id:'${d._id}',name:'${placeName.replace(/'/g,"\\'")}',lat:${d.lat||0},lng:${d.lng||0},type:'pilgrim',icon:'${d.placeIcon||"📍"}',celeb:''})"><span class="gb-ic">🗺️</span><span class="gb-tx">코스담기</span></button>
         <button class="gb" onclick="event.stopPropagation();openPlaceInfo('${placeName.replace(/'/g,"\\'")}',${d.lat||0},${d.lng||0})"><span class="gb-ic">🍽️</span><span class="gb-tx">식당정보</span></button>
         <a class="gb" href="https://map.naver.com/p/search/${encodeURIComponent(placeName)}" target="_blank" onclick="event.stopPropagation()"><span class="gb-ic">🔍</span><span class="gb-tx">네이버</span></a>
         <button class="gb" onclick="event.stopPropagation();shareKakaoPilgrim('${d._id}','${placeName.replace(/'/g,"\\'")}')"><span class="gb-ic">💛</span><span class="gb-tx">공유</span></button>
-        <button class="gb" onclick="event.stopPropagation();pilgrimGoMap(${d.lat||0},${d.lng||0})"><span class="gb-ic">🗺️</span><span class="gb-tx">지도보기</span></button>
+        <button class="gb" onclick="event.stopPropagation();pilgrimGoMap(${d.lat||0},${d.lng||0})"><span class="gb-ic">📍</span><span class="gb-tx">지도보기</span></button>
       </div>
     </div>`;
   }).join('');
+  if (append) {
+    const moreBtn = body.querySelector('#pilgrimMoreBtn');
+    if (moreBtn) moreBtn.remove();
+    body.insertAdjacentHTML('beforeend', html);
+  } else {
+    body.innerHTML = html;
+    _pilgrimPage = 0;
+  }
+  const total = _pilgrimSearchQ ? _pilgrimSearchResults.length : _pilgrimFiltered.length;
+  const shown = (_pilgrimPage + 1) * PILGRIM_PER_PAGE;
+  if (shown < total) {
+    body.insertAdjacentHTML('beforeend', `<div id="pilgrimMoreBtn" style="padding:16px;text-align:center"><button onclick="loadMorePilgrim()" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 24px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer">더보기 (${total - shown}곳 남음)</button></div>`);
+  }
 }
+
+window.loadMorePilgrim = function() {
+  _pilgrimPage++;
+  const src = _pilgrimSearchQ ? _pilgrimSearchResults : _pilgrimFiltered;
+  renderPilgrimList(src.slice(_pilgrimPage * PILGRIM_PER_PAGE, (_pilgrimPage + 1) * PILGRIM_PER_PAGE), true);
+};
+
+window.doPilgrimSearch = function(q) {
+  _pilgrimSearchQ = q.trim();
+  const clearBtn = document.getElementById('pilgrimSearchClear');
+  if (clearBtn) clearBtn.style.display = _pilgrimSearchQ ? '' : 'none';
+  if (!_pilgrimSearchQ) { filterPilgrim(); return; }
+  _pilgrimSearchResults = _pilgrimData.filter(d =>
+    (d.title||'').includes(_pilgrimSearchQ) ||
+    (d.placeName||'').includes(_pilgrimSearchQ) ||
+    (d.story||'').includes(_pilgrimSearchQ) ||
+    (d.area||'').includes(_pilgrimSearchQ)
+  );
+  if (myLat && myLng) {
+    _pilgrimSearchResults = _pilgrimSearchResults.map(d => {
+      const dlat=(d.lat||0)-myLat, dlng=(d.lng||0)-myLng;
+      d._dist = Math.round(Math.sqrt(dlat*dlat+dlng*dlng)*111320);
+      return d;
+    }).sort((a,b)=>a._dist-b._dist);
+  }
+  const titleEl = document.getElementById('pilgrimListTitle');
+  const countEl = document.getElementById('pilgrimListCount');
+  if (titleEl) titleEl.textContent = `"${_pilgrimSearchQ}" 검색`;
+  if (countEl) countEl.textContent = _pilgrimSearchResults.length + '곳';
+  _pilgrimPage = 0;
+  renderPilgrimList(_pilgrimSearchResults.slice(0, PILGRIM_PER_PAGE));
+  renderPilgrimPins(_pilgrimSearchResults.slice(0, 100));
+};
+
+window.clearPilgrimSearch = function() {
+  const input = document.getElementById('pilgrimSearch');
+  if (input) input.value = '';
+  _pilgrimSearchQ = '';
+  const clearBtn = document.getElementById('pilgrimSearchClear');
+  if (clearBtn) clearBtn.style.display = 'none';
+  filterPilgrim();
+};
+
 
 // 카드 탭 → 버튼 토글
 let _lastPToggle = {};
