@@ -3134,6 +3134,7 @@ let _pilgrimContent = null;
 window.syncPilgrimVars = function() {
   _pilgrimData = window._pilgrimData || [];
   _pilgrimLoaded = window._pilgrimLoaded || false;
+  console.log('syncPilgrimVars: _pilgrimData length =', _pilgrimData.length);
 };
 let _pilgrimOpenId = null;    // 펼쳐진 카드 id
 
@@ -7730,8 +7731,10 @@ window.loadPilgrimData = async function() {
     window._pilgrimData = snap.docs.map(d => ({...d.data(), _id: d.id}));
     window._pilgrimLoaded = true;
     if (window.showToast) showToast('🎬 성지 ' + window._pilgrimData.length + '곳 로드 완료!');
-    if (window.buildPilgrimContentBar) buildPilgrimContentBar();
-    if (window.filterPilgrim) filterPilgrim();
+    // 일반 스크립트 변수에 동기화 (핵심!)
+    if (window.syncPilgrimVars) window.syncPilgrimVars();
+    if (window.buildPilgrimContentBar) window.buildPilgrimContentBar();
+    if (window.filterPilgrim) window.filterPilgrim();
     setTimeout(() => { try { window._pilgrimMap && window._pilgrimMap.relayout(); } catch(e) {} }, 100);
   } catch(e) {
     console.error('pilgrim 로드 오류:', e);
