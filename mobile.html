@@ -3265,14 +3265,38 @@ window.setPilgrimFilter = function(type, el) {
 };
 
 // 콘텐츠 pill 바 생성 (드라마별/스타별)
+// 콘텐츠 영향력 순위 (전세계 인지도 기준)
+const PILGRIM_PRIORITY = [
+  // 한류스타
+  '방탄소년단','BTS','블랙핑크','BLACKPINK','아이유','IU','싸이','PSY',
+  '세븐틴','스트레이키즈','트와이스','TWICE','뉴진스','NewJeans','엑소','EXO',
+  // 드라마 (글로벌 히트작)
+  '오징어게임','도깨비','사랑의 불시착','이태원 클라쓰','별에서 온 그대',
+  '태양의 후예','킹덤','이상한 변호사 우영우','마이 디어 미스터','눈물의 여왕',
+  '스물다섯 스물하나','지금 우리 학교는','좋아하면 울리는','힘쎈여자 강남순',
+  '무빙','악마판사','빈센조','갯마을 차차차','청춘기록','스타트업',
+  // 영화
+  '기생충','부산행','헤어질 결심','범죄도시','올드보이',
+];
+
 function buildPilgrimContentBar() {
   const bar = document.getElementById('pilgrimContentBar');
   if (!bar) return;
   const filtered = _pilgrimType === 'all' ? _pilgrimData : _pilgrimData.filter(d => d.mediaType === _pilgrimType);
   const counts = {};
   filtered.forEach(d => { const t = d.title || ''; if (t) counts[t] = (counts[t] || 0) + 1; });
-  const top = Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0, 15);
-  bar.innerHTML = top.map(([title, cnt]) => {
+
+  // 정렬: 영향력 순위 우선 → 그 다음 장소 개수 순
+  const sorted = Object.entries(counts).sort((a, b) => {
+    const ai = PILGRIM_PRIORITY.indexOf(a[0]);
+    const bi = PILGRIM_PRIORITY.indexOf(b[0]);
+    if (ai !== -1 && bi !== -1) return ai - bi;  // 둘 다 순위 있으면 순위순
+    if (ai !== -1) return -1;                      // a만 순위 있으면 a 앞
+    if (bi !== -1) return 1;                       // b만 순위 있으면 b 앞
+    return b[1] - a[1];                            // 둘 다 없으면 개수순
+  }).slice(0, 15);
+
+  bar.innerHTML = sorted.map(([title, cnt]) => {
     const short = title.length > 12 ? title.slice(0, 12) + '…' : title;
     return `<button class="p-content-pill${_pilgrimContent===title?' on':''}" onclick="selectPilgrimContent('${title.replace(/'/g,"\\'")}',this)" title="${title}">${short} <span style="opacity:0.6">${cnt}</span></button>`;
   }).join('');
