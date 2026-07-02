@@ -3165,27 +3165,34 @@ async function loadPilgrimData() {
   if (listBody) listBody.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px"><div style="font-size:32px;margin-bottom:8px">🎬</div>성지 데이터 불러오는 중...</div>';
 
   try {
-    // db가 준비될 때까지 대기 (최대 5초)
-    let waited = 0;
-    while (!window.db && waited < 5000) {
-      await new Promise(r => setTimeout(r, 100));
-      waited += 100;
-    }
-    if (!window.db) throw new Error('db not ready');
+    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
+    const { getFirestore, collection, getDocs, query, limit } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
 
-    const { collection, getDocs, query, limit } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
-    const q = query(collection(window.db, 'pilgrimages'), limit(500));
+    // 이미 초기화된 앱 재사용
+    const firebaseConfig = {
+      apiKey: "AIzaSyC5nf84GbQQ_5vIDwhIvTZ5zPqf7nrnSxU",
+      authDomain: "starspoon-120d7.firebaseapp.com",
+      projectId: "starspoon-120d7",
+      storageBucket: "starspoon-120d7.firebasestorage.app",
+      messagingSenderId: "672370227821",
+      appId: "1:672370227821:web:aea1d9c6ca8587842a5d64"
+    };
+    const apps = getApps();
+    const app = apps.length ? apps[0] : initializeApp(firebaseConfig);
+    const pdb = getFirestore(app);
+
+    const q = query(collection(pdb, 'pilgrimages'), limit(500));
     const snap = await getDocs(q);
     _pilgrimData = snap.docs.map(d => ({...d.data(), _id: d.id}));
     _pilgrimLoaded = true;
     showToast(`🎬 성지 ${_pilgrimData.length}곳 로드 완료!`);
     buildPilgrimContentBar();
     filterPilgrim();
-    // 지도 크기 재조정
     setTimeout(() => { try { _pilgrimMap?.relayout(); } catch(e) {} }, 100);
   } catch(e) {
     console.log('pilgrim 로드 오류:', e);
-    if (listBody) listBody.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)">⚠️ 데이터를 불러올 수 없어요<br><button onclick="loadPilgrimData()" style="margin-top:10px;padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);cursor:pointer;font-size:12px">다시 시도</button></div>';
+    const listBody2 = document.getElementById('pilgrimListBody');
+    if (listBody2) listBody2.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)">⚠️ 데이터를 불러올 수 없어요<br><button onclick="loadPilgrimData()" style="margin-top:10px;padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);cursor:pointer;font-size:12px">다시 시도</button></div>';
   }
 }
 
