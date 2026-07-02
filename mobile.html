@@ -1099,14 +1099,13 @@ input::placeholder{color:var(--text3) !important;opacity:1}
       </svg>
       <span style="font-family:'Noto Serif KR',serif;font-size:13px;font-weight:900;color:var(--text)">Star<span style="color:var(--gold)">spoon</span></span>
     </a>
-    <div style="flex:1;display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:0 4px 0 12px;height:34px">
-      <i class="ti ti-search" style="font-size:14px;color:var(--text3);flex-shrink:0"></i>
+    <div style="flex:1;display:flex;align-items:center;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:0 8px 0 12px;height:34px">
       <input id="pilgrimSearch" type="search" placeholder="드라마명, 배우명, 장소명 검색"
-        style="border:none;background:none;flex:1;padding:0 8px;font-size:13px;color:var(--text);outline:none;-webkit-appearance:none"
+        style="border:none;background:none;flex:1;padding:0 6px 0 0;font-size:13px;color:var(--text);outline:none;-webkit-appearance:none;min-width:0"
         onkeydown="if(event.key==='Enter'){event.preventDefault();doPilgrimSearch(this.value)}"
         oninput="if(!this.value){clearPilgrimSearch()}">
-      <button id="pilgrimSearchClear" onclick="clearPilgrimSearch()" style="display:none;background:none;border:none;color:var(--text3);cursor:pointer;padding:0 4px;font-size:16px;touch-action:manipulation">✕</button>
-      <button onclick="doPilgrimSearch(document.getElementById('pilgrimSearch').value)" style="background:var(--gold);border:none;border-radius:7px;height:26px;padding:0 10px;color:#fff;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent">검색</button>
+      <button id="pilgrimSearchClear" onclick="clearPilgrimSearch()" style="display:none;background:none;border:none;color:var(--text3);cursor:pointer;padding:0;font-size:16px;flex-shrink:0;touch-action:manipulation">✕</button>
+      <button onclick="doPilgrimSearch(document.getElementById('pilgrimSearch').value)" style="background:none;border:none;cursor:pointer;padding:0;flex-shrink:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent"><i class="ti ti-search" style="font-size:18px;color:var(--gold)"></i></button>
     </div>
     <button onclick="openHamburger()" style="background:none;border:none;cursor:pointer;padding:4px;color:var(--text2)"><i class="ti ti-menu-2" style="font-size:20px"></i></button>
   </div>
