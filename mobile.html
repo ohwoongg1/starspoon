@@ -3168,6 +3168,34 @@ async function initPilgrimPage() {
 // Firebase에서 pilgrimages 로드 → module 스크립트의 window.loadPilgrimData 사용
 // (이 함수는 module 스크립트에서 정의됨)
 
+// 필터 적용 + 리스트 렌더
+function filterPilgrim() {
+  let data = _pilgrimData;
+  if (_pilgrimType !== 'all') data = data.filter(d => d.mediaType === _pilgrimType);
+  if (_pilgrimContent) data = data.filter(d => d.title === _pilgrimContent);
+  if (myLat && myLng) {
+    data = data.map(d => {
+      const dlat = (d.lat||0) - myLat, dlng = (d.lng||0) - myLng;
+      d._dist = Math.round(Math.sqrt(dlat*dlat + dlng*dlng) * 111320);
+      return d;
+    }).sort((a,b) => a._dist - b._dist);
+  }
+  _pilgrimFiltered = data;
+  _pilgrimSearchQ = '';
+  _pilgrimPage = 0;
+  const title = _pilgrimContent || (_pilgrimType === 'all' ? '성지순례' : _pilgrimType === 'drama' ? '드라마 촬영지' : _pilgrimType === 'artist' ? '한류스타 방문지' : '영화 촬영지');
+  const titleEl = document.getElementById('pilgrimListTitle');
+  const countEl = document.getElementById('pilgrimListCount');
+  if (titleEl) titleEl.textContent = title;
+  if (countEl) countEl.textContent = data.length + '곳';
+  renderPilgrimList(data.slice(0, PILGRIM_PER_PAGE));
+  renderPilgrimPins(data.slice(0, 100));
+}
+// window 노출 (module 스크립트에서 호출 가능하게)
+window.filterPilgrim = filterPilgrim;
+window.buildPilgrimContentBar = buildPilgrimContentBar;
+window.renderPilgrimList = renderPilgrimList;
+
 // 필터 타입 변경
 window.setPilgrimFilter = function(type, el) {
   _pilgrimType = type;
