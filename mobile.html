@@ -3120,13 +3120,19 @@ function renderPins() {
 // ══════════════════════════════════════════
 // 🎬 성지순례 (Pilgrim) 기능
 // ══════════════════════════════════════════
-let _pilgrimData = [];        // 전체 로드된 데이터
-let _pilgrimFiltered = [];    // 현재 필터 결과
-let _pilgrimLoaded = false;   // 최초 1회 로드 여부
-let _pilgrimMap = null;       // 성지순례 지도
-let _pilgrimMarkers = [];     // 지도 핀
-let _pilgrimType = 'all';     // 현재 필터 타입
-let _pilgrimContent = null;   // 선택된 콘텐츠 (드라마명/스타명)
+let _pilgrimData = window._pilgrimData = [];
+let _pilgrimFiltered = window._pilgrimFiltered = [];
+let _pilgrimLoaded = window._pilgrimLoaded = false;
+let _pilgrimMap = window._pilgrimMap = null;
+let _pilgrimMarkers = window._pilgrimMarkers = [];
+let _pilgrimType = 'all';
+let _pilgrimContent = null;
+
+// module 스크립트에서 로드한 데이터를 일반 스크립트 변수에 동기화
+window.syncPilgrimVars = function() {
+  _pilgrimData = window._pilgrimData || [];
+  _pilgrimLoaded = window._pilgrimLoaded || false;
+};
 let _pilgrimOpenId = null;    // 펼쳐진 카드 id
 
 // 성지순례 탭 진입 시 호출
@@ -3153,48 +3159,14 @@ async function initPilgrimPage() {
 
   // 데이터 최초 로드
   if (!_pilgrimLoaded) {
-    await loadPilgrimData();
+    loadPilgrimData();
   } else {
     renderPilgrimList(_pilgrimFiltered.slice(0, PILGRIM_PER_PAGE));
   }
 }
 
-// Firebase에서 pilgrimages 로드 (지연 로딩)
-async function loadPilgrimData() {
-  const listBody = document.getElementById('pilgrimListBody');
-  if (listBody) listBody.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3);font-size:13px"><div style="font-size:32px;margin-bottom:8px">🎬</div>성지 데이터 불러오는 중...</div>';
-
-  try {
-    const { initializeApp, getApps } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js");
-    const { getFirestore, collection, getDocs, query, limit } = await import("https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js");
-
-    // 이미 초기화된 앱 재사용
-    const firebaseConfig = {
-      apiKey: "AIzaSyC5nf84GbQQ_5vIDwhIvTZ5zPqf7nrnSxU",
-      authDomain: "starspoon-120d7.firebaseapp.com",
-      projectId: "starspoon-120d7",
-      storageBucket: "starspoon-120d7.firebasestorage.app",
-      messagingSenderId: "672370227821",
-      appId: "1:672370227821:web:aea1d9c6ca8587842a5d64"
-    };
-    const apps = getApps();
-    const app = apps.length ? apps[0] : initializeApp(firebaseConfig);
-    const pdb = getFirestore(app);
-
-    const q = query(collection(pdb, 'pilgrimages'), limit(500));
-    const snap = await getDocs(q);
-    _pilgrimData = snap.docs.map(d => ({...d.data(), _id: d.id}));
-    _pilgrimLoaded = true;
-    showToast(`🎬 성지 ${_pilgrimData.length}곳 로드 완료!`);
-    buildPilgrimContentBar();
-    filterPilgrim();
-    setTimeout(() => { try { _pilgrimMap?.relayout(); } catch(e) {} }, 100);
-  } catch(e) {
-    console.log('pilgrim 로드 오류:', e);
-    const listBody2 = document.getElementById('pilgrimListBody');
-    if (listBody2) listBody2.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)">⚠️ 데이터를 불러올 수 없어요<br><button onclick="loadPilgrimData()" style="margin-top:10px;padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);cursor:pointer;font-size:12px">다시 시도</button></div>';
-  }
-}
+// Firebase에서 pilgrimages 로드 → module 스크립트의 window.loadPilgrimData 사용
+// (이 함수는 module 스크립트에서 정의됨)
 
 // 필터 타입 변경
 window.setPilgrimFilter = function(type, el) {
@@ -7616,6 +7588,28 @@ window.updateMspSelectedInfo = updateMspSelectedInfo;
 window.renderMspBasket = renderMspBasket;
 window.applyMspFilters = applyMspFilters;
 window.switchResultTab = switchResultTab;
+
+// ── 성지순례 Firebase 로드 (module 스크립트 안에서 직접 실행) ──
+window.loadPilgrimData = async function() {
+  const listBody = document.getElementById('pilgrimListBody');
+  if (listBody) listBody.innerHTML = '<div style="text-align:center;padding:60px 0;color:var(--text3);font-size:13px"><div style="font-size:32px;margin-bottom:8px">🎬</div>성지 데이터 불러오는 중...</div>';
+  try {
+    // 이미 import된 collection, getDocs, query, limit 직접 사용
+    const q = query(collection(db, 'pilgrimages'), limit(500));
+    const snap = await getDocs(q);
+    window._pilgrimData = snap.docs.map(d => ({...d.data(), _id: d.id}));
+    window._pilgrimLoaded = true;
+    if (window.showToast) showToast('🎬 성지 ' + window._pilgrimData.length + '곳 로드 완료!');
+    if (window.syncPilgrimVars) window.syncPilgrimVars();
+    if (window.buildPilgrimContentBar) buildPilgrimContentBar();
+    if (window.filterPilgrim) filterPilgrim();
+    setTimeout(() => { try { window._pilgrimMap && window._pilgrimMap.relayout(); } catch(e) {} }, 100);
+  } catch(e) {
+    console.error('pilgrim 로드 오류:', e);
+    const lb = document.getElementById('pilgrimListBody');
+    if (lb) lb.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text3)">⚠️ 데이터를 불러올 수 없어요<br><small style="font-size:11px;opacity:0.6">' + (e.message||'') + '</small><br><button onclick="loadPilgrimData()" style="margin-top:12px;padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:var(--bg2);cursor:pointer;font-size:13px;font-weight:600">다시 시도</button></div>';
+  }
+};
 
 </script>
 
